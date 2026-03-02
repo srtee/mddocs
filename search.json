@@ -8,5 +8,49 @@
     "crumbs": [
       "Introduction"
     ]
+  },
+  {
+    "objectID": "vmd/loading-data.html",
+    "href": "vmd/loading-data.html",
+    "title": "Getting Started",
+    "section": "",
+    "text": "TODO: setting up CLI properly for Mac!",
+    "crumbs": [
+      "Using VMD",
+      "Getting Started"
+    ]
+  },
+  {
+    "objectID": "vmd/loading-data.html#installation",
+    "href": "vmd/loading-data.html#installation",
+    "title": "Getting Started",
+    "section": "",
+    "text": "TODO: setting up CLI properly for Mac!",
+    "crumbs": [
+      "Using VMD",
+      "Getting Started"
+    ]
+  },
+  {
+    "objectID": "vmd/loading-data.html#loading-in-data",
+    "href": "vmd/loading-data.html#loading-in-data",
+    "title": "Getting Started",
+    "section": "Loading In Data",
+    "text": "Loading In Data\nHere’s the quickest way to load LAMMPS simulation data into VMD:\n1topo readlammpsdata DATA_FILE.data\n2topo guessatom lammps data\n3animate read xtc TRAJECTORY.xtc\n\n1\n\nRead in DATA_FILE.data as a molecule (this includes bonds, angles, dihedrals, and molecule index numbers)!\n\n2\n\nguessatom lammps data calls TopoTools to (a) guess each particle type’s element based on its mass;\n\n3\n\nanimate will now use the XTC data type to read in the coordinates from your trajectory file TRAJECTORY.xtc.",
+    "crumbs": [
+      "Using VMD",
+      "Getting Started"
+    ]
+  },
+  {
+    "objectID": "vmd/loading-data.html#pbc-adjustments",
+    "href": "vmd/loading-data.html#pbc-adjustments",
+    "title": "Getting Started",
+    "section": "PBC Adjustments",
+    "text": "PBC Adjustments",
+    "crumbs": [
+      "Using VMD",
+      "Getting Started"
+    ]
   }
 ]
