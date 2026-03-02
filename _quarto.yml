@@ -34,12 +34,13 @@ website:
           - "folder-practices.qmd"
       - section: "Using VMD"
         contents:
-          - "loading-data.qmd"
-          - "pbc-adjustments.qmd"
+          - vmd/loading-data.qmd
+          - "using-reps.qmd"
       - "acknowledgment.qmd"
 
 format:
   html:
     theme: cosmo
     toc: true
-    #css: styles.css
+    code-block-bg: true
+    code-block-border-left: "#31BAE9"
