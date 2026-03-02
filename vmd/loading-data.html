@@ -304,11 +304,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <dl class="code-annotation-container-grid">
 <dt data-target-cell="annotated-cell-1" data-target-annotation="1">1</dt>
 <dd>
-<span data-code-cell="annotated-cell-1" data-code-lines="1" data-code-annotation="1">Read in <code>DATA_FILE.data</code> as a <strong>molecule</strong> (this includes bonds, angles, dihedrals, and molecule index numbers)!</span>
+<span data-code-cell="annotated-cell-1" data-code-lines="1" data-code-annotation="1">Read in <code>DATA_FILE.data</code> as a <strong>molecule</strong> (this includes bonds, angles, dihedrals, and molecule index numbers)! <br> (<code>topo</code> calls the <a href="https://www.ks.uiuc.edu/Research/vmd/plugins/topotools/">TopoTools</a> plugin which was written specifically for handling LAMMPS data files. The usual VMD dialog does not have an option for reading that <code>data</code> format in!)</span>
 </dd>
 <dt data-target-cell="annotated-cell-1" data-target-annotation="2">2</dt>
 <dd>
-<span data-code-cell="annotated-cell-1" data-code-lines="2" data-code-annotation="2"><code>guessatom lammps data</code> calls TopoTools to (a) guess each particle type’s <em>element</em> based on its mass;</span>
+<span data-code-cell="annotated-cell-1" data-code-lines="2" data-code-annotation="2"><code>guessatom lammps data</code> calls TopoTools to (a) guess each particle type’s <em>element</em> based on its mass; (b) then use each element to set each particle’s <em>name</em> and <em>display radius</em>. <br> (If you aren’t using regular atom types – for example coarse-grains or virtual sites – you can skip this!)</span>
 </dd>
 <dt data-target-cell="annotated-cell-1" data-target-annotation="3">3</dt>
 <dd>
