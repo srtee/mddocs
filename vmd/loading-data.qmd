@@ -17,16 +17,14 @@ topo guessatom lammps data         # <2>
 animate read xtc TRAJECTORY.xtc    # <3>
 ```
 
-1.  Read in `DATA_FILE.data` as a **molecule** (this includes bonds, angles, dihedrals, and molecule index numbers)!
+1. Read in `DATA_FILE.data` as a **molecule** (this includes bonds, angles, dihedrals, and molecule index numbers)! <br />
+(`topo` calls the [TopoTools](https://www.ks.uiuc.edu/Research/vmd/plugins/topotools/) plugin
+which was written specifically for handling LAMMPS data files. 
+The usual VMD dialog does not have an option for reading that `data` format in!)
 
-    (`topo` calls the [TopoTools](https://www.ks.uiuc.edu/Research/vmd/plugins/topotools/) plugin
-    which was written specifically for handling LAMMPS data files. 
-    The usual VMD dialog does not have an option for reading that `data` format in!)
-
-2.  `guessatom lammps data` calls TopoTools to (a) guess each particle type's _element_ based on its mass;
-    (b) then use each element to set each particle's _name_ and _display radius_.
-    
-    (If you aren't using regular atom types -- for example coarse-grains or virtual sites -- you can skip this!)
+2.  `guessatom lammps data` calls TopoTools to (a) guess each particle type's _element_ based on its mass; (b)
+then use each element to set each particle's _name_ and _display radius_. <br />
+(If you aren't using regular atom types -- for example coarse-grains or virtual sites -- you can skip this!)
 
 3.  `animate` will now use the XTC data type to _read in_ the _coordinates_ from your trajectory file `TRAJECTORY.xtc`.
 
