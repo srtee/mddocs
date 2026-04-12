@@ -205,13 +205,23 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-is-a-force-field" id="toc-what-is-a-force-field" class="nav-link active" data-scroll-target="#what-is-a-force-field">What Is a Force Field?</a></li>
+  <li><a href="#what-is-a-force-field" id="toc-what-is-a-force-field" class="nav-link active" data-scroll-target="#what-is-a-force-field">What Is a Force Field?</a>
+  <ul class="collapse">
+  <li><a href="#force-field-components" id="toc-force-field-components" class="nav-link" data-scroll-target="#force-field-components">Force Field Components</a></li>
+  </ul></li>
   <li><a href="#non-bonded-interactions" id="toc-non-bonded-interactions" class="nav-link" data-scroll-target="#non-bonded-interactions">Non-Bonded Interactions</a>
   <ul class="collapse">
   <li><a href="#van-der-waals-dispersionrepulsion" id="toc-van-der-waals-dispersionrepulsion" class="nav-link" data-scroll-target="#van-der-waals-dispersionrepulsion">Van der Waals (Dispersion/Repulsion)</a></li>
   <li><a href="#coulombic-electrostatics" id="toc-coulombic-electrostatics" class="nav-link" data-scroll-target="#coulombic-electrostatics">Coulombic Electrostatics</a></li>
-  <li><a href="#combined-short-range-potentials" id="toc-combined-short-range-potentials" class="nav-link" data-scroll-target="#combined-short-range-potentials">Combined Short-Range Potentials</a></li>
-  <li><a href="#bonded-interactions" id="toc-bonded-interactions" class="nav-link" data-scroll-target="#bonded-interactions">Bonded Interactions</a></li>
+  <li><a href="#pair-style-compatibility" id="toc-pair-style-compatibility" class="nav-link" data-scroll-target="#pair-style-compatibility">Pair Style Compatibility</a></li>
+  <li><a href="#other-non-bonded-styles" id="toc-other-non-bonded-styles" class="nav-link" data-scroll-target="#other-non-bonded-styles">Other Non-Bonded Styles</a></li>
+  </ul></li>
+  <li><a href="#bonded-interactions" id="toc-bonded-interactions" class="nav-link" data-scroll-target="#bonded-interactions">Bonded Interactions</a>
+  <ul class="collapse">
+  <li><a href="#bonds" id="toc-bonds" class="nav-link" data-scroll-target="#bonds">Bonds</a></li>
+  <li><a href="#angles" id="toc-angles" class="nav-link" data-scroll-target="#angles">Angles</a></li>
+  <li><a href="#dihedrals" id="toc-dihedrals" class="nav-link" data-scroll-target="#dihedrals">Dihedrals</a></li>
+  <li><a href="#when-bonded-interactions-matter" id="toc-when-bonded-interactions-matter" class="nav-link" data-scroll-target="#when-bonded-interactions-matter">When Bonded Interactions Matter</a></li>
   </ul></li>
   <li><a href="#cross-terms-and-mixing-rules" id="toc-cross-terms-and-mixing-rules" class="nav-link" data-scroll-target="#cross-terms-and-mixing-rules">Cross-Terms and Mixing Rules</a>
   <ul class="collapse">
@@ -232,6 +242,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#simple-electrolyte-nacl-in-spce-water" id="toc-simple-electrolyte-nacl-in-spce-water" class="nav-link" data-scroll-target="#simple-electrolyte-nacl-in-spce-water">Simple Electrolyte (NaCl in SPC/E water)</a></li>
   <li><a href="#electrode-electrolyte-interface" id="toc-electrode-electrolyte-interface" class="nav-link" data-scroll-target="#electrode-electrolyte-interface">Electrode-Electrolyte Interface</a></li>
+  <li><a href="#checking-your-force-field" id="toc-checking-your-force-field" class="nav-link" data-scroll-target="#checking-your-force-field">Checking Your Force Field</a></li>
   </ul></li>
   <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
   </ul>
@@ -272,15 +283,23 @@ window.Quarto = {
 <ul>
 <li>Non-bonded interactions (LJ, Coulomb): formula, meaning, parameters</li>
 <li>Bonded interactions (bonds, angles, dihedrals): when they’re needed</li>
-<li>Cross-terms and mixing rules</li>
+<li>Cross-terms and mixing rules with physical interpretation</li>
 <li>How force field choices affect simulation output</li>
+<li>Common force field configurations for electrode-electrolyte systems</li>
 </ul>
 </div>
 </div>
 <section id="what-is-a-force-field" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-a-force-field">What Is a Force Field?</h2>
-<p>A <strong>force field</strong> is a set of mathematical functions and parameters that describe interatomic forces. It is an approximation — no force field is “correct”, only more or less appropriate for a given system.</p>
-<p>The components of a force field:</p>
+<p>A <strong>force field</strong> is a set of mathematical functions and parameters that describe interatomic forces. It is an approximation — no force field is “correct”, only more or less appropriate for a given system and question.</p>
+<p>The force field determines:</p>
+<ol type="1">
+<li><strong>What interactions exist</strong> — which pairs have attractive/repulsive forces</li>
+<li><strong>How strong they are</strong> — the energy scale of binding</li>
+<li><strong>What is neglected</strong> — polarizability, electronic structure, chemical reactions</li>
+</ol>
+<section id="force-field-components" class="level3">
+<h3 class="anchored" data-anchor-id="force-field-components">Force Field Components</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -291,33 +310,35 @@ window.Quarto = {
 </thead>
 <tbody>
 <tr class="odd">
-<td>Non-bonded</td>
+<td><strong>Non-bonded</strong></td>
 <td>Van der Waals, electrostatics</td>
 <td>LJ, Coulomb</td>
 </tr>
 <tr class="even">
-<td>Bonded</td>
+<td><strong>Bonded</strong></td>
 <td>Chemical bonds</td>
 <td>Harmonic, Morse</td>
 </tr>
 <tr class="odd">
-<td>Angle</td>
+<td><strong>Angle</strong></td>
 <td>Three-body bending</td>
 <td>Harmonic, cosine</td>
 </tr>
 <tr class="even">
-<td>Dihedral</td>
+<td><strong>Dihedral</strong></td>
 <td>Four-body torsion</td>
 <td>Trigonometric series</td>
 </tr>
 </tbody>
 </table>
+<p>For simple electrolytes (salt in water), only non-bonded interactions are needed. For explicit water models, bonds and angles are also required.</p>
+</section>
 </section>
 <section id="non-bonded-interactions" class="level2">
 <h2 class="anchored" data-anchor-id="non-bonded-interactions">Non-Bonded Interactions</h2>
 <section id="van-der-waals-dispersionrepulsion" class="level3">
 <h3 class="anchored" data-anchor-id="van-der-waals-dispersionrepulsion">Van der Waals (Dispersion/Repulsion)</h3>
-<p>The Lennard-Jones (LJ) potential is the most common:</p>
+<p>The Lennard-Jones (LJ) potential is the workhorse of MD:</p>
 <p><span class="math display">\[V(r) = 4\epsilon \left[ \left(\frac{\sigma}{r}\right)^{12} - \left(\frac{\sigma}{r}\right)^6 \right]\]</span></p>
 <table class="caption-top table">
 <colgroup>
@@ -345,60 +366,149 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-<p><strong>Term-by-term breakdown</strong>:</p>
-<ul>
-<li><strong>r⁻¹² term</strong>: Steep repulsion at short range (Pauli exclusion)</li>
-<li><strong>r⁻⁶ term</strong>: Softer attraction at longer range (London dispersion)</li>
-</ul>
-<p><strong>Visual representation</strong>:</p>
+<section id="term-by-term-breakdown" class="level4">
+<h4 class="anchored" data-anchor-id="term-by-term-breakdown">Term-by-Term Breakdown</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 50%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Physical Origin</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(r^{-12}\)</span></td>
+<td>Pauli exclusion (electron cloud repulsion)</td>
+<td>Very steep; only matters at short range</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(r^{-6}\)</span></td>
+<td>London dispersion (induced dipole attraction)</td>
+<td>Softer; dominant at intermediate range</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The r⁻¹² term is 4096× steeper than r⁻⁶ at r = σ.</strong> This is why LJ produces a hard-sphere-like repulsion at short distances while having a soft attractive well.</p>
+<p><strong>Why r⁻¹² specifically?</strong> It’s computationally convenient (easy to square), not because it represents any specific physical interaction. Other repulsion forms (Born-Mayer, exp) are more physically grounded but less common.</p>
+</section>
+<section id="visual-representation" class="level4">
+<h4 class="anchored" data-anchor-id="visual-representation">Visual Representation</h4>
 <div id="cell-fig-lj-potential" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div id="fig-lj-potential" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-lj-potential-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="02-force-fields_files/figure-html/fig-lj-potential-output-1.png" width="565" height="373" class="figure-img">
+<img src="02-force-fields_files/figure-html/fig-lj-potential-output-1.png" width="660" height="468" class="figure-img">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lj-potential-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Lennard-Jones potential: repulsion at short range, attraction at longer range
+Figure&nbsp;1: Lennard-Jones potential: repulsion dominates at short range, attraction at intermediate range, zero at r=σ
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>The minimum of the LJ potential is at <span class="math inline">\(r_{min} = 2^{1/6}\sigma \approx 1.12\sigma\)</span>.</p>
+</section>
+<section id="key-properties-of-lj" class="level4">
+<h4 class="anchored" data-anchor-id="key-properties-of-lj">Key Properties of LJ</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 32%">
+<col style="width: 22%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Value</th>
+<th>Significance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Energy minimum</td>
+<td><span class="math inline">\(V_{min} = -\epsilon\)</span> at <span class="math inline">\(r_{min} = 2^{1/6}\sigma \approx 1.12\sigma\)</span></td>
+<td>Determines equilibrium spacing</td>
+</tr>
+<tr class="even">
+<td>Zero crossing</td>
+<td><span class="math inline">\(r = \sigma\)</span></td>
+<td>Convenient reference point</td>
+</tr>
+<tr class="odd">
+<td>Force zero</td>
+<td><span class="math inline">\(r = 2^{1/6}\sigma\)</span></td>
+<td>Where attraction balances repulsion</td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="lj-in-lammps" class="level4">
 <h4 class="anchored" data-anchor-id="lj-in-lammps">LJ in LAMMPS</h4>
 <pre class="lammps"><code>pair_style lj/cut 10.0    # LJ with cutoff at 10 Å
-pair_coeff 1 1 0.15 3.5   # type 1-type 1: epsilon=0.15, sigma=3.5
-pair_coeff 1 2 0.10 3.3   # type 1-type 2: mixed values</code></pre>
-<p><strong>Cutoff considerations</strong>: - LJ is truncated at <code>rcut</code> — introduces error - Typical <code>rcut</code> = 10–12 Å for water - Energy drift indicates cutoff too small - Never exceed half the minimum box dimension</p>
+pair_coeff 1 1 0.15 3.5   # epsilon=0.15, sigma=3.5 (real units)</code></pre>
+<p><strong>Cutoff considerations</strong>: - LJ is truncated at <code>rcut</code> — introduces error, but necessary for speed - Typical <code>rcut</code> = 10–12 Å for water; energy drift &lt; 0.1% if cutoff is appropriate - <strong>Never exceed half the minimum box dimension</strong> — you would double-count interactions - Some use “shifted” LJ to make potential go smoothly to zero at cutoff: <code>lammps   pair_style lj/cut/coul/long 10.0  # no shift   pair_style lj/charmm/coul/long 10.0 12.0  # with shift</code></p>
 </section>
 </section>
 <section id="coulombic-electrostatics" class="level3">
 <h3 class="anchored" data-anchor-id="coulombic-electrostatics">Coulombic Electrostatics</h3>
 <p><span class="math display">\[V(r) = k \frac{q_1 q_2}{r}\]</span></p>
-<p>Long-range and never truly zero. This is why special methods (Ewald, PPPM) are needed — see <strong>?@sec-electrostatics</strong>.</p>
-<p><strong>In LAMMPS</strong>:</p>
-<pre class="lammps"><code>pair_style lj/cut/coul/long 10.0   # LJ + real-space Coulomb; k-space handles long-range
-pair_coeff * * 0.15 3.5            # LJ parameters for all pairs
-pair_coeff 1 1 0.0 0.0             # no LJ for some pairs
-kspace_style pppm 1e-5             # long-range solver</code></pre>
-</section>
-<section id="combined-short-range-potentials" class="level3">
-<h3 class="anchored" data-anchor-id="combined-short-range-potentials">Combined Short-Range Potentials</h3>
-<pre class="lammps"><code>pair_style lj/cut/coul/long 10.0    # Most common for electrolyte simulations
-pair_style born/coul/long 10.0       # For ionic crystals with repulsion term
-pair_style 12-6-4/long               # For metal oxides (adds 1/r⁴ term)</code></pre>
-<p>The pair style MUST be compatible with the kspace style:</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 36%">
-<col style="width: 42%">
-<col style="width: 21%">
+<col style="width: 58%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Constant <span class="math inline">\(k\)</span></td>
+<td>332.07 Å·kcal/mol·e² (real) or 14.3996 Å·eV·e² (metal)</td>
+</tr>
+<tr class="even">
+<td>Decay</td>
+<td><span class="math inline">\(r^{-1}\)</span> — long-range, never truly zero</td>
+</tr>
+<tr class="odd">
+<td>Energy scale</td>
+<td>Much larger than LJ for charged systems</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why Coulomb is the hard problem</strong>: A pair of unit charges at 3 Å has <span class="math inline">\(V\)</span> ≈ 110 kcal/mol (real units) — far larger than LJ well depths. And it doesn’t decay to zero at typical cutoffs.</p>
+<p>This is why special methods (Ewald, PPPM) are needed — see <strong>?@sec-electrostatics</strong>.</p>
+<section id="in-lammps" class="level4">
+<h4 class="anchored" data-anchor-id="in-lammps">In LAMMPS</h4>
+<pre class="lammps"><code>pair_style lj/cut/coul/long 10.0   # LJ + real-space Coulomb
+pair_coeff * * 0.15 3.5            # LJ for all pairs
+pair_coeff 1 1 0.0 0.0             # no LJ for specific pairs
+kspace_style pppm 1e-5             # long-range solver (REQUIRED)</code></pre>
+<p><strong>Key rule</strong>: If you use <code>coul/long</code>, you MUST use a kspace style like <code>pppm</code> or <code>ewald</code>. The <code>long</code> designation means “long-range handled by kspace”, not “I don’t need kspace”.</p>
+</section>
+</section>
+<section id="pair-style-compatibility" class="level3">
+<h3 class="anchored" data-anchor-id="pair-style-compatibility">Pair Style Compatibility</h3>
+<p>The pair style determines what is computed in real space. The kspace style must complement it:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 25%">
+<col style="width: 31%">
+<col style="width: 15%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Pair Style</th>
+<th>Real Space</th>
 <th>Kspace Style</th>
 <th>Notes</th>
 </tr>
@@ -406,92 +516,226 @@ pair_style 12-6-4/long               # For metal oxides (adds 1/r⁴ term)</code
 <tbody>
 <tr class="odd">
 <td><code>lj/cut/coul/long</code></td>
+<td>LJ + Coulomb (short-range)</td>
 <td><code>pppm</code> or <code>ewald</code></td>
-<td>Standard for electrolytes</td>
+<td><strong>Standard for electrolytes</strong></td>
 </tr>
 <tr class="even">
 <td><code>lj/cut/coul/cut</code></td>
-<td>none</td>
-<td>Direct Coulomb only; error if cutoff too small</td>
+<td>LJ + Coulomb (truncated)</td>
+<td><strong>none</strong></td>
+<td>Large error; only for testing</td>
 </tr>
 <tr class="odd">
 <td><code>coul/long</code> only</td>
-<td><code>pppm</code></td>
-<td>No LJ; pure Coulomb</td>
+<td>Coulomb (short-range only)</td>
+<td><code>pppm</code> or <code>ewald</code></td>
+<td>No LJ</td>
+</tr>
+<tr class="even">
+<td><code>lj/cut</code> only</td>
+<td>LJ only</td>
+<td>none</td>
+<td>No electrostatics</td>
 </tr>
 </tbody>
 </table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Mismatch Causes Error or Crash
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If you use <code>lj/cut/coul/long</code> but forget kspace, LAMMPS will error: “Kspace style required for coul/long pair style.”</p>
+<p>If you use <code>lj/cut/coul/cut</code> but have kspace, the long-range Coulomb is double-counted or handled incorrectly.</p>
+</div>
+</div>
 </section>
-<section id="bonded-interactions" class="level3">
-<h3 class="anchored" data-anchor-id="bonded-interactions">Bonded Interactions</h3>
-<section id="bonds" class="level4">
-<h4 class="anchored" data-anchor-id="bonds">Bonds</h4>
+<section id="other-non-bonded-styles" class="level3">
+<h3 class="anchored" data-anchor-id="other-non-bonded-styles">Other Non-Bonded Styles</h3>
+<p>For specialized systems:</p>
+<pre class="lammps"><code>pair_style born/coul/long 10.0    # Born-Mayer repulsion + Coulomb (ionic crystals)
+pair_style 12-6-4/long 10.0       # Adds 1/r⁴ term (metal oxides, halides)
+pair_style buck/coul/long 10.0   # Buckingham (exp) repulsion + Coulomb</code></pre>
+</section>
+</section>
+<section id="bonded-interactions" class="level2">
+<h2 class="anchored" data-anchor-id="bonded-interactions">Bonded Interactions</h2>
+<p>When molecules have explicit chemical bonds (water, organics), bonded terms are needed.</p>
+<section id="bonds" class="level3">
+<h3 class="anchored" data-anchor-id="bonds">Bonds</h3>
 <p>Harmonic bond (most common):</p>
 <p><span class="math display">\[V(r) = k (r - r_0)^2\]</span></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Physical Meaning</th>
+<th>Typical Values (real)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(k\)</span></td>
+<td>Stiffness (force constant)</td>
+<td>300–600 kcal/mol/Å²</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(r_0\)</span></td>
+<td>Equilibrium bond length</td>
+<td>0.96–1.0 Å for O-H</td>
+</tr>
+</tbody>
+</table>
+<p>In LAMMPS:</p>
 <pre class="lammps"><code>bond_style harmonic
-bond_coeff 1 300 1.0    # k=300 kcal/mol/Å², r0=1.0 Å</code></pre>
+bond_coeff 1 300 1.0    # k=300, r0=1.0 Å</code></pre>
+<p><strong>Why harmonic?</strong> It’s a good approximation near the minimum. For large deviations, Morse or cubic terms are better.</p>
 </section>
-<section id="angles" class="level4">
-<h4 class="anchored" data-anchor-id="angles">Angles</h4>
+<section id="angles" class="level3">
+<h3 class="anchored" data-anchor-id="angles">Angles</h3>
 <p>Harmonic angle:</p>
 <p><span class="math display">\[V(\theta) = k (\theta - \theta_0)^2\]</span></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Typical Values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(k\)</span></td>
+<td>30–60 kcal/mol/rad²</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\theta_0\)</span></td>
+<td>~104.5° for water H-O-H</td>
+</tr>
+</tbody>
+</table>
 <pre class="lammps"><code>angle_style harmonic
 angle_coeff 1 40 109.5    # k=40 kcal/mol/rad², theta0=109.5°</code></pre>
 </section>
-<section id="dihedrals" class="level4">
-<h4 class="anchored" data-anchor-id="dihedrals">Dihedrals</h4>
-<p>Proper dihedral (trigonometric series):</p>
+<section id="dihedrals" class="level3">
+<h3 class="anchored" data-anchor-id="dihedrals">Dihedrals</h3>
+<p>Proper dihedral (torsion around a bond):</p>
 <p><span class="math display">\[V(\phi) = \sum_{n=0}^{N} k_n \cos(n\phi - \phi_n)\]</span></p>
-<pre class="lammps"><code>dihedral_style opls              # OPLS-style dihedrals
-dihedral_coeff 1 0.5 0.0 3 0.0  # k, n, phi0 parameters</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Style</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>opls</code></td>
+<td>OPLS force field; multiple terms</td>
+</tr>
+<tr class="even">
+<td><code>charmm</code></td>
+<td>CHARMM; Fourier series</td>
+</tr>
+<tr class="odd">
+<td><code>harmonic</code></td>
+<td>Simple harmonic dihedral</td>
+</tr>
+</tbody>
+</table>
+<pre class="lammps"><code>dihedral_style opls
+dihedral_coeff 1 0.5 0.0 3 0.0    # k, n, phi0 per term</code></pre>
+</section>
+<section id="when-bonded-interactions-matter" class="level3">
+<h3 class="anchored" data-anchor-id="when-bonded-interactions-matter">When Bonded Interactions Matter</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>System</th>
+<th>Bonds/Angles Needed?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Simple electrolyte (NaCl in water)</td>
+<td>No — only non-bonded</td>
+</tr>
+<tr class="even">
+<td>SPC/E water</td>
+<td>Yes — 3 atoms, 2 bonds, 1 angle</td>
+</tr>
+<tr class="odd">
+<td>TIP4P water</td>
+<td>Yes — 4 atoms, 2 bonds, 1 angle (rigid)</td>
+</tr>
+<tr class="even">
+<td>Organic molecules</td>
+<td>Yes — for conformational properties</td>
+</tr>
+<tr class="odd">
+<td>Ionic crystals (NaCl)</td>
+<td>Typically no — implicit in pair potential</td>
+</tr>
+</tbody>
+</table>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>When Bonded Interactions Matter
+<span class="screen-reader-only">Note</span>Water Model Checklist
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<ul>
-<li><strong>Water models</strong> (TIP3P, TIP4P): explicit O-H bonds and H-O-H angle</li>
-<li><strong>Organic molecules</strong>: bonds, angles, dihedrals all needed</li>
-<li><strong>Simple electrolytes (NaCl in water)</strong>: no bonds; only non-bonded interactions</li>
-<li><strong>Ionic crystals</strong>: bonds may be implicit (pair_style only)</li>
-</ul>
-<p>When in doubt: check your water model’s structure. If it has <code>bond_style</code> and <code>angle_style</code>, you need those coefficients.</p>
+<p>For a new water model, check: 1. How many atoms? → <code>atom_style charge</code> (3 or 4 sites) 2. Are there bonds? → <code>bond_style</code> + <code>bond_coeff</code> if yes 3. Are there angles? → <code>angle_style</code> + <code>angle_coeff</code> if yes 4. Is it rigid? → Use <code>fix rigid</code> or <code>fix shake</code> instead of dynamics on bonds</p>
+<p>SPC/E and TIP4P are commonly used rigid models — no bond/angle dynamics needed.</p>
 </div>
 </div>
-</section>
 </section>
 </section>
 <section id="cross-terms-and-mixing-rules" class="level2">
 <h2 class="anchored" data-anchor-id="cross-terms-and-mixing-rules">Cross-Terms and Mixing Rules</h2>
-<p>When two different atom types interact, we need parameters for the cross-pair.</p>
+<p>When two different atom types interact, we need cross-pair parameters.</p>
 <section id="lorentz-berthelot-mixing" class="level3">
 <h3 class="anchored" data-anchor-id="lorentz-berthelot-mixing">Lorentz-Berthelot Mixing</h3>
-<pre class="lammps"><code>pair_coeff 1 1 epsilon1 sigma1    # type 1 - type 1
-pair_coeff 2 2 epsilon2 sigma2    # type 2 - type 2
-# type 1 - type 2 is computed as:
-epsilon_12 = sqrt(epsilon1 * epsilon2)
-sigma_12 = (sigma1 + sigma2) / 2</code></pre>
+<p>Default mixing rule in most force fields:</p>
+<p><span class="math display">\[\epsilon_{ij} = \sqrt{\epsilon_{ii} \cdot \epsilon_{jj}}\]</span> <span class="math display">\[\sigma_{ij} = \frac{\sigma_{ii} + \sigma_{jj}}{2}\]</span></p>
+<p><strong>Physical meaning</strong>: - <span class="math inline">\(\sigma\)</span> averaging = geometric mean of sizes (reasonable for van der Waals radii) - <span class="math inline">\(\epsilon\)</span> averaging = arithmetic mean of energy depths</p>
+<p>In LAMMPS, this is the default. If you specify only <code>pair_coeff 1 1</code> and <code>pair_coeff 2 2</code>, the cross-term is computed automatically.</p>
 </section>
 <section id="explicit-cross-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="explicit-cross-parameters">Explicit Cross-Parameters</h3>
-<pre class="lammps"><code>pair_coeff 1 2 epsilon12 sigma12    # override mixing rule</code></pre>
-<p>For electrolyte-electrode interactions: explicit cross-parameters are often better than mixing rules.</p>
+<p>Sometimes mixing rules give poor results. Override with explicit values:</p>
+<pre class="lammps"><code>pair_coeff 1 1 0.01 3.0    # type 1 - type 1
+pair_coeff 2 2 0.05 3.5    # type 2 - type 2
+pair_coeff 1 2 0.025 3.25  # type 1 - type 2 (explicit override)</code></pre>
+<p><strong>When explicit is better</strong>: - Electrode-electrolyte interactions (metal-water cross terms often poorly described by mixing) - Systems with very different chemistries - When fitted to quantum calculations or experiment</p>
 </section>
 </section>
 <section id="force-field-parameters-where-they-come-from" class="level2">
 <h2 class="anchored" data-anchor-id="force-field-parameters-where-they-come-from">Force Field Parameters — Where They Come From</h2>
 <section id="water-models" class="level3">
 <h3 class="anchored" data-anchor-id="water-models">Water Models</h3>
+<p>Water models are parameterized to reproduce: - Density of liquid water at 298 K and 1 atm - Heat of vaporization - Dielectric constant (for polarizable models)</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 14%">
+<col style="width: 23%">
+<col style="width: 12%">
+<col style="width: 12%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Model</th>
-<th>Atoms</th>
+<th>Sites</th>
 <th>Bonds</th>
 <th>Angles</th>
 <th>ε (kcal/mol)</th>
@@ -501,38 +745,58 @@ sigma_12 = (sigma1 + sigma2) / 2</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td>SPC/E</td>
+<td>SPC</td>
 <td>3</td>
-<td>1</td>
+<td>2</td>
 <td>1</td>
 <td>0.155</td>
 <td>3.166</td>
-<td>Rigid; commonly used</td>
+<td>Rigid; 3-site pioneer</td>
 </tr>
 <tr class="even">
+<td>SPC/E</td>
+<td>3</td>
+<td>2</td>
+<td>1</td>
+<td>0.155</td>
+<td>3.166</td>
+<td>SPC with corrected energy</td>
+</tr>
+<tr class="odd">
 <td>TIP3P</td>
 <td>3</td>
-<td>1</td>
+<td>2</td>
 <td>1</td>
 <td>0.155</td>
 <td>3.150</td>
-<td>O-H = 0.957 Å</td>
+<td>CHARMM version; O-H=0.957Å</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>TIP4P</td>
 <td>4</td>
 <td>2</td>
 <td>1</td>
 <td>0.155</td>
 <td>3.154</td>
-<td>4-site; better density</td>
+<td>4-site; M-site for electrostatics</td>
+</tr>
+<tr class="odd">
+<td>TIP5P</td>
+<td>5</td>
+<td>2</td>
+<td>1</td>
+<td>0.155</td>
+<td>3.12</td>
+<td>5-site; better for ice</td>
 </tr>
 </tbody>
 </table>
+<p><strong>SPC/E vs TIP4P</strong>: TIP4P gives better density (~1.0 g/cm³ vs ~0.98 for SPC/E) but is slower (extra site). For electrode simulations, SPC/E is common.</p>
 </section>
 <section id="ion-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="ion-parameters">Ion Parameters</h3>
-<p>From Joung &amp; Cheatham (2008): parameters matched to specific water models.</p>
+<p>Ions are parameterized to match: - Solvation free energy - Ion-water RDF from quantum calculations - Hydration structure</p>
+<p>From Joung &amp; Cheatham (2008) for SPC/E:</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -547,31 +811,71 @@ sigma_12 = (sigma1 + sigma2) / 2</code></pre>
 <td>Na⁺</td>
 <td>0.0874</td>
 <td>3.40</td>
-<td>Matched to SPC/E</td>
+<td>Small; tightly hydrated</td>
 </tr>
 <tr class="even">
-<td>Cl⁻</td>
-<td>0.100</td>
-<td>4.45</td>
-<td>Matched to SPC/E</td>
-</tr>
-<tr class="odd">
 <td>K⁺</td>
 <td>0.100</td>
 <td>4.47</td>
-<td>Larger than Na⁺</td>
+<td>Larger; more diffuse hydration</td>
+</tr>
+<tr class="odd">
+<td>Cl⁻</td>
+<td>0.100</td>
+<td>4.45</td>
+<td>Similar size to K⁺</td>
+</tr>
+<tr class="even">
+<td>Mg²⁺</td>
+<td>0.111</td>
+<td>3.47</td>
+<td>Small; highly charged</td>
+</tr>
+<tr class="odd">
+<td>Ca²⁺</td>
+<td>0.449</td>
+<td>2.95</td>
+<td>Divalent; strong binding</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Always match ion parameters to your water model.</strong> Using NaCl parameters fitted for SPC/E with TIP4P water will give incorrect behavior.</p>
 </section>
 <section id="electrode-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="electrode-parameters">Electrode Parameters</h3>
-<p>Electrode LJ parameters are typically:</p>
-<ul>
-<li><strong>Large ε</strong>: creates hard-wall repulsion to prevent electrolyte penetration</li>
-<li><strong>No Coulomb</strong>: metal screens electrostatic interactions internally</li>
-<li><strong>Typical values</strong>: ε = 0.01–0.1 eV, σ = 2.5–3.5 Å (metal units)</li>
-</ul>
+<p>Electrodes in classical MD are typically: - <strong>Neutral atoms</strong> (no Coulomb contribution — metal screens electrostatics) - <strong>Soft repulsion</strong> (large ε prevents penetration; not real bonding) - <strong>No explicit electronic structure</strong> (classical approximation)</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 49%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Typical Values (metal units)</th>
+<th>Physical Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ε</td>
+<td>0.01–0.1 eV</td>
+<td>Soft repulsion; prevents electrolyte penetration</td>
+</tr>
+<tr class="even">
+<td>σ</td>
+<td>2.5–3.5 Å</td>
+<td>Atomic size; matches electrode lattice constant</td>
+</tr>
+<tr class="odd">
+<td>q</td>
+<td>0 (for standard LJ)</td>
+<td>No Coulomb; screening is implicit in dielectric</td>
+</tr>
+</tbody>
+</table>
+<p><strong>What LJ on electrodes does NOT model</strong>: actual metallic bonding, d-band chemistry, charge-transfer (CPM handles this separately).</p>
 </section>
 </section>
 <section id="force-field-output-connection" class="level2">
@@ -593,7 +897,7 @@ sigma_12 = (sigma1 + sigma2) / 2</code></pre>
 <tbody>
 <tr class="odd">
 <td>Increase ε (LJ)</td>
-<td>Stronger binding</td>
+<td>Stronger binding; lower energy</td>
 <td>Lower diffusivity; higher density</td>
 </tr>
 <tr class="even">
@@ -604,29 +908,57 @@ sigma_12 = (sigma1 + sigma2) / 2</code></pre>
 <tr class="odd">
 <td>Increase cutoff</td>
 <td>More accurate (to a point)</td>
-<td>Lower energy drift; more computation</td>
+<td>Lower energy drift; slower</td>
 </tr>
 <tr class="even">
 <td>Add bond constraints</td>
 <td>Remove fast vibrations</td>
-<td>Can use larger timestep; affects vibrational spectra</td>
+<td>Can use larger Δt; affects vibrational spectra</td>
 </tr>
 <tr class="odd">
 <td>Change water model</td>
-<td>Different H-bonding</td>
-<td>Different density (~1 g/cm³ vs ~0.98); different dielectric</td>
+<td>Different H-bonding structure</td>
+<td>Different density, diffusion, dielectric</td>
 </tr>
 </tbody>
 </table>
 <section id="energy-components-breakdown" class="level3">
 <h3 class="anchored" data-anchor-id="energy-components-breakdown">Energy Components Breakdown</h3>
-<pre><code>Potential Energy = Pair + Bond + Angle + Dihedral + Kspace
-                = (LJ + Coulomb_real) + bonded terms + Coulomb_recip</code></pre>
-<ul>
-<li><code>PairEng</code> dominates for simple electrolytes</li>
-<li><code>KspaceEng</code> is significant for charged systems (long-range electrostatics)</li>
-<li>Large <code>BondEng</code> or <code>AngleEng</code> indicates instability (atoms too close)</li>
-</ul>
+<pre><code>Potential Energy = PairEng + BondEng + AngleEng + DihedralEng + KspaceEng
+                 = (LJ + Coulomb_real) + bonded terms + Coulomb_recip</code></pre>
+<p>For a typical electrolyte system:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Typical Fraction</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PairEng</code></td>
+<td>60–80%</td>
+<td>Dominates for simple electrolytes</td>
+</tr>
+<tr class="even">
+<td><code>KspaceEng</code></td>
+<td>20–40%</td>
+<td>Significant for charged systems</td>
+</tr>
+<tr class="odd">
+<td><code>BondEng</code></td>
+<td>0–5%</td>
+<td>Only if flexible molecules</td>
+</tr>
+<tr class="even">
+<td><code>AngleEng</code></td>
+<td>0–2%</td>
+<td>Only if flexible angles</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Large <code>BondEng</code> or <code>AngleEng</code> = atoms too close or bonds overstretched.</strong> Check geometry.</p>
 </section>
 </section>
 <section id="common-force-field-configurations" class="level2">
@@ -636,14 +968,22 @@ sigma_12 = (sigma1 + sigma2) / 2</code></pre>
 <pre class="lammps"><code>units real
 atom_style charge
 pair_style lj/cut/coul/long 10.0
+
+# Ion LJ (Joung &amp; Cheatham for SPC/E)
 pair_coeff Na Na 0.0874 3.40
 pair_coeff Cl Cl 0.100 4.45
 pair_coeff Na Cl 0.0935 3.925    # Lorentz-Berthelot mixed
-pair_coeff OW OW 0.155 3.166    # water O (SPC/E)
-pair_coeff HW HW 0.0 0.0        # water H (no LJ)
+
+# Water LJ (SPC/E)
+pair_coeff OW OW 0.155 3.166    # water oxygen
+pair_coeff HW HW 0.0 0.0         # water hydrogen (no LJ)
+
+# Cross terms
 pair_coeff Na OW 0.114 3.28
 pair_coeff Cl OW 0.124 3.81
-kspace_style pppm 1e-5</code></pre>
+
+kspace_style pppm 1e-5
+kspace_modify order 5    # for better accuracy with ions</code></pre>
 </section>
 <section id="electrode-electrolyte-interface" class="level3">
 <h3 class="anchored" data-anchor-id="electrode-electrolyte-interface">Electrode-Electrolyte Interface</h3>
@@ -651,19 +991,35 @@ kspace_style pppm 1e-5</code></pre>
 atom_style charge
 pair_style lj/cut/coul/long 10.0
 
-# Electrode LJ (soft repulsion, not bonding)
-pair_coeff 1 1 0.01 3.0          # Au-Au (typical metal electrode)
+# Electrode-electrode (soft repulsion, not bonding)
+pair_coeff 1 1 0.01 3.0          # Au-Au typical values
+pair_coeff 2 2 0.01 3.0          # top electrode same type
+pair_coeff 1 2 0.005 3.0         # cross-interaction
 
-# Electrolyte LJ (water + ions)
-pair_coeff 2 2 0.01 3.0          # counter-electrode same type
-pair_coeff 3 3 0.155 3.166       # SPC/E water O
-pair_coeff 3 4 0.0 0.0           # water H
+# Electrolyte LJ (SPC/E water)
+pair_coeff 3 3 0.155 3.166       # water O
+pair_coeff 4 4 0.0 0.0          # water H (no LJ)
 
-# Cross terms (electrode-electrolyte)
-pair_coeff 1 3 0.005 3.1
-pair_coeff 2 3 0.005 3.1
+# Electrode-electrolyte cross terms
+# (explicit is often better than Lorentz-Berthelot)
+pair_coeff 1 3 0.005 3.1         # electrode1 - water
+pair_coeff 2 3 0.005 3.1         # electrode2 - water
+pair_coeff 1 4 0.0 0.0           # no LJ with H
+pair_coeff 2 4 0.0 0.0
 
-kspace_style pppm/electrode 1e-5</code></pre>
+kspace_style pppm/electrode 1e-5
+kspace_modify slab 3</code></pre>
+</section>
+<section id="checking-your-force-field" class="level3">
+<h3 class="anchored" data-anchor-id="checking-your-force-field">Checking Your Force Field</h3>
+<pre class="lammps"><code># After setup, use these to verify:
+compute pe all pe/atom              # per-atom potential energy
+compute ke all ke/atom             # per-atom kinetic energy
+
+# Sum should match thermo PotEng + KinEng
+# Run for a few steps and check:
+print "Total PE: $(c_pe)"
+print "Total KE: $(c_ke)"</code></pre>
 </section>
 </section>
 <section id="next-steps" class="level2">

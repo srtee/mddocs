@@ -106,35 +106,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -245,21 +216,40 @@ window.Quarto = {
   <li><a href="#what-we-are-building" id="toc-what-we-are-building" class="nav-link" data-scroll-target="#what-we-are-building">What We Are Building</a></li>
   <li><a href="#step-1-initialization" id="toc-step-1-initialization" class="nav-link" data-scroll-target="#step-1-initialization">Step 1: Initialization</a></li>
   <li><a href="#step-2-create-the-box-and-atoms" id="toc-step-2-create-the-box-and-atoms" class="nav-link" data-scroll-target="#step-2-create-the-box-and-atoms">Step 2: Create the Box and Atoms</a></li>
-  <li><a href="#step-3-force-field" id="toc-step-3-force-field" class="nav-link" data-scroll-target="#step-3-force-field">Step 3: Force Field</a></li>
-  <li><a href="#step-4-apply-the-electrode-fix" id="toc-step-4-apply-the-electrode-fix" class="nav-link" data-scroll-target="#step-4-apply-the-electrode-fix">Step 4: Apply the ELECTRODE Fix</a></li>
-  <li><a href="#step-5-integrators" id="toc-step-5-integrators" class="nav-link" data-scroll-target="#step-5-integrators">Step 5: Integrators</a></li>
+  <li><a href="#step-3-force-field" id="toc-step-3-force-field" class="nav-link" data-scroll-target="#step-3-force-field">Step 3: Force Field</a>
+  <ul class="collapse">
+  <li><a href="#electrode-parameters" id="toc-electrode-parameters" class="nav-link" data-scroll-target="#electrode-parameters">Electrode Parameters</a></li>
+  <li><a href="#electrolyte-parameters" id="toc-electrolyte-parameters" class="nav-link" data-scroll-target="#electrolyte-parameters">Electrolyte Parameters</a></li>
+  <li><a href="#cross-terms" id="toc-cross-terms" class="nav-link" data-scroll-target="#cross-terms">Cross-Terms</a></li>
+  <li><a href="#kspace-setup" id="toc-kspace-setup" class="nav-link" data-scroll-target="#kspace-setup">Kspace Setup</a></li>
+  </ul></li>
+  <li><a href="#step-4-apply-the-electrode-fix" id="toc-step-4-apply-the-electrode-fix" class="nav-link" data-scroll-target="#step-4-apply-the-electrode-fix">Step 4: Apply the ELECTRODE Fix</a>
+  <ul class="collapse">
+  <li><a href="#dynamic-potential-control" id="toc-dynamic-potential-control" class="nav-link" data-scroll-target="#dynamic-potential-control">Dynamic Potential Control</a></li>
+  </ul></li>
+  <li><a href="#step-5-integrators" id="toc-step-5-integrators" class="nav-link" data-scroll-target="#step-5-integrators">Step 5: Integrators</a>
+  <ul class="collapse">
+  <li><a href="#for-mobile-electrodes" id="toc-for-mobile-electrodes" class="nav-link" data-scroll-target="#for-mobile-electrodes">For Mobile Electrodes</a></li>
+  </ul></li>
   <li><a href="#step-6-energy-minimization" id="toc-step-6-energy-minimization" class="nav-link" data-scroll-target="#step-6-energy-minimization">Step 6: Energy Minimization</a></li>
-  <li><a href="#step-7-output-configuration" id="toc-step-7-output-configuration" class="nav-link" data-scroll-target="#step-7-output-configuration">Step 7: Output Configuration</a></li>
+  <li><a href="#step-7-output-configuration" id="toc-step-7-output-configuration" class="nav-link" data-scroll-target="#step-7-output-configuration">Step 7: Output Configuration</a>
+  <ul class="collapse">
+  <li><a href="#trajectory-output" id="toc-trajectory-output" class="nav-link" data-scroll-target="#trajectory-output">Trajectory Output</a></li>
+  </ul></li>
   <li><a href="#step-8-run" id="toc-step-8-run" class="nav-link" data-scroll-target="#step-8-run">Step 8: Run</a></li>
   <li><a href="#expected-output-what-to-look-for" id="toc-expected-output-what-to-look-for" class="nav-link" data-scroll-target="#expected-output-what-to-look-for">Expected Output: What to Look For</a>
   <ul class="collapse">
   <li><a href="#energy-conservation" id="toc-energy-conservation" class="nav-link" data-scroll-target="#energy-conservation">Energy Conservation</a></li>
   <li><a href="#electrode-charges" id="toc-electrode-charges" class="nav-link" data-scroll-target="#electrode-charges">Electrode Charges</a></li>
-  <li><a href="#ion-density-profile" id="toc-ion-density-profile" class="nav-link" data-scroll-target="#ion-density-profile">Ion Density Profile</a></li>
-  <li><a href="#potential-profile" id="toc-potential-profile" class="nav-link" data-scroll-target="#potential-profile">Potential Profile</a></li>
+  <li><a href="#capacitance-calculation" id="toc-capacitance-calculation" class="nav-link" data-scroll-target="#capacitance-calculation">Capacitance Calculation</a></li>
   </ul></li>
   <li><a href="#complete-input-script" id="toc-complete-input-script" class="nav-link" data-scroll-target="#complete-input-script">Complete Input Script</a></li>
-  <li><a href="#post-processing-computing-capacitance" id="toc-post-processing-computing-capacitance" class="nav-link" data-scroll-target="#post-processing-computing-capacitance">Post-Processing: Computing Capacitance</a></li>
+  <li><a href="#post-processing" id="toc-post-processing" class="nav-link" data-scroll-target="#post-processing">Post-Processing</a>
+  <ul class="collapse">
+  <li><a href="#computing-capacitance-from-trajectory" id="toc-computing-capacitance-from-trajectory" class="nav-link" data-scroll-target="#computing-capacitance-from-trajectory">Computing Capacitance from Trajectory</a></li>
+  <li><a href="#computing-ion-density-profile" id="toc-computing-ion-density-profile" class="nav-link" data-scroll-target="#computing-ion-density-profile">Computing Ion Density Profile</a></li>
+  <li><a href="#computing-potential-profile" id="toc-computing-potential-profile" class="nav-link" data-scroll-target="#computing-potential-profile">Computing Potential Profile</a></li>
+  </ul></li>
   <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
   </ul></li>
   </ul>
@@ -285,15 +275,17 @@ window.Quarto = {
 <div class="callout-body-container callout-body">
 <ul>
 <li>Step-by-step construction of an electrode-electrolyte input script</li>
-<li>Physical meaning of each section</li>
+<li>Physical meaning of each section with justification</li>
 <li>Expected output and how to interpret it</li>
-<li>Post-processing for common observables</li>
+<li>Post-processing for common observables (capacitance, density profiles, potential)</li>
+<li>Complete working script you can adapt for your system</li>
 </ul>
 </div>
 </div>
 <section id="what-we-are-building" class="level2">
 <h2 class="anchored" data-anchor-id="what-we-are-building">What We Are Building</h2>
 <p>A planar electrode supercapacitor with: - Two gold electrodes (top and bottom) - SPC/E water with 1M NaCl electrolyte - Constant potential mode (1 V difference) - NVT ensemble at 300 K</p>
+<p><strong>Goal</strong>: By the end, you should understand every line of this input and know how to modify it for your own system.</p>
 </section>
 <section id="step-1-initialization" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-initialization">Step 1: Initialization</h2>
@@ -303,57 +295,69 @@ boundary p p f</code></pre>
 <p><strong>Physical meaning</strong>:</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 33%">
-<col style="width: 66%">
+<col style="width: 28%">
+<col style="width: 56%">
+<col style="width: 15%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Command</th>
 <th>Physical Meaning</th>
+<th>Why</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>units metal</code></td>
-<td>Å, eV, ps — standard for materials</td>
+<td>Å, eV, ps</td>
+<td>Standard for materials; electrode parameters usually in eV</td>
 </tr>
 <tr class="even">
 <td><code>atom_style charge</code></td>
-<td>Each atom has charge — needed for electrostatics</td>
+<td>Each atom has charge</td>
+<td>Required for electrostatics; no bonds needed for simple electrolytes</td>
 </tr>
 <tr class="odd">
 <td><code>boundary p p f</code></td>
-<td>Slab geometry: periodic in x,y; non-periodic in z</td>
+<td>Slab geometry</td>
+<td>Two electrode surfaces; vacuum region above electrolyte</td>
 </tr>
 </tbody>
 </table>
-<p>The slab geometry means we have two electrode surfaces exposed to vacuum (or a vacuum region above the electrolyte).</p>
+<p><strong>Why not <code>units real</code>?</strong> Many electrode force field parameters are published in eV (metal units). Using <code>units real</code> would require converting kcal/mol to eV (factor of 23.06). If your parameters are in kcal/mol, use <code>units real</code>.</p>
 </section>
 <section id="step-2-create-the-box-and-atoms" class="level2">
 <h2 class="anchored" data-anchor-id="step-2-create-the-box-and-atoms">Step 2: Create the Box and Atoms</h2>
-<pre class="lammps"><code>region box block 0 20 0 20 0 60
-create_box 3 box
+<pre class="lammps"><code>variable Lx equal 20
+variable Ly equal 20
+variable Lz equal 60
 
-region bot block 0 20 0 20 0 5
-region top block 0 20 0 20 55 60
-region elyte block 0 20 0 20 5 55
+region box block 0 $Lx 0 $Ly 0 $Lz
+create_box 5 box    # 1=bot electrode, 2=top, 3=O, 4=H, 5=Na, 6=Cl</code></pre>
+<p><strong>Box dimensions</strong>: 20×20×60 Å = 24,000 Å³ For water at 1 g/cm³, this holds ~480 water molecules (the electrolyte region is 20×20×50 Å = 20,000 Å³).</p>
+<pre class="lammps"><code># Define regions
+region bot block 0 $Lx 0 $Ly 0 5
+region top block 0 $Lx 0 $Ly 55 $Lz
+region elyte block 0 $Lx 0 $Ly 5 55
 
+# Create atoms
 create_atoms 1 region bot    # bottom electrode (type 1)
 create_atoms 2 region top    # top electrode (type 2)
-create_atoms 3 region elyte  # electrolyte (type 3)
-
-group bot region bot
-group top region top
-group elyte region elyte
-group electrode union bot top
-group mobile subtract all electrode</code></pre>
-<p><strong>Physical meaning</strong>:</p>
+# Water and ions: use moltemplate, packmol, or convert from structure file</code></pre>
+<p><strong>Physical meaning of regions</strong>:</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 12%">
+<col style="width: 19%">
+<col style="width: 51%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Region</th>
 <th>Size</th>
 <th>Purpose</th>
+<th>Atom Count (estimate)</th>
 </tr>
 </thead>
 <tbody>
@@ -361,80 +365,81 @@ group mobile subtract all electrode</code></pre>
 <td><code>box</code></td>
 <td>20×20×60 Å</td>
 <td>Full simulation cell</td>
+<td>—</td>
 </tr>
 <tr class="even">
 <td><code>bot</code></td>
 <td>20×20×5 Å</td>
-<td>Bottom electrode (gold atoms)</td>
+<td>Bottom electrode</td>
+<td>~200 Au atoms</td>
 </tr>
 <tr class="odd">
 <td><code>top</code></td>
 <td>20×20×5 Å</td>
-<td>Top electrode (gold atoms)</td>
+<td>Top electrode</td>
+<td>~200 Au atoms</td>
 </tr>
 <tr class="even">
 <td><code>elyte</code></td>
 <td>20×20×50 Å</td>
-<td>Water + ions between electrodes</td>
+<td>Water + ions between</td>
+<td>~480 water + 10 Na + 10 Cl</td>
 </tr>
 </tbody>
 </table>
-<p>The 50 Å gap between electrodes is large enough to avoid electrode-electrode interactions through periodic images in x,y.</p>
-<p><strong>Atom type convention</strong>: Using different types for bottom and top electrodes allows independent control of their potentials.</p>
+<p><strong>Why 50 Å gap?</strong> The electrode separation should be large enough that periodic images in x,y don’t interact through the electrolyte. For 1M salt, Debye length ≈ 10 Å, so 50 Å is sufficient.</p>
+<pre class="lammps"><code># Define groups
+group bot region bot
+group top region top
+group elyte region elyte
+group electrode union bot top
+group mobile subtract all electrode    # electrolyte only</code></pre>
 </section>
 <section id="step-3-force-field" class="level2">
 <h2 class="anchored" data-anchor-id="step-3-force-field">Step 3: Force Field</h2>
-<pre class="lammps"><code>pair_style lj/cut/coul/long 10.0
+<pre class="lammps"><code>pair_style lj/cut/coul/long 10.0</code></pre>
+<p><strong>Why <code>lj/cut/coul/long</code>?</strong> We need: - LJ for short-range repulsion/attraction - Coulomb for ionic interactions - <code>long</code> suffix = long-range handled by kspace (pppm/electrode)</p>
+<section id="electrode-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="electrode-parameters">Electrode Parameters</h3>
+<pre class="lammps"><code># Electrode-electrode (soft repulsion, no chemical bonding)
+pair_coeff 1 1 0.01 3.0    # ε=0.01 eV, σ=3.0 Å (soft repulsion)
+pair_coeff 2 2 0.01 3.0    # same for top
+pair_coeff 1 2 0.005 3.0   # cross-term (smaller)</code></pre>
+<p><strong>Why ε=0.01 eV?</strong> This is a soft repulsion that prevents electrolyte atoms from penetrating the electrode. Real metallic bonding is much stronger but is not modeled (CPM handles charge response instead).</p>
+<p><strong>Why σ=3.0 Å?</strong> Approximately matches Au atomic radius. The electrode atoms are just “soft spheres” preventing overlap.</p>
+</section>
+<section id="electrolyte-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="electrolyte-parameters">Electrolyte Parameters</h3>
+<pre class="lammps"><code># Water LJ (SPC/E)
+pair_coeff 3 3 0.155 3.166    # O: ε=0.155 eV, σ=3.166 Å
+pair_coeff 4 4 0.0 0.0        # H: no LJ (charged but no van der Waals)
 
-# Electrode-electrode (soft repulsion, no chemical bonding)
-pair_coeff 1 1 0.01 3.0    # Au-Au LJ (soft)
-pair_coeff 2 2 0.01 3.0    # Au-Au LJ (top)
-pair_coeff 1 2 0.005 3.0   # cross-interaction (smaller)
+# Ion LJ (Joung &amp; Cheatham for SPC/E)
+pair_coeff 5 5 0.0874 3.40    # Na: ε=0.0874 eV, σ=3.40 Å
+pair_coeff 6 6 0.100 4.45      # Cl: ε=0.100 eV, σ=4.45 Å</code></pre>
+</section>
+<section id="cross-terms" class="level3">
+<h3 class="anchored" data-anchor-id="cross-terms">Cross-Terms</h3>
+<pre class="lammps"><code># Electrode-water
+pair_coeff 1 3 0.005 3.1    # bot-O: mixed using Lorentz-Berthelot
+pair_coeff 2 3 0.005 3.1    # top-O: same
+pair_coeff 1 4 0.0 0.0      # bot-H: no LJ
+pair_coeff 2 4 0.0 0.0      # top-H: no LJ
 
-# Electrolyte LJ (SPC/E water O)
-pair_coeff 3 3 0.155 3.166
+# Ion-water (important for solvation)
+pair_coeff 5 3 0.114 3.28    # Na-O
+pair_coeff 6 3 0.124 3.81    # Cl-O
+pair_coeff 5 4 0.0 0.0       # Na-H: no LJ
+pair_coeff 6 4 0.0 0.0       # Cl-H: no LJ
 
-# Cross terms: electrode-electrolyte
-pair_coeff 1 3 0.005 3.1    # bot-water
-pair_coeff 2 3 0.005 3.1    # top-water
+# Ion-electrode
+pair_coeff 1 5 0.005 3.2    # bot-Na
+pair_coeff 2 5 0.005 3.2    # top-Na
+pair_coeff 1 6 0.005 3.7    # bot-Cl
+pair_coeff 2 6 0.005 3.7    # top-Cl
 
-# Note: we need all unique pair combinations defined
-# If water has H atoms (type 4), also define:
-# pair_coeff 1 4, 2 4, 3 4, etc.
-
-kspace_style pppm/electrode 1e-5
-kspace_modify slab 3</code></pre>
-<p><strong>Physical meaning</strong>:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 39%">
-<col style="width: 60%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Parameter</th>
-<th>Physical Effect</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>epsilon = 0.01 eV</code></td>
-<td>Electrode-electrode: very soft (prevents overlap, no bonding)</td>
-</tr>
-<tr class="even">
-<td><code>epsilon = 0.155 eV</code></td>
-<td>Water O: standard O-O LJ</td>
-</tr>
-<tr class="odd">
-<td><code>sigma = 3.0-3.2 Å</code></td>
-<td>Appropriate atomic sizes</td>
-</tr>
-<tr class="even">
-<td><code>cutoff = 10 Å</code></td>
-<td>Standard for water; energy drift &lt; 0.1%</td>
-</tr>
-</tbody>
-</table>
+# Ion-ion
+pair_coeff 5 6 0.0935 3.925  # Na-Cl (Lorentz-Berthelot)</code></pre>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -445,14 +450,22 @@ kspace_modify slab 3</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>All unique atom type pairs must be defined. If type 4 (water H) exists, you need <code>pair_coeff * 4 ...</code> entries or LAMMPS will error. Use <code>*</code> for wildcard: <code>pair_coeff * 4 0.0 0.0</code> (no LJ for H).</p>
+<p>All unique atom type pairs must be defined. LAMMPS will error if any pair is missing. Use <code>*</code> for wildcards: <code>pair_coeff * 4 0.0 0.0</code> means “all types with type 4 have zero LJ”.</p>
 </div>
 </div>
+</section>
+<section id="kspace-setup" class="level3">
+<h3 class="anchored" data-anchor-id="kspace-setup">Kspace Setup</h3>
+<pre class="lammps"><code>kspace_style pppm/electrode 1e-5
+kspace_modify slab 3</code></pre>
+<p><strong>Why <code>pppm/electrode</code>?</strong> Standard pppm doesn’t provide the electrode-electrode interaction matrix that ELECTRODE needs.</p>
+<p><strong>Why <code>slab 3</code>?</strong> Non-periodic z requires the 2D Ewald correction. The <code>3</code> means the third dimension (z) is non-periodic.</p>
+</section>
 </section>
 <section id="step-4-apply-the-electrode-fix" class="level2">
 <h2 class="anchored" data-anchor-id="step-4-apply-the-electrode-fix">Step 4: Apply the ELECTRODE Fix</h2>
 <pre class="lammps"><code>fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on</code></pre>
-<p><strong>Physical meaning</strong>:</p>
+<p><strong>What each argument means</strong>:</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -463,24 +476,24 @@ kspace_modify slab 3</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>group</code></td>
 <td><code>bot</code></td>
+<td>group</td>
 <td>Apply to bottom electrode</td>
 </tr>
 <tr class="even">
-<td><code>potential</code></td>
-<td><code>-1.0 V</code></td>
+<td><code>-1.0</code></td>
+<td>potential (V)</td>
 <td>Bottom electrode held at -1 V</td>
 </tr>
 <tr class="odd">
-<td><code>eta</code></td>
-<td><code>1.805 Å⁻¹</code></td>
+<td><code>1.805</code></td>
+<td>eta (Å⁻¹)</td>
 <td>Gaussian smearing width</td>
 </tr>
 <tr class="even">
-<td><code>couple top</code></td>
-<td><code>1.0 V</code></td>
-<td>Top electrode held at +1 V</td>
+<td><code>couple top 1.0</code></td>
+<td>couple</td>
+<td>Top electrode at +1 V</td>
 </tr>
 <tr class="odd">
 <td><code>symm on</code></td>
@@ -489,7 +502,17 @@ kspace_modify slab 3</code></pre>
 </tr>
 </tbody>
 </table>
-<p><strong>What happens during simulation</strong>: 1. At each timestep, the kspace solver computes the electrostatic environment 2. ELECTRODE computes what charges on bottom and top electrodes would produce the target potentials 3. Those charges are assigned to electrode atoms (distributed according to Gaussian) 4. Forces are computed with these induced charges 5. Charges are updated at the next step based on new electrolyte configuration</p>
+<p><strong>Why <code>symm on</code>?</strong> For a symmetric capacitor, the total charge must be zero. With <code>symm on</code>, if bot has charge -Q, top automatically has +Q.</p>
+<p><strong>The eta value (1.805 Å⁻¹)</strong>: This is the standard value for metallic electrodes. It determines how the electrode charge is distributed — larger eta = narrower distribution (more like point charge).</p>
+<section id="dynamic-potential-control" class="level3">
+<h3 class="anchored" data-anchor-id="dynamic-potential-control">Dynamic Potential Control</h3>
+<pre class="lammps"><code># Linear sweep (cyclic voltammetry simulation)
+variable V equal ramp(-1.0, 1.0)
+fix fxconp bot electrode/conp v_V 1.805 couple top 1.0</code></pre>
+<pre class="lammps"><code># Sinusoidal (AC impedance simulation)
+variable V equal "2.0 * sin(time * 0.01)"
+fix fxconp bot electrode/conp v_V 1.805</code></pre>
+</section>
 </section>
 <section id="step-5-integrators" class="level2">
 <h2 class="anchored" data-anchor-id="step-5-integrators">Step 5: Integrators</h2>
@@ -512,108 +535,165 @@ fix mytemp elyte langevin 300.0 300.0 100.0 12345</code></pre>
 <tbody>
 <tr class="odd">
 <td><code>fix frozen all nve</code></td>
-<td>No dynamics on any atoms</td>
-<td>Electrodes are static (default assumption)</td>
+<td>No dynamics on frozen atoms</td>
+<td>Electrodes are static</td>
 </tr>
 <tr class="even">
 <td><code>fix mytemp elyte langevin</code></td>
-<td>Langevin thermostat on electrolyte</td>
-<td>Controls temperature; adds noise for ergodicity</td>
+<td>Langevin thermostat</td>
+<td>Controls T; ergodicity</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Alternative for mobile electrodes</strong>:</p>
+<p><strong>Why Langevin?</strong> For electrode-electrolyte systems, Langevin is often preferred because: 1. It handles heterogeneous dynamics well (electrolyte may have slow ions) 2. Stochastic term helps escape metastable states 3. No “ghost” forces from thermostat coupling</p>
+<p><strong>Damping time of 100 fs</strong>: This is appropriate for water at 300 K. Too small = over-damped; too large = slow equipartition.</p>
+<section id="for-mobile-electrodes" class="level3">
+<h3 class="anchored" data-anchor-id="for-mobile-electrodes">For Mobile Electrodes</h3>
 <pre class="lammps"><code>fix elec_nvt electrode nvt temp 300.0 300.0 100.0
 fix elyte_nvt elyte nvt temp 300.0 300.0 100.0</code></pre>
+<p>Or with Langevin on both:</p>
+<pre class="lammps"><code>fix elec_langevin electrode langevin 300.0 300.0 100.0 12345
+fix elyte_langevin elyte langevin 300.0 300.0 100.0 54321</code></pre>
+</section>
 </section>
 <section id="step-6-energy-minimization" class="level2">
 <h2 class="anchored" data-anchor-id="step-6-energy-minimization">Step 6: Energy Minimization</h2>
 <pre class="lammps"><code>minimize 1e-6 1e-9 1000 10000</code></pre>
-<p><strong>Why</strong>: Before dynamics, the system has atomic overlaps and bad contacts. Running minimization with <code>minimize</code> command: - Applies conjugate gradient / steepest descent - Reduces forces to acceptable level - Prevents “blow up” in first dynamics steps</p>
-<p><strong>Parameters</strong>: <code>1e-6</code> (force tolerance), <code>1e-9</code> (energy tolerance), <code>1000</code> (max iterations), <code>10000</code> (max force evaluations)</p>
+<p><strong>Why</strong>: Before dynamics, the system has atomic overlaps and bad contacts. Minimization: - Applies conjugate gradient or steepest descent - Reduces forces to acceptable level - Prevents “blow up” in first dynamics steps</p>
+<p><strong>Parameters</strong>: - <code>1e-6</code> = force tolerance (forces &lt; this are considered converged) - <code>1e-9</code> = energy tolerance - <code>1000</code> = max iterations - <code>10000</code> = max force evaluations</p>
+<p><strong>What to expect</strong>: You should see energy decrease over many iterations. If it doesn’t converge, check for: - Overlapping atoms - Missing pair coefficients - Invalid geometry</p>
 </section>
 <section id="step-7-output-configuration" class="level2">
 <h2 class="anchored" data-anchor-id="step-7-output-configuration">Step 7: Output Configuration</h2>
 <pre class="lammps"><code>thermo 100
-thermo_style custom step temp pe ke vol density f_fxconp[1]
-
-dump 1 all custom 100 traj.lammpstrj id type x y z q
-dump 2 all dcd 100 traj.dcd</code></pre>
-<p><strong>What to expect in output</strong>:</p>
+thermo_style custom step temp pe ke vol density f_fxconp[1] f_fxconp[2] f_fxconp[3] f_fxconp[5] f_fxconp[6]</code></pre>
+<p><strong>What each output column means</strong>:</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 48%">
+<col style="width: 29%">
+<col style="width: 33%">
+<col style="width: 37%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Quantity</th>
+<th>Column</th>
+<th>Meaning</th>
 <th>Expected</th>
-<th>Physical Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>Temp</code></td>
+<td><code>step</code></td>
+<td>Timestep number</td>
+<td>Increases by 100</td>
+</tr>
+<tr class="even">
+<td><code>temp</code></td>
+<td>Temperature</td>
 <td>300 ± 15 K</td>
-<td>Thermostat working</td>
-</tr>
-<tr class="even">
-<td><code>PotEng</code></td>
-<td>Stable (~-50000 eV for this size)</td>
-<td>Force field reasonable</td>
 </tr>
 <tr class="odd">
-<td><code>KinEng</code></td>
-<td>Fluctuates with T</td>
+<td><code>pe</code></td>
+<td>Potential energy</td>
+<td>Negative; stable</td>
+</tr>
+<tr class="even">
+<td><code>ke</code></td>
 <td>Kinetic energy</td>
-</tr>
-<tr class="even">
-<td><code>Vol</code></td>
-<td>Constant (NVT)</td>
-<td>Box unchanged</td>
+<td>Fluctuates with T</td>
 </tr>
 <tr class="odd">
-<td><code>Density</code></td>
-<td>~1.0 g/cm³ (water region)</td>
-<td>Correct water density</td>
+<td><code>vol</code></td>
+<td>Volume</td>
+<td>Constant (NVT)</td>
 </tr>
 <tr class="even">
+<td><code>density</code></td>
+<td>Mass/volume</td>
+<td>~1.0 g/cm³ for water</td>
+</tr>
+<tr class="odd">
 <td><code>f_fxconp[1]</code></td>
-<td>~0 (small fluctuations)</td>
-<td>Energy conserved by fix</td>
+<td>Electrode fix energy</td>
+<td>~0, small fluctuations</td>
+</tr>
+<tr class="even">
+<td><code>f_fxconp[2]</code></td>
+<td>Bottom electrode potential</td>
+<td>Should be -1.0 V (convergence check)</td>
+</tr>
+<tr class="odd">
+<td><code>f_fxconp[3]</code></td>
+<td>Top electrode potential</td>
+<td>Should be +1.0 V</td>
+</tr>
+<tr class="even">
+<td><code>f_fxconp[5]</code></td>
+<td>Bottom electrode charge</td>
+<td>Negative; magnitude depends on capacitance</td>
+</tr>
+<tr class="odd">
+<td><code>f_fxconp[6]</code></td>
+<td>Top electrode charge</td>
+<td>Positive; = -Q_bot</td>
 </tr>
 </tbody>
 </table>
+<section id="trajectory-output" class="level3">
+<h3 class="anchored" data-anchor-id="trajectory-output">Trajectory Output</h3>
+<pre class="lammps"><code>dump 1 all custom 100 traj.lammpstrj id type x y z q
+dump 2 all dcd 100 traj.dcd    # binary format; smaller</code></pre>
+<p><strong>For large trajectories</strong>: Use DCD format (10-100× smaller). For analysis, read with MDAnalysis or mdtraj.</p>
+</section>
 </section>
 <section id="step-8-run" class="level2">
 <h2 class="anchored" data-anchor-id="step-8-run">Step 8: Run</h2>
 <pre class="lammps"><code>run 10000</code></pre>
-<p>At 2 fs timestep, this is 20 ps of simulation. For meaningful statistics:</p>
+<p>At 1 fs timestep: 10 ps simulation At 2 fs timestep: 20 ps simulation</p>
+<p><strong>Simulation time needed for different properties</strong>:</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 42%">
+<col style="width: 19%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Property</th>
-<th>Simulation Time Needed</th>
+<th>Time Scale</th>
+<th>Why</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
+<td>Minimization</td>
+<td>&lt; 1 ps</td>
+<td>Remove bad contacts</td>
+</tr>
+<tr class="even">
 <td>Equilibration</td>
 <td>100–500 ps</td>
-</tr>
-<tr class="even">
-<td>Double-layer formation</td>
-<td>100–500 ps</td>
+<td>System reaches steady state</td>
 </tr>
 <tr class="odd">
-<td>Diffusion (MSD)</td>
-<td>1–10 ns</td>
+<td>Double-layer formation</td>
+<td>100–500 ps</td>
+<td>Ions redistribute near electrodes</td>
 </tr>
 <tr class="even">
+<td>Diffusion (MSD)</td>
+<td>1–10 ns</td>
+<td>Statistical accuracy for D</td>
+</tr>
+<tr class="odd">
 <td>Capacitance (steady)</td>
 <td>1–10 ns</td>
+<td>Need averaged Q at each V</td>
+</tr>
+<tr class="even">
+<td>Capacitance (frequency)</td>
+<td>10–100 ns</td>
+<td>For AC response</td>
 </tr>
 </tbody>
 </table>
@@ -622,93 +702,102 @@ dump 2 all dcd 100 traj.dcd</code></pre>
 <h2 class="anchored" data-anchor-id="expected-output-what-to-look-for">Expected Output: What to Look For</h2>
 <section id="energy-conservation" class="level3">
 <h3 class="anchored" data-anchor-id="energy-conservation">Energy Conservation</h3>
-<p>In a well-behaved simulation: - <code>TotEng</code> should drift &lt; 0.1% over the run - <code>f_fxconp[1]</code> (fix energy) should fluctuate around constant</p>
-<p>If <code>TotEng</code> increases monotonically: something is wrong (timestep, cutoff, overlap).</p>
+<p>In a well-behaved simulation: - <code>TotEng</code> should drift &lt; 0.1% over 10 ps - <code>f_fxconp[1]</code> should fluctuate around constant</p>
+<p><strong>How to check</strong>: After running, plot <code>TotEng</code> vs step in the log file. If it increases monotonically: - Timestep too large → reduce to 0.5 or 1 fs - Cutoff too small → increase to 12 Å - Atoms overlapping → re-minimize</p>
 </section>
 <section id="electrode-charges" class="level3">
 <h3 class="anchored" data-anchor-id="electrode-charges">Electrode Charges</h3>
 <pre class="lammps"><code>variable Q_bot equal f_fxconp[5]
 variable Q_top equal f_fxconp[6]
-fix prop all print 100 "Q_bot = $(v_Q_bot)" file charge_vs_time.txt</code></pre>
-<p>The charges should: - Start at some value based on initial guess - Equilibrate within 10–100 ps - Fluctuate around equilibrium value (thermal noise)</p>
+fix printQ all print 100 "Q_bot = $(v_Q_bot) Q_top = $(v_Q_top)" file charge_vs_time.txt</code></pre>
+<p>The charges should: 1. Start at initial guess (based on zero voltage) 2. Equilibrate within 10–100 ps 3. Fluctuate around equilibrium (thermal noise)</p>
+<p><strong>Charge magnitude</strong>: For a 20×20 Å electrode at 1 V in 1M NaCl: - Capacitance ≈ 10 μF/cm² - Electrode area = 400 Å² = 4×10⁻¹⁴ m² - Q = C × V = 10×10⁻⁶ × 4×10⁻¹⁴ × 1 = 4×10⁻¹⁹ C = 2.5 e - Expect |Q_bot| ≈ 2–5 electrons worth of charge</p>
 </section>
-<section id="ion-density-profile" class="level3">
-<h3 class="anchored" data-anchor-id="ion-density-profile">Ion Density Profile</h3>
-<p>Post-processing (Python + MDAnalysis):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> mdtraj <span class="im">as</span> md</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>traj <span class="op">=</span> md.load(<span class="st">'traj.dcd'</span>, top<span class="op">=</span><span class="st">'data.lammps'</span>)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute ion density along z</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> traj.xyz[:, :, <span class="dv">2</span>]  <span class="co"># z-coordinates</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Bin by z and compute density</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Expected: oscillatory density near electrode surfaces (double layer), then bulk.</p>
-</section>
-<section id="potential-profile" class="level3">
-<h3 class="anchored" data-anchor-id="potential-profile">Potential Profile</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Bin atoms by z</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute average charge per bin</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Integrate Poisson's equation to get potential</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Expected: sharp drop near electrodes, linear in bulk electrolyte (for 1:1 salt at low concentration).</p>
+<section id="capacitance-calculation" class="level3">
+<h3 class="anchored" data-anchor-id="capacitance-calculation">Capacitance Calculation</h3>
+<p>For a symmetric two-electrode system:</p>
+<pre class="lammps"><code># Run at V = 0.5 V
+fix fxconp bot electrode/conp -0.25 1.805 couple top 0.25 symm on
+run 10000
+variable Q_05V equal f_fxconp[5]
+
+# Run at V = 1.5 V  
+# (change potential and run again)
+variable Q_15V equal f_fxconp[5]
+
+# Capacitance = dQ/dV ≈ (Q_15V - Q_05V) / (1.5 - 0.5)</code></pre>
+<p>For more accuracy, use multiple voltages and fit the Q-V curve.</p>
 </section>
 </section>
 <section id="complete-input-script" class="level2">
 <h2 class="anchored" data-anchor-id="complete-input-script">Complete Input Script</h2>
 <pre class="lammps"><code># ============================================
 # Constant Potential Supercapacitor
-# SPC/E water + 1M NaCl between Au electrodes
+# Au electrodes, SPC/E water, 1M NaCl
 # ============================================
 
 units metal
 atom_style charge
 boundary p p f
 
-# --- Box and geometry ---
+# --- Variables ---
 variable Lx equal 20
 variable Ly equal 20
 variable Lz equal 60
 
+# --- Box ---
 region box block 0 $Lx 0 $Ly 0 $Lz
-create_box 4 box    # 1=bot, 2=top, 3=O, 4=H (SPC/E has explicit H)
+create_box 6 box    # 1=bot Au, 2=top Au, 3=O, 4=H, 5=Na, 6=Cl
 
+# --- Regions ---
 region bot block 0 $Lx 0 $Ly 0 5
 region top block 0 $Lx 0 $Ly 55 $Lz
 region elyte block 0 $Lx 0 $Ly 5 55
 
+# --- Electrode atoms ---
 create_atoms 1 region bot
 create_atoms 2 region top
 
-# Water molecules (pre-generated positions preferred)
-# create_atoms 3 region elyte would add O atoms
-# For SPC/E: need explicit H positions
+# --- Electrolyte (pre-generated positions recommended) ---
+# For this example, assuming water/ions already placed
 
-# Define groups
+# --- Groups ---
 group bot region bot
 group top region top
 group elyte region elyte
 group electrode union bot top
+group mobile subtract all electrode
 
 # --- Force field ---
 pair_style lj/cut/coul/long 10.0
 
-# Electrode LJ
+# Electrode-electrode
 pair_coeff 1 1 0.01 3.0
 pair_coeff 2 2 0.01 3.0
 pair_coeff 1 2 0.005 3.0
 
-# Water O LJ (SPC/E)
-pair_coeff 3 3 0.155 3.166
-pair_coeff 4 4 0.0 0.0     # H: no LJ
+# Water (SPC/E)
+pair_coeff 3 3 0.155 3.166    # O
+pair_coeff 4 4 0.0 0.0        # H
 
-# Electrode-water cross terms
+# Ions
+pair_coeff 5 5 0.0874 3.40    # Na
+pair_coeff 6 6 0.100 4.45     # Cl
+
+# Cross terms
 pair_coeff 1 3 0.005 3.1
 pair_coeff 2 3 0.005 3.1
 pair_coeff 1 4 0.0 0.0
 pair_coeff 2 4 0.0 0.0
-
-# Water O-H and H-H
-pair_coeff 3 4 0.0 0.0
-pair_coeff 4 3 0.0 0.0
+pair_coeff 5 3 0.114 3.28
+pair_coeff 6 3 0.124 3.81
+pair_coeff 5 4 0.0 0.0
+pair_coeff 6 4 0.0 0.0
+pair_coeff 1 5 0.005 3.2
+pair_coeff 2 5 0.005 3.2
+pair_coeff 1 6 0.005 3.7
+pair_coeff 2 6 0.005 3.7
+pair_coeff 5 6 0.0935 3.925
 
 kspace_style pppm/electrode 1e-5
 kspace_modify slab 3
@@ -722,11 +811,11 @@ fix mytemp elyte langevin 300.0 300.0 100.0 12345
 
 # --- Output ---
 thermo 100
-thermo_style custom step temp pe ke vol density f_fxconp[1]
+thermo_style custom step temp pe ke vol density f_fxconp[1] f_fxconp[2] f_fxconp[3] f_fxconp[5] f_fxconp[6]
 
 variable Q_bot equal f_fxconp[5]
 variable Q_top equal f_fxconp[6]
-fix prints all print 100 "Q_bot = $(v_Q_bot) Q_top = $(v_Q_top)" screen no
+fix printQ all print 100 "Q_bot = $(v_Q_bot) Q_top = $(v_Q_top)"
 
 dump 1 all custom 100 traj.lammpstrj id type x y z q
 dump 2 all dcd 100 traj.dcd
@@ -735,12 +824,60 @@ dump 2 all dcd 100 traj.dcd
 minimize 1e-6 1e-9 1000 10000
 run 10000</code></pre>
 </section>
-<section id="post-processing-computing-capacitance" class="level2">
-<h2 class="anchored" data-anchor-id="post-processing-computing-capacitance">Post-Processing: Computing Capacitance</h2>
-<p>The differential capacitance:</p>
-<p><span class="math display">\[C = \frac{dQ}{dV}\]</span></p>
-<p>For a symmetric capacitor: 1. Run at V = 0 V (or small V) 2. Run at V = 1 V 3. Compute Q at each 4. C = ΔQ / ΔV</p>
-<p>In practice, use multiple voltages and fit the Q-V curve.</p>
+<section id="post-processing" class="level2">
+<h2 class="anchored" data-anchor-id="post-processing">Post-Processing</h2>
+<section id="computing-capacitance-from-trajectory" class="level3">
+<h3 class="anchored" data-anchor-id="computing-capacitance-from-trajectory">Computing Capacitance from Trajectory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> mdtraj <span class="im">as</span> md</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load trajectory</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>traj <span class="op">=</span> md.load(<span class="st">'traj.dcd'</span>, top<span class="op">=</span><span class="st">'data.lammps'</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Get charge from trajectory (if saved) or from log</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co"># For log file parsing:</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>charges <span class="op">=</span> []</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'log.lammps'</span>) <span class="im">as</span> f:</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> line <span class="kw">in</span> f:</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="st">'f_fxconp[5]'</span> <span class="kw">in</span> line:</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Parse charge from line</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">pass</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Or access from compute if available:</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="co"># compute_charge all property/atom q</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="co"># dump 1 all custom 100 traj.lammpstrj id type x y z q</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute capacitance</span></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="co"># C = dQ/dV from multiple voltage runs</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="computing-ion-density-profile" class="level3">
+<h3 class="anchored" data-anchor-id="computing-ion-density-profile">Computing Ion Density Profile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Bin ions by z-coordinate</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>z_bins <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">60</span>, <span class="dv">100</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>z_ion <span class="op">=</span> traj.xyz[:, ion_indices, <span class="dv">2</span>]  <span class="co"># z-coords of ions only</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Count in each bin</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>density, edges <span class="op">=</span> np.histogram(z_ion.flatten(), bins<span class="op">=</span>z_bins)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>plt.plot(z_bins[:<span class="op">-</span><span class="dv">1</span>], density)</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'z (Å)'</span>)</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Ion count'</span>)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Expected: oscillatory density near electrode surfaces (double layer), bulk density farther away.</p>
+</section>
+<section id="computing-potential-profile" class="level3">
+<h3 class="anchored" data-anchor-id="computing-potential-profile">Computing Potential Profile</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Bin by z</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>z_bins <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">60</span>, <span class="dv">50</span>)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co"># For each bin, compute average charge</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Then integrate Poisson's equation:</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co"># d²φ/dz² = -ρ(z)/ε₀</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Or use pytim for automatic interface detection and analysis</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 </section>
 <section id="next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>

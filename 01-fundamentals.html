@@ -106,6 +106,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -213,18 +242,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#sec-fundamentals" id="toc-sec-fundamentals" class="nav-link active" data-scroll-target="#sec-fundamentals">Molecular Dynamics Fundamentals</a>
   <ul class="collapse">
-  <li><a href="#the-core-loop" id="toc-the-core-loop" class="nav-link" data-scroll-target="#the-core-loop">The Core Loop</a></li>
+  <li><a href="#the-core-loop" id="toc-the-core-loop" class="nav-link" data-scroll-target="#the-core-loop">The Core Loop</a>
+  <ul class="collapse">
+  <li><a href="#why-this-is-computationally-expensive" id="toc-why-this-is-computationally-expensive" class="nav-link" data-scroll-target="#why-this-is-computationally-expensive">Why This Is Computationally Expensive</a></li>
+  <li><a href="#what-md-actually-computes" id="toc-what-md-actually-computes" class="nav-link" data-scroll-target="#what-md-actually-computes">What MD Actually Computes</a></li>
+  </ul></li>
+  <li><a href="#newtons-laws-in-md" id="toc-newtons-laws-in-md" class="nav-link" data-scroll-target="#newtons-laws-in-md">Newton’s Laws in MD</a>
+  <ul class="collapse">
+  <li><a href="#the-equations" id="toc-the-equations" class="nav-link" data-scroll-target="#the-equations">The Equations</a></li>
+  <li><a href="#integration-velocity-verlet" id="toc-integration-velocity-verlet" class="nav-link" data-scroll-target="#integration-velocity-verlet">Integration: Velocity Verlet</a></li>
+  <li><a href="#the-timestep" id="toc-the-timestep" class="nav-link" data-scroll-target="#the-timestep">The Timestep</a></li>
+  <li><a href="#why-bond-constraints-help" id="toc-why-bond-constraints-help" class="nav-link" data-scroll-target="#why-bond-constraints-help">Why Bond Constraints Help</a></li>
+  </ul></li>
   <li><a href="#physical-meaning-of-key-lammps-commands" id="toc-physical-meaning-of-key-lammps-commands" class="nav-link" data-scroll-target="#physical-meaning-of-key-lammps-commands">Physical Meaning of Key LAMMPS Commands</a>
   <ul class="collapse">
   <li><a href="#units" id="toc-units" class="nav-link" data-scroll-target="#units">Units</a></li>
   <li><a href="#atom-style" id="toc-atom-style" class="nav-link" data-scroll-target="#atom-style">Atom Style</a></li>
   <li><a href="#boundary-conditions" id="toc-boundary-conditions" class="nav-link" data-scroll-target="#boundary-conditions">Boundary Conditions</a></li>
-  <li><a href="#groups" id="toc-groups" class="nav-link" data-scroll-target="#groups">Groups</a></li>
+  <li><a href="#regions-and-groups" id="toc-regions-and-groups" class="nav-link" data-scroll-target="#regions-and-groups">Regions and Groups</a></li>
   </ul></li>
+  <li><a href="#the-lammps-input-script-structure" id="toc-the-lammps-input-script-structure" class="nav-link" data-scroll-target="#the-lammps-input-script-structure">The LAMMPS Input Script Structure</a></li>
   <li><a href="#forces-and-energy" id="toc-forces-and-energy" class="nav-link" data-scroll-target="#forces-and-energy">Forces and Energy</a>
   <ul class="collapse">
-  <li><a href="#potential-energy-components" id="toc-potential-energy-components" class="nav-link" data-scroll-target="#potential-energy-components">Potential Energy Components</a></li>
+  <li><a href="#where-energy-comes-from" id="toc-where-energy-comes-from" class="nav-link" data-scroll-target="#where-energy-comes-from">Where Energy Comes From</a></li>
+  <li><a href="#reading-thermodynamic-output" id="toc-reading-thermodynamic-output" class="nav-link" data-scroll-target="#reading-thermodynamic-output">Reading Thermodynamic Output</a></li>
   <li><a href="#energy-conservation-check" id="toc-energy-conservation-check" class="nav-link" data-scroll-target="#energy-conservation-check">Energy Conservation Check</a></li>
+  <li><a href="#how-to-check-conservation" id="toc-how-to-check-conservation" class="nav-link" data-scroll-target="#how-to-check-conservation">How to Check Conservation</a></li>
   </ul></li>
   <li><a href="#key-concepts-summary" id="toc-key-concepts-summary" class="nav-link" data-scroll-target="#key-concepts-summary">Key Concepts Summary</a></li>
   <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
@@ -251,9 +294,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div class="callout-body-container callout-body">
 <ul>
-<li>What the simulation loop actually does</li>
+<li>What the simulation loop actually does and why it matters</li>
+<li>How Newton’s laws connect to the trajectories MD produces</li>
 <li>Key LAMMPS concepts mapped to physical meaning</li>
-<li>How to read thermodynamic output</li>
+<li>How to read and interpret thermodynamic output</li>
+<li>What the conserved quantity tells you about simulation quality</li>
 </ul>
 </div>
 </div>
@@ -267,13 +312,96 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> timestep <span class="kw">in</span> <span class="bu">range</span>(N_steps):</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    forces <span class="op">=</span> compute_forces(positions, force_field)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    positions, velocities <span class="op">=</span> integrate(positions, velocities, forces, dt)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The <strong>trajectory</strong> — the sequence of positions and velocities — is the primary output. From it, we compute thermodynamic properties by averaging over time.</p>
+<p>The <strong>trajectory</strong> — the sequence of positions and velocities — is the primary output. From it, we compute thermodynamic properties by averaging over many timesteps.</p>
+<section id="why-this-is-computationally-expensive" class="level3">
+<h3 class="anchored" data-anchor-id="why-this-is-computationally-expensive">Why This Is Computationally Expensive</h3>
+<p>For each of <span class="math inline">\(N\)</span> atoms, we must compute: - Force from every other atom: <span class="math inline">\(O(N^2)\)</span> interactions - With <span class="math inline">\(N = 10{,}000\)</span> water molecules, that’s 100 million pair calculations per step - At 1 fs timestep, a 1 ns simulation needs 1 million steps</p>
+<p>This is why long-range interactions (Coulomb) need special treatment (Ewald/PPPM) and why MD is routinely run on HPC clusters.</p>
+</section>
+<section id="what-md-actually-computes" class="level3">
+<h3 class="anchored" data-anchor-id="what-md-actually-computes">What MD Actually Computes</h3>
+<p>MD produces <strong>deterministic trajectories</strong> — given the same initial conditions, the same code produces identical results (in exact arithmetic). Real randomness comes from initial velocity sampling:</p>
+<pre class="lammps"><code>velocity all create 300.0 492845 rot yes mom yes</code></pre>
+<p>The <code>492845</code> is the random seed. Change it, get different initial velocities, same ensemble-averaged properties.</p>
+</section>
+</section>
+<section id="newtons-laws-in-md" class="level2">
+<h2 class="anchored" data-anchor-id="newtons-laws-in-md">Newton’s Laws in MD</h2>
+<section id="the-equations" class="level3">
+<h3 class="anchored" data-anchor-id="the-equations">The Equations</h3>
+<p>For each atom <span class="math inline">\(i\)</span>:</p>
+<p><span class="math display">\[m_i \frac{d^2\mathbf{r}_i}{dt^2} = \mathbf{F}_i = -\nabla_i U(\mathbf{r}_1, \mathbf{r}_2, \ldots, \mathbf{r}_N)\]</span></p>
+<p>The force <span class="math inline">\(\mathbf{F}_i\)</span> is the negative gradient of the potential energy <span class="math inline">\(U\)</span> with respect to atom <span class="math inline">\(i\)</span>’s position.</p>
+</section>
+<section id="integration-velocity-verlet" class="level3">
+<h3 class="anchored" data-anchor-id="integration-velocity-verlet">Integration: Velocity Verlet</h3>
+<p>The standard integrator in LAMMPS is <strong>velocity Verlet</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Half-step velocity</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>v(t <span class="op">+</span> Δt<span class="op">/</span><span class="dv">2</span>) <span class="op">=</span> v(t) <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> F(t) <span class="op">/</span> m <span class="op">*</span> Δt</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Full-step position</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>x(t <span class="op">+</span> Δt) <span class="op">=</span> x(t) <span class="op">+</span> v(t <span class="op">+</span> Δt<span class="op">/</span><span class="dv">2</span>) <span class="op">*</span> Δt</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: Compute new forces at new positions</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>F(t <span class="op">+</span> Δt) <span class="op">=</span> <span class="op">-</span>∇U(x(t <span class="op">+</span> Δt))</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 4: Complete velocity</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>v(t <span class="op">+</span> Δt) <span class="op">=</span> v(t <span class="op">+</span> Δt<span class="op">/</span><span class="dv">2</span>) <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> F(t <span class="op">+</span> Δt) <span class="op">/</span> m <span class="op">*</span> Δt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Why this order? Because <span class="math inline">\(F(t + Δt)\)</span> depends on <span class="math inline">\(x(t + Δt)\)</span>, which is only known after step 2.</p>
+</section>
+<section id="the-timestep" class="level3">
+<h3 class="anchored" data-anchor-id="the-timestep">The Timestep</h3>
+<p>The timestep <span class="math inline">\(\Delta t\)</span> must be small enough to resolve the fastest motion in the system:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Motion</th>
+<th>Period</th>
+<th>Timestep Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C-H bond stretch</td>
+<td>~10 fs</td>
+<td>Δt &lt; 0.5 fs</td>
+</tr>
+<tr class="even">
+<td>O-H bond stretch</td>
+<td>~9 fs</td>
+<td>Δt &lt; 0.5 fs</td>
+</tr>
+<tr class="odd">
+<td>H-O-H bend</td>
+<td>~20 fs</td>
+<td>Δt &lt; 1 fs</td>
+</tr>
+<tr class="even">
+<td>Lennard-Jones repulsion</td>
+<td>~2–4 fs</td>
+<td>Δt &lt; 1 fs</td>
+</tr>
+<tr class="odd">
+<td>Metal phonon</td>
+<td>ps scale</td>
+<td>Δt ~1–2 fs</td>
+</tr>
+</tbody>
+</table>
+<p>For flexible water (SPC/F): Δt = 0.5 fs For rigid water (SPC/E, TIP4P): Δt = 1–2 fs with bond constraints</p>
+</section>
+<section id="why-bond-constraints-help" class="level3">
+<h3 class="anchored" data-anchor-id="why-bond-constraints-help">Why Bond Constraints Help</h3>
+<p><code>fix shake</code> removes the fastest degrees of freedom by constraint:</p>
+<pre class="lammps"><code>fix constrain all shake 1e-4 200 0 a 1.0 b 1.0</code></pre>
+<p>This fixes O-H bond lengths to 1.0 Å and H-H distance appropriately. The algorithm solves these constraints analytically at each integration step, allowing a larger Δt without instability.</p>
+</section>
 </section>
 <section id="physical-meaning-of-key-lammps-commands" class="level2">
 <h2 class="anchored" data-anchor-id="physical-meaning-of-key-lammps-commands">Physical Meaning of Key LAMMPS Commands</h2>
 <section id="units" class="level3">
 <h3 class="anchored" data-anchor-id="units">Units</h3>
-<p>LAMMPS supports multiple unit systems. The choice affects every physical quantity.</p>
+<p>LAMMPS supports multiple unit systems. The choice affects every physical quantity — energy, distance, time, charge.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -281,6 +409,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <th>Distance</th>
 <th>Energy</th>
 <th>Time</th>
+<th>Charge</th>
 <th>Use Case</th>
 </tr>
 </thead>
@@ -288,15 +417,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><code>real</code></td>
 <td>Å</td>
-<td>kcal/mol</td>
+<td><strong>kcal/mol</strong></td>
 <td>fs</td>
+<td>e</td>
 <td>Organic molecules, proteins</td>
 </tr>
 <tr class="even">
 <td><code>metal</code></td>
 <td>Å</td>
-<td>eV</td>
+<td><strong>eV</strong></td>
 <td>ps</td>
+<td>e</td>
 <td>Materials science, metals</td>
 </tr>
 <tr class="odd">
@@ -304,6 +435,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>m</td>
 <td>J</td>
 <td>s</td>
+<td>C</td>
 <td>Academic; rarely used</td>
 </tr>
 <tr class="even">
@@ -311,10 +443,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>σ</td>
 <td>ε</td>
 <td>τ</td>
+<td>q</td>
 <td>Simplified units; for testing</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Electrode potentials are ALWAYS in volts</strong> regardless of unit system. This is a LAMMPS convention.</p>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -325,75 +459,132 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>If you set <code>units metal</code> but provide <code>pair_coeff</code> values in kcal/mol, all energies will be wrong by ~43×. Always verify consistency.</p>
+<p>If you set <code>units metal</code> but provide <code>pair_coeff</code> values in kcal/mol, all energies will be wrong by ~43× (1 eV = 23.06 kcal/mol).</p>
+<p>Always verify: what units does your force field use? What units did the original paper use?</p>
 </div>
 </div>
 </section>
 <section id="atom-style" class="level3">
 <h3 class="anchored" data-anchor-id="atom-style">Atom Style</h3>
-<p>The <code>atom_style</code> determines what properties each particle carries.</p>
+<p>The <code>atom_style</code> determines what properties each particle carries. More properties = more memory.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 36%">
-<col style="width: 33%">
-<col style="width: 30%">
+<col style="width: 29%">
+<col style="width: 26%">
+<col style="width: 19%">
+<col style="width: 24%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Atom Style</th>
 <th>Properties</th>
+<th>Memory</th>
 <th>Use When</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>full</code></td>
-<td>id, type, molecule, charge, mass, position, velocity, bonds, angles</td>
-<td>Standard molecular systems (water, organics)</td>
+<td>id, type, molecule, charge, mass, position, velocity, bonds, angles, dihedrals</td>
+<td>High</td>
+<td>Standard molecular (water, organics)</td>
 </tr>
 <tr class="even">
 <td><code>charge</code></td>
 <td>id, type, charge, mass, position, velocity</td>
-<td>Electrolytes, electrode systems (no bonds needed)</td>
+<td>Medium</td>
+<td>Electrolytes, electrode systems</td>
 </tr>
 <tr class="odd">
 <td><code>atomic</code></td>
 <td>id, type, mass, position, velocity</td>
+<td>Low</td>
 <td>Pure metals, noble gases</td>
 </tr>
 <tr class="even">
 <td><code>bonded</code></td>
 <td>id, type, molecule, charge, mass, position, velocity, bonds, angles, dihedrals</td>
-<td>Complex molecules with explicit torsions</td>
+<td>High</td>
+<td>Complex organics</td>
 </tr>
 </tbody>
 </table>
-<p>For constant potential simulations with simple electrolytes, <code>atom_style charge</code> is sufficient and faster than <code>full</code>.</p>
+<p>For constant potential simulations with simple electrolytes (water + ions), <code>atom_style charge</code> is sufficient and faster than <code>full</code>.</p>
 </section>
 <section id="boundary-conditions" class="level3">
 <h3 class="anchored" data-anchor-id="boundary-conditions">Boundary Conditions</h3>
 <pre class="lammps"><code>boundary p p f</code></pre>
-<p><code>p</code> = periodic, <code>f</code> = fixed (non-periodic), <code>s</code> = shrink-wrapped.</p>
-<p>For electrode-electrolyte slab simulations:</p>
-<ul>
-<li><strong>x, y</strong>: periodic — allows long-range electrostatics in these directions</li>
-<li><strong>z</strong>: fixed — creates a slab geometry with two surfaces exposed to vacuum (or vacuum region above electrolyte)</li>
-</ul>
-<p>The non-periodic z-direction requires the <code>kspace_modify slab</code> correction for electrostatics (see <strong>?@sec-electrostatics</strong>).</p>
+<p>Each character specifies the boundary type for x, y, z:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Character</th>
+<th>Meaning</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>p</code></td>
+<td>periodic</td>
+<td>Wrapping; continuous across boundary</td>
+</tr>
+<tr class="even">
+<td><code>f</code></td>
+<td>fixed</td>
+<td>Non-periodic; no wrapping</td>
+</tr>
+<tr class="odd">
+<td><code>s</code></td>
+<td>shrink-wrapped</td>
+<td>Periodic only if needed; auto-computes size</td>
+</tr>
+<tr class="even">
+<td><code>m</code></td>
+<td>shrink-wrapped with minimum</td>
+<td>Like <code>s</code> but with minimum extent</td>
+</tr>
+</tbody>
+</table>
+<p><strong>For electrode-electrolyte slab simulations</strong>:</p>
+<pre class="lammps"><code>boundary p p f    # periodic in x,y; non-periodic in z</code></pre>
+<p>This creates: - Two electrode surfaces (top and bottom) - A vacuum region above the electrolyte - Non-periodic z requires the <code>kspace_modify slab</code> correction for electrostatics</p>
+<p><strong>Why non-periodic z?</strong> Because you have two surfaces exposed to vacuum, not an infinite bulk material.</p>
 </section>
-<section id="groups" class="level3">
-<h3 class="anchored" data-anchor-id="groups">Groups</h3>
-<p>Groups are named subsets of atoms. They are essential for:</p>
-<ul>
-<li>Distinguishing electrode atoms from electrolyte</li>
-<li>Applying different thermostats to different components</li>
-<li>Computing properties for specific regions</li>
-</ul>
-<pre class="lammps"><code>group bot region bottom_electrode
-group top region top_electrode
-group elyte region electrolyte
+<section id="regions-and-groups" class="level3">
+<h3 class="anchored" data-anchor-id="regions-and-groups">Regions and Groups</h3>
+<p><strong>Regions</strong> define spatial volumes:</p>
+<pre class="lammps"><code>region bot block 0 20 0 20 0 5    # rectangular box from x=0-20, y=0-20, z=0-5
+region sphere sphere 10 10 10 5    # sphere centered at (10,10,10) with radius 5</code></pre>
+<p><strong>Groups</strong> are collections of atoms for targeting commands:</p>
+<pre class="lammps"><code>group bot region bot
+group top region top
+group elyte region elyte
 group electrode union bot top
 group mobile subtract all electrode</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>union group1 group2</code></td>
+<td>Atoms in either group</td>
+</tr>
+<tr class="even">
+<td><code>intersect group1 group2</code></td>
+<td>Atoms in both groups</td>
+</tr>
+<tr class="odd">
+<td><code>subtract group1 group2</code></td>
+<td>Atoms in group1 but not group2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why groups matter for ELECTRODE</strong>: You apply <code>fix electrode/conp</code> to a group, so the group must contain exactly the atoms you want as your electrode.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -404,119 +595,234 @@ group mobile subtract all electrode</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Use descriptive names: <code>bot</code>, <code>top</code>, <code>elyte</code>, <code>mobile</code>. Avoid names like <code>g1</code> which are meaningless in isolation.</p>
+<p>Use descriptive names: <code>bot</code>, <code>top</code>, <code>elyte</code>, <code>mobile</code>, <code>electrode</code>. Avoid names like <code>g1</code> which are meaningless in isolation.</p>
 </div>
 </div>
 </section>
+</section>
+<section id="the-lammps-input-script-structure" class="level2">
+<h2 class="anchored" data-anchor-id="the-lammps-input-script-structure">The LAMMPS Input Script Structure</h2>
+<p>A LAMMPS input script has a logical flow:</p>
+<pre class="lammps"><code># 1. INITIALIZATION
+units metal
+atom_style charge
+boundary p p f
+
+# 2. ATOM CREATION
+region box block 0 20 0 20 0 60
+create_box 3 box
+create_atoms 1 region bot
+create_atoms 2 region top
+create_atoms 3 region elyte
+
+# 3. GROUPS
+group bot region bot
+group top region top
+group elyte region elyte
+
+# 4. FORCE FIELD
+pair_style lj/cut/coul/long 10.0
+pair_coeff 1 1 0.01 3.0
+pair_coeff 2 2 0.01 3.0
+pair_coeff 3 3 0.155 3.166
+...
+kspace_style pppm/electrode 1e-5
+
+# 5. ELECTRODE FIX
+fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on
+
+# 6. INTEGRATION
+fix frozen all nve
+fix mytemp elyte langevin 300 300 100 12345
+
+# 7. OUTPUT
+thermo 100
+thermo_style custom step temp pe ke vol density
+dump 1 all custom 100 traj.lammpstrj id type x y z q
+
+# 8. RUN
+minimize 1e-6 1e-9 1000 10000
+run 10000</code></pre>
+<p><strong>Order matters</strong>: you cannot set a force field before creating atoms, and you cannot define groups before atoms exist.</p>
 </section>
 <section id="forces-and-energy" class="level2">
 <h2 class="anchored" data-anchor-id="forces-and-energy">Forces and Energy</h2>
-<section id="potential-energy-components" class="level3">
-<h3 class="anchored" data-anchor-id="potential-energy-components">Potential Energy Components</h3>
-<p>LAMMPS’s thermodynamic output breaks down the potential energy:</p>
+<section id="where-energy-comes-from" class="level3">
+<h3 class="anchored" data-anchor-id="where-energy-comes-from">Where Energy Comes From</h3>
+<p>The potential energy <span class="math inline">\(U\)</span> is the sum of all interatomic interactions:</p>
+<p><span class="math display">\[U_{total} = U_{pair} + U_{bond} + U_{angle} + U_{dihedral} + U_{kspace}\]</span></p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 55%">
-<col style="width: 45%">
+<col style="width: 22%">
+<col style="width: 29%">
+<col style="width: 48%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Component</th>
-<th>Meaning</th>
+<th>Term</th>
+<th>Source</th>
+<th>Computation</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
+<td><code>PairEng</code></td>
+<td>Non-bonded pairs (LJ + real-space Coulomb)</td>
+<td>Sum over all unique pairs</td>
+</tr>
+<tr class="even">
+<td><code>BondEng</code></td>
+<td>Chemical bonds</td>
+<td>Sum over all bonds</td>
+</tr>
+<tr class="odd">
+<td><code>AngleEng</code></td>
+<td>Angle bending</td>
+<td>Sum over all angles</td>
+</tr>
+<tr class="even">
+<td><code>KspaceEng</code></td>
+<td>Long-range electrostatics</td>
+<td>Reciprocal-space sum</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="reading-thermodynamic-output" class="level3">
+<h3 class="anchored" data-anchor-id="reading-thermodynamic-output">Reading Thermodynamic Output</h3>
+<pre><code>Step Temp PotEng KinEng Volume Density f_fxconp[1]
+0 0 -58234.35 0 24000 0.98234 0
+100 299.45 -58421.23 4412.34 24000 0.98312 -0.234</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Column</th>
+<th>Meaning</th>
+<th>Normal Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Step</code></td>
+<td>Timestep number</td>
+<td>Increases by <code>thermo</code> interval</td>
+</tr>
+<tr class="even">
+<td><code>Temp</code></td>
+<td>Instantaneous temperature</td>
+<td>Fluctuates ±10 K around target</td>
+</tr>
+<tr class="odd">
 <td><code>PotEng</code></td>
-<td>Total potential energy = sum of all contributions</td>
+<td>Potential energy</td>
+<td>Should be stable (small drift OK)</td>
 </tr>
 <tr class="even">
 <td><code>KinEng</code></td>
-<td>Kinetic energy = ½mv² summed over all atoms</td>
+<td>Kinetic energy</td>
+<td>Fluctuates with T</td>
 </tr>
 <tr class="odd">
 <td><code>TotEng</code></td>
-<td>Total energy = PotEng + KinEng (conserved in NVE)</td>
+<td>Total energy = PotEng + KinEng</td>
+<td>Conserved in NVE</td>
 </tr>
 <tr class="even">
-<td><code>PairEng</code></td>
-<td>Non-bonded pairwise interactions (LJ + Coulomb real-space)</td>
+<td><code>Volume</code></td>
+<td>System volume</td>
+<td>Constant in NVT; adjusts in NPT</td>
 </tr>
 <tr class="odd">
-<td><code>BondEng</code></td>
-<td>Bond stretching energy</td>
+<td><code>Density</code></td>
+<td>Mass/volume</td>
+<td>Should match experimental ~1 g/cm³</td>
 </tr>
 <tr class="even">
-<td><code>AngleEng</code></td>
-<td>Angle bending energy</td>
-</tr>
-<tr class="odd">
-<td><code>KspaceEng</code></td>
-<td>Long-range electrostatics (reciprocal space)</td>
+<td><code>f_fxconp[1]</code></td>
+<td>ELECTRODE energy</td>
+<td>Small fluctuations; near zero</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="energy-conservation-check" class="level3">
 <h3 class="anchored" data-anchor-id="energy-conservation-check">Energy Conservation Check</h3>
-<p>In a well-behaved NVE simulation (no thermostat), <code>TotEng</code> should drift by less than 0.1% over 1 ns. Drift indicates:</p>
-<ul>
-<li>Timestep too large</li>
-<li>Cutoff too small causing large force spikes</li>
-<li>Numerical instability in integration</li>
-</ul>
+<p>In a well-behaved NVE simulation (no thermostat), <code>TotEng</code> should drift by less than 0.1% over 1 ns.</p>
+<p><strong>Example</strong>: 1 ns at 1 fs timestep = 1,000,000 steps - If <code>TotEng</code> changes by 1 eV over this time, that’s ~0.002% (excellent) - If it changes by 100 eV, that’s ~0.2% (acceptable) - If it changes by 1000 eV, that’s ~2% (problematic)</p>
+<p>Drift sources: - Timestep too large → numerical instability - Cutoff too small → large force errors accumulate - Bad initial geometry → atoms overlapping</p>
+<p><strong>Always run NVE first</strong> to check if your simulation is well-behaved before adding thermostats.</p>
+</section>
+<section id="how-to-check-conservation" class="level3">
+<h3 class="anchored" data-anchor-id="how-to-check-conservation">How to Check Conservation</h3>
+<pre class="lammps"><code># Run NVE for 10 ps
+fix conservative all nve
+thermo 100
+thermo_style custom step temp pe ke vol TotEng
+
+run 10000    # 10 ps at 1 fs timestep</code></pre>
+<p>Then plot <code>TotEng</code> vs step — it should be flat (plus small random fluctuations).</p>
 </section>
 </section>
 <section id="key-concepts-summary" class="level2">
 <h2 class="anchored" data-anchor-id="key-concepts-summary">Key Concepts Summary</h2>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 22%">
-<col style="width: 32%">
-<col style="width: 45%">
+<col style="width: 37%">
+<col style="width: 28%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Concept</th>
+<th>Physical Concept</th>
 <th>LAMMPS Term</th>
-<th>Physical Meaning</th>
+<th>What It Means</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Interaction function</td>
+<td>Functional form of interaction</td>
 <td><code>pair_style</code></td>
-<td>Functional form of interatomic potential</td>
+<td>Mathematical formula (LJ, Coulomb, etc.)</td>
 </tr>
 <tr class="even">
-<td>Force field parameters</td>
+<td>Numerical parameters</td>
 <td><code>pair_coeff</code>, <code>bond_coeff</code></td>
-<td>Numerical values (ε, σ, k, etc.)</td>
+<td>The ε, σ, k, r₀ values</td>
 </tr>
 <tr class="odd">
 <td>Time integration</td>
 <td><code>fix nve</code>, <code>fix nvt</code></td>
-<td>Newton’s laws numerical solution</td>
+<td>How positions/velocities evolve</td>
 </tr>
 <tr class="even">
 <td>Temperature control</td>
 <td><code>fix langevin</code>, <code>fix nvt</code></td>
-<td>Sampling from correct ensemble</td>
+<td>How system samples canonical ensemble</td>
 </tr>
 <tr class="odd">
-<td>Long-range electrostatics</td>
-<td><code>kspace_style pppm</code></td>
-<td>Handling Coulomb’s law in periodic systems</td>
+<td>Pressure control</td>
+<td><code>fix npt</code>, <code>fix barostat</code></td>
+<td>How system samples isobaric ensemble</td>
 </tr>
 <tr class="even">
+<td>Long-range electrostatics</td>
+<td><code>kspace_style pppm</code></td>
+<td>How Coulomb’s law is solved efficiently</td>
+</tr>
+<tr class="odd">
 <td>On-the-fly calculation</td>
 <td><code>compute</code></td>
 <td>Quantities computed during simulation</td>
 </tr>
-<tr class="odd">
-<td>Property storage</td>
-<td><code>fix ave/time</code></td>
+<tr class="even">
 <td>Time-averaged output</td>
+<td><code>fix ave/time</code></td>
+<td>Accumulate data over run</td>
+</tr>
+<tr class="odd">
+<td>Trajectory recording</td>
+<td><code>dump</code></td>
+<td>Write positions to file</td>
 </tr>
 </tbody>
 </table>

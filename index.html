@@ -229,7 +229,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Constant Potential Molecular Dynamics in LAMMPS</h1>
-<p class="subtitle lead">A practical guide to the ELECTRODE package</p>
+<p class="subtitle lead">A practical guide to running constant potential simulations with the ELECTRODE package</p>
 </div>
 
 
@@ -248,18 +248,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="what-is-this-guide" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-this-guide">What Is This Guide?</h2>
-<p>This guide walks you through running <strong>constant potential molecular dynamics (MD)</strong> simulations using the <a href="https://lammps.org">LAMMPS</a> ELECTRODE package. It is written for researchers and students who have a working LAMMPS installation and want to understand the physics behind the commands — not just the syntax.</p>
+<p>This guide teaches you to run <strong>constant potential molecular dynamics (MD)</strong> simulations using the <a href="https://lammps.org">LAMMPS</a> ELECTRODE package. It is written for researchers and students who have access to a working LAMMPS installation and want to understand the <strong>physics</strong> behind the commands — not just the syntax.</p>
+<p>By “physics” we mean: - What does a Lennard-Jones potential actually describe? - Why does controlling temperature require a thermostat, and how do different thermostats work? - What does constant potential mean for an electrode, and why is it different from constant charge? - How does the capacitance matrix emerge from electrostatics?</p>
 </section>
 <section id="what-you-will-learn" class="level2">
 <h2 class="anchored" data-anchor-id="what-you-will-learn">What You Will Learn</h2>
 <p>By the end of this guide you will be able to:</p>
-<ul>
-<li><strong>Interpret</strong> LAMMPS input commands in terms of physical meaning</li>
-<li><strong>Connect</strong> force field choices to simulation observables (energy, density, capacitance)</li>
-<li><strong>Design</strong> electrode-electrolyte simulations with appropriate boundary conditions and physical parameters</li>
-<li><strong>Run</strong> constant potential simulations and diagnose common problems</li>
-<li><strong>Analyze</strong> output including trajectories, thermodynamic data, and electrode properties</li>
-</ul>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 73%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Skill</th>
+<th>How It’s Developed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Interpret</strong> LAMMPS commands in terms of physical meaning</td>
+<td>Every command linked to what it computes and why</td>
+</tr>
+<tr class="even">
+<td><strong>Connect</strong> force field choices to observables</td>
+<td>Tables showing how ε, σ, cutoff affect density, diffusion, energy</td>
+</tr>
+<tr class="odd">
+<td><strong>Design</strong> electrode-electrolyte simulations</td>
+<td>Geometry, boundary conditions, potential control</td>
+</tr>
+<tr class="even">
+<td><strong>Run</strong> constant potential simulations</td>
+<td>Full example with all options explained</td>
+</tr>
+<tr class="odd">
+<td><strong>Diagnose</strong> problems</td>
+<td>Energy drift, charge oscillation, NaN values</td>
+</tr>
+<tr class="even">
+<td><strong>Analyze</strong> output</td>
+<td>Capacitance, density profiles, potential distribution</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="how-to-use-this-guide" class="level2">
 <h2 class="anchored" data-anchor-id="how-to-use-this-guide">How to Use This Guide</h2>
@@ -270,13 +302,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p></p><figure class="figure"><p></p>
 <div>
 <pre class="mermaid mermaid-js">flowchart LR
-    A[1. Fundamentals] --&gt; B[2. Force Fields]
+    A[1. MD Fundamentals] --&gt; B[2. Force Fields]
     A --&gt; C[4. Electrostatics]
     B --&gt; C
     C --&gt; D[5. Electrodes &amp; CPM]
     D --&gt; E[6. ELECTRODE Package]
     E --&gt; F[7. Example]
     F --&gt; G[8. Troubleshooting]
+    B --&gt; D
 </pre>
 </div>
 <p></p></figure><p></p>
@@ -285,77 +318,81 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 21%">
-<col style="width: 16%">
-<col style="width: 61%">
+<col style="width: 26%">
+<col style="width: 20%">
+<col style="width: 52%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Section</th>
 <th>Topic</th>
-<th>What You Will Understand</th>
+<th>Primary Question</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>1</td>
 <td>Fundamentals</td>
-<td>What MD actually computes; key LAMMPS concepts</td>
+<td>What does MD actually compute, and how?</td>
 </tr>
 <tr class="even">
 <td>2</td>
 <td>Force Fields</td>
-<td>What interactions exist; how to configure them</td>
+<td>What interactions exist between atoms?</td>
 </tr>
 <tr class="odd">
 <td>3</td>
 <td>Physical Conditions</td>
-<td>How temperature, pressure, and time are controlled</td>
+<td>How do we control T, P, and time?</td>
 </tr>
 <tr class="even">
 <td>4</td>
 <td>Electrostatics</td>
-<td>How long-range Coulomb is handled (Ewald, PPPM)</td>
+<td>How does LAMMPS solve the long-range Coulomb problem?</td>
 </tr>
 <tr class="odd">
 <td>5</td>
 <td>Electrodes &amp; CPM</td>
-<td>Why electrodes need special treatment; what CPM does</td>
+<td>Why do conductors need special treatment?</td>
 </tr>
 <tr class="even">
 <td>6</td>
 <td>ELECTRODE Package</td>
-<td>LAMMPS syntax for constant potential, charge, thermo</td>
+<td>What commands does LAMMPS provide?</td>
 </tr>
 <tr class="odd">
 <td>7</td>
 <td>Example</td>
-<td>A complete input script with output interpretation</td>
+<td>How do these pieces fit together?</td>
 </tr>
 <tr class="even">
 <td>8</td>
 <td>Troubleshooting</td>
-<td>Common problems and how to fix them</td>
+<td>What goes wrong and how to fix it?</td>
 </tr>
 </tbody>
 </table>
+<p><strong>Reading order</strong>: Start with Section 1 (fundamentals) and proceed in order for conceptual building. Later sections assume knowledge from earlier ones.</p>
+<p><strong>Reference use</strong>: If you already know the basics, go directly to the section you need (e.g., Section 6 for ELECTRODE syntax, Section 8 for troubleshooting).</p>
 </section>
 <section id="prerequisites" class="level2">
 <h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
 <p>This guide assumes you have:</p>
 <ul>
-<li>Completed introductory physics (mechanics, electromagnetism basics)</li>
-<li>Completed one semester of general chemistry (ions, Coulomb’s law)</li>
+<li>Introductory physics (mechanics, electromagnetism basics)</li>
+<li>One semester of general chemistry (ions, Coulomb’s law)</li>
 <li>Basic programming experience (any language)</li>
-<li><strong>Access to a LAMMPS installation</strong> (binary or source; CMake-built with ELECTRODE and KSPACE packages)</li>
+<li><strong>Access to a LAMMPS installation</strong> with ELECTRODE and KSPACE packages enabled</li>
 </ul>
-<p>No prior MD experience is required.</p>
+<p><strong>No prior MD experience required.</strong> We explain the physics from scratch.</p>
 </section>
 <section id="computing-environment" class="level2">
 <h2 class="anchored" data-anchor-id="computing-environment">Computing Environment</h2>
-<p>All examples in this guide assume a standard LAMMPS installation. Commands shown in <code>code blocks</code> like:</p>
+<p>All examples assume a standard LAMMPS installation. Commands like:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lmp</span> <span class="at">-in</span> in.electrode <span class="at">-pk</span> gpu 1 <span class="at">-l</span> yes</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>should be run in a terminal where LAMMPS is available.</p>
+<p>To check if ELECTRODE is installed:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lmp</span> <span class="at">-h</span> <span class="kw">|</span> <span class="fu">grep</span> ELECTRODE</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="contributing" class="level2">
 <h2 class="anchored" data-anchor-id="contributing">Contributing</h2>

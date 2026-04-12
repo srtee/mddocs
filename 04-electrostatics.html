@@ -212,7 +212,7 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#the-split" id="toc-the-split" class="nav-link" data-scroll-target="#the-split">The Split</a></li>
   <li><a href="#the-physical-idea" id="toc-the-physical-idea" class="nav-link" data-scroll-target="#the-physical-idea">The Physical Idea</a></li>
-  <li><a href="#the-ewald-parameter-α" id="toc-the-ewald-parameter-α" class="nav-link" data-scroll-target="#the-ewald-parameter-α">The Ewald Parameter (α)</a></li>
+  <li><a href="#why-the-split-works" id="toc-why-the-split-works" class="nav-link" data-scroll-target="#why-the-split-works">Why the Split Works</a></li>
   <li><a href="#ewald-in-lammps" id="toc-ewald-in-lammps" class="nav-link" data-scroll-target="#ewald-in-lammps">Ewald in LAMMPS</a></li>
   </ul></li>
   <li><a href="#pppm-particle-particle-particle-mesh" id="toc-pppm-particle-particle-particle-mesh" class="nav-link" data-scroll-target="#pppm-particle-particle-particle-mesh">PPPM — Particle-Particle Particle-Mesh</a>
@@ -220,18 +220,19 @@ window.Quarto = {
   <li><a href="#why-pppm" id="toc-why-pppm" class="nav-link" data-scroll-target="#why-pppm">Why PPPM?</a></li>
   <li><a href="#how-pppm-works" id="toc-how-pppm-works" class="nav-link" data-scroll-target="#how-pppm-works">How PPPM Works</a></li>
   <li><a href="#pppm-in-lammps" id="toc-pppm-in-lammps" class="nav-link" data-scroll-target="#pppm-in-lammps">PPPM in LAMMPS</a></li>
-  <li><a href="#pppm-accuracy" id="toc-pppm-accuracy" class="nav-link" data-scroll-target="#pppm-accuracy">PPPM Accuracy</a></li>
+  <li><a href="#pppm-accuracy-vs.-speed" id="toc-pppm-accuracy-vs.-speed" class="nav-link" data-scroll-target="#pppm-accuracy-vs.-speed">PPPM Accuracy vs.&nbsp;Speed</a></li>
   </ul></li>
   <li><a href="#cutoff-based-methods-when-to-use-them" id="toc-cutoff-based-methods-when-to-use-them" class="nav-link" data-scroll-target="#cutoff-based-methods-when-to-use-them">Cutoff-Based Methods (When to Use Them)</a>
   <ul class="collapse">
   <li><a href="#direct-coulomb-with-cutoff" id="toc-direct-coulomb-with-cutoff" class="nav-link" data-scroll-target="#direct-coulomb-with-cutoff">Direct Coulomb with Cutoff</a></li>
   <li><a href="#when-cutoff-based-is-acceptable" id="toc-when-cutoff-based-is-acceptable" class="nav-link" data-scroll-target="#when-cutoff-based-is-acceptable">When Cutoff-Based Is Acceptable</a></li>
-  <li><a href="#performance-note" id="toc-performance-note" class="nav-link" data-scroll-target="#performance-note">Performance Note</a></li>
+  <li><a href="#the-error-from-truncating-coulomb" id="toc-the-error-from-truncating-coulomb" class="nav-link" data-scroll-target="#the-error-from-truncating-coulomb">The Error from Truncating Coulomb</a></li>
   </ul></li>
   <li><a href="#boundary-conditions-and-electrostatics" id="toc-boundary-conditions-and-electrostatics" class="nav-link" data-scroll-target="#boundary-conditions-and-electrostatics">Boundary Conditions and Electrostatics</a>
   <ul class="collapse">
   <li><a href="#periodic-boundary-conditions-in-3d" id="toc-periodic-boundary-conditions-in-3d" class="nav-link" data-scroll-target="#periodic-boundary-conditions-in-3d">Periodic Boundary Conditions in 3D</a></li>
   <li><a href="#slab-geometry-non-periodic-z" id="toc-slab-geometry-non-periodic-z" class="nav-link" data-scroll-target="#slab-geometry-non-periodic-z">Slab Geometry (Non-Periodic Z)</a></li>
+  <li><a href="#the-dipole-correction" id="toc-the-dipole-correction" class="nav-link" data-scroll-target="#the-dipole-correction">The Dipole Correction</a></li>
   <li><a href="#periodic-z-with-finite-field" id="toc-periodic-z-with-finite-field" class="nav-link" data-scroll-target="#periodic-z-with-finite-field">Periodic Z with Finite Field</a></li>
   </ul></li>
   <li><a href="#pair-style-kspace-consistency" id="toc-pair-style-kspace-consistency" class="nav-link" data-scroll-target="#pair-style-kspace-consistency">Pair Style — Kspace Consistency</a>
@@ -244,7 +245,9 @@ window.Quarto = {
   <li><a href="#output-and-diagnostics" id="toc-output-and-diagnostics" class="nav-link" data-scroll-target="#output-and-diagnostics">Output and Diagnostics</a>
   <ul class="collapse">
   <li><a href="#kspace-energy" id="toc-kspace-energy" class="nav-link" data-scroll-target="#kspace-energy">Kspace Energy</a></li>
+  <li><a href="#checking-energy-conservation" id="toc-checking-energy-conservation" class="nav-link" data-scroll-target="#checking-energy-conservation">Checking Energy Conservation</a></li>
   <li><a href="#performance" id="toc-performance" class="nav-link" data-scroll-target="#performance">Performance</a></li>
+  <li><a href="#grid-size-effects" id="toc-grid-size-effects" class="nav-link" data-scroll-target="#grid-size-effects">Grid Size Effects</a></li>
   </ul></li>
   <li><a href="#common-issues" id="toc-common-issues" class="nav-link" data-scroll-target="#common-issues">Common Issues</a></li>
   <li><a href="#summary-table" id="toc-summary-table" class="nav-link" data-scroll-target="#summary-table">Summary Table</a></li>
@@ -273,10 +276,11 @@ window.Quarto = {
 <div class="callout-body-container callout-body">
 <ul>
 <li>Why long-range Coulomb is computationally hard</li>
-<li>How Ewald summation splits the problem</li>
+<li>How Ewald summation splits the problem conceptually</li>
 <li>How PPPM achieves O(N log N) scaling</li>
 <li>Why slab geometry needs special treatment</li>
-<li>Pair-kpace consistency rules</li>
+<li>Pair-kspace consistency rules</li>
+<li>Practical guidance on choosing tolerance and debugging</li>
 </ul>
 </div>
 </div>
@@ -302,11 +306,12 @@ window.Quarto = {
 <tr class="even">
 <td>Cutoff at 10 Å</td>
 <td>O(N)</td>
-<td>~10% error for ionic systems</td>
+<td>~10–50% error for ionic systems</td>
 </tr>
 </tbody>
 </table>
 <p>The challenge: we need the <strong>long-range part</strong> of Coulomb for accuracy, but we cannot sum it directly because there are too many pairs.</p>
+<p><strong>Why Coulomb is harder than LJ</strong>: - For unit charges at 3 Å: V ≈ 110 kcal/mol (real units) - For LJ minimum at same distance: V ≈ -1 kcal/mol - Coulomb is 100× larger and decays slower</p>
 </section>
 <section id="ewald-summation-the-conceptual-basis" class="level2">
 <h2 class="anchored" data-anchor-id="ewald-summation-the-conceptual-basis">Ewald Summation — The Conceptual Basis</h2>
@@ -355,41 +360,21 @@ window.Quarto = {
 <li><strong>Self term</strong>: subtract the interaction of each charge with its own Gaussian</li>
 </ol>
 </section>
-<section id="the-ewald-parameter-α" class="level3">
-<h3 class="anchored" data-anchor-id="the-ewald-parameter-α">The Ewald Parameter (α)</h3>
-<p>α controls the width of the Gaussian smearing:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>α (large)</th>
-<th>α (small)</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Narrow Gaussians</td>
-<td>Wide Gaussians</td>
-</tr>
-<tr class="even">
-<td>Real space converges quickly</td>
-<td>Real space converges slowly</td>
-</tr>
-<tr class="odd">
-<td>Reciprocal space expensive</td>
-<td>Reciprocal space cheaper</td>
-</tr>
-<tr class="even">
-<td>Overall: fast for small systems</td>
-<td>Overall: better for large systems</td>
-</tr>
-</tbody>
-</table>
-<p>Typical α ≈ 0.2–0.5 Å⁻¹ (real units). LAMMPS usually chooses a reasonable default, but for very asymmetric boxes (very thin in one direction), tuning helps.</p>
+<section id="why-the-split-works" class="level3">
+<h3 class="anchored" data-anchor-id="why-the-split-works">Why the Split Works</h3>
+<p>The problem with direct Coulomb sum is that <span class="math inline">\(1/r\)</span> is slowly decaying. By smearing charges into Gaussians:</p>
+<ul>
+<li>The short-range interaction (original charge × Gaussian of neighbor) converges quickly</li>
+<li>The long-range interaction (Gaussian × Gaussian) becomes smooth and amenable to Fourier methods</li>
+</ul>
+<p><strong>The Ewald parameter α controls the split</strong>: - Large α: Gaussian is narrow → real-space converges fast → reciprocal space slow - Small α: Gaussian is wide → real-space converges slow → reciprocal space fast</p>
+<p>For typical systems, α ≈ 0.2–0.5 Å⁻¹ (real units). LAMMPS chooses a reasonable default based on the system size and cutoff.</p>
 </section>
 <section id="ewald-in-lammps" class="level3">
 <h3 class="anchored" data-anchor-id="ewald-in-lammps">Ewald in LAMMPS</h3>
 <pre class="lammps"><code>kspace_style ewald 1e-5</code></pre>
 <p><code>1e-5</code> = desired RMS force accuracy (relative to force magnitude). Tighter tolerance = more accurate = slower.</p>
+<p><strong>How to interpret tolerance</strong>: If the RMS force on atoms is ~100 kcal/mol/Å, a tolerance of <code>1e-5</code> means the kspace force error is ~0.001 kcal/mol/Å (negligible).</p>
 </section>
 </section>
 <section id="pppm-particle-particle-particle-mesh" class="level2">
@@ -397,53 +382,65 @@ window.Quarto = {
 <section id="why-pppm" class="level3">
 <h3 class="anchored" data-anchor-id="why-pppm">Why PPPM?</h3>
 <p>Ewald scales as O(N³/²). For very large systems, this is still prohibitive.</p>
-<p>PPPM (also called PME — Particle Mesh Ewald) maps charges to a regular mesh and uses FFT for the reciprocal space sum:</p>
+<p>PPPM (Particle-Particle Particle-Mesh, also called PME — Particle Mesh Ewald) maps charges to a regular mesh and uses FFT for the reciprocal space sum:</p>
 <p><span class="math display">\[O(N \log N) \text{ scaling}\]</span></p>
 </section>
 <section id="how-pppm-works" class="level3">
 <h3 class="anchored" data-anchor-id="how-pppm-works">How PPPM Works</h3>
 <ol type="1">
-<li><strong>Distribute charges to mesh</strong>: each charge assigned to nearby mesh points (Gaussian or cloud-in-cell)</li>
-<li><strong>FFT to reciprocal space</strong>: <code>charge density(r)</code> → <code>charge density(k)</code></li>
-<li><strong>Multiply by Green’s function</strong>: apply the Coulomb kernel in k-space</li>
-<li><strong>FFT back to real space</strong>: forces on mesh</li>
-<li><strong>Interpolate forces to particles</strong>: mesh forces → atomic forces</li>
+<li><strong>Distribute charges to mesh</strong>: each charge assigned to nearby mesh points (Gaussian or cloud-in-cell scheme)</li>
+<li><strong>FFT to reciprocal space</strong>: <code>ρ(r)</code> → <code>ρ(k)</code> (charge density in k-space)</li>
+<li><strong>Multiply by Green’s function</strong>: apply the Coulomb kernel <span class="math inline">\(4π/k²\)</span> in k-space</li>
+<li><strong>FFT back to real space</strong>: get the long-range potential on the mesh</li>
+<li><strong>Interpolate forces to particles</strong>: mesh → atom forces via shape function</li>
 </ol>
-<p>The key advantage: FFT is O(N log N), so the reciprocal space part scales much better than Ewald.</p>
+<p><strong>The key insight</strong>: convolution with Green’s function becomes multiplication in Fourier space. FFT does this efficiently.</p>
 </section>
 <section id="pppm-in-lammps" class="level3">
 <h3 class="anchored" data-anchor-id="pppm-in-lammps">PPPM in LAMMPS</h3>
 <pre class="lammps"><code>kspace_style pppm 1e-5</code></pre>
+<p><strong>For ELECTRODE systems</strong>, use the electrode-aware variant:</p>
+<pre class="lammps"><code>kspace_style pppm/electrode 1e-5</code></pre>
 </section>
-<section id="pppm-accuracy" class="level3">
-<h3 class="anchored" data-anchor-id="pppm-accuracy">PPPM Accuracy</h3>
+<section id="pppm-accuracy-vs.-speed" class="level3">
+<h3 class="anchored" data-anchor-id="pppm-accuracy-vs.-speed">PPPM Accuracy vs.&nbsp;Speed</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Tolerance</th>
-<th>Force Accuracy</th>
+<th>Force RMS Error</th>
+<th>Relative Error</th>
 <th>Speed</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>1e-4</code></td>
-<td>~0.1%</td>
+<td><code>1e-3</code></td>
+<td>~1%</td>
+<td>Large</td>
 <td>Fastest</td>
 </tr>
 <tr class="even">
-<td><code>1e-5</code></td>
-<td>~0.01%</td>
-<td>Standard</td>
+<td><code>1e-4</code></td>
+<td>~0.1%</td>
+<td>Noticeable</td>
+<td>Fast</td>
 </tr>
 <tr class="odd">
+<td><code>1e-5</code></td>
+<td>~0.01%</td>
+<td>Usually fine</td>
+<td>Medium</td>
+</tr>
+<tr class="even">
 <td><code>1e-6</code></td>
 <td>~0.001%</td>
-<td>Slowest</td>
+<td>Precise</td>
+<td>Slow</td>
 </tr>
 </tbody>
 </table>
-<p>For production: <code>1e-5</code> is usually sufficient. For precise energy calculations: <code>1e-6</code>.</p>
+<p>For production: <code>1e-5</code> is standard. For precise energy calculations (e.g., comparing binding energies): <code>1e-6</code>.</p>
 </section>
 </section>
 <section id="cutoff-based-methods-when-to-use-them" class="level2">
@@ -457,31 +454,35 @@ kspace_style none                   # explicitly no long-range</code></pre>
 <section id="when-cutoff-based-is-acceptable" class="level3">
 <h3 class="anchored" data-anchor-id="when-cutoff-based-is-acceptable">When Cutoff-Based Is Acceptable</h3>
 <ul>
-<li>Neutral, sparse systems (gases)</li>
+<li>Neutral, sparse systems (gases at low pressure)</li>
 <li>Very short simulations where speed matters more than accuracy</li>
 <li>Testing/debugging before production</li>
+<li>Systems with all charges screened by high dielectric (but even then, be careful)</li>
 </ul>
 </section>
-<section id="performance-note" class="level3">
-<h3 class="anchored" data-anchor-id="performance-note">Performance Note</h3>
-<p>For small systems (N &lt; 1000) with short simulation times (ns), cutoff-based may be acceptable. For anything involving ions, water, or electrode interfaces: use PPPM.</p>
+<section id="the-error-from-truncating-coulomb" class="level3">
+<h3 class="anchored" data-anchor-id="the-error-from-truncating-coulomb">The Error from Truncating Coulomb</h3>
+<p>For 1M NaCl solution: - Bulk screening length ≈ 10 Å - But at electrode surfaces, unscreened charges persist - Cutting off at 10 Å means you miss the long-range surface interactions entirely - This changes capacitance by 20–50%</p>
+<p><strong>Conclusion</strong>: for electrode-electrolyte simulations, always use PPPM.</p>
 </section>
 </section>
 <section id="boundary-conditions-and-electrostatics" class="level2">
 <h2 class="anchored" data-anchor-id="boundary-conditions-and-electrostatics">Boundary Conditions and Electrostatics</h2>
 <section id="periodic-boundary-conditions-in-3d" class="level3">
 <h3 class="anchored" data-anchor-id="periodic-boundary-conditions-in-3d">Periodic Boundary Conditions in 3D</h3>
-<p>With <code>boundary p p p</code>, the system is a periodic tile. Ewald/PPPM works straightforwardly.</p>
+<p>With <code>boundary p p p</code>, the system is a periodic tile repeating infinitely. Ewald/PPPM works straightforwardly.</p>
 </section>
 <section id="slab-geometry-non-periodic-z" class="level3">
 <h3 class="anchored" data-anchor-id="slab-geometry-non-periodic-z">Slab Geometry (Non-Periodic Z)</h3>
 <p>For electrode-electrolyte simulations:</p>
 <pre class="lammps"><code>boundary p p f    # non-periodic z</code></pre>
-<p>The z-direction has a vacuum gap. This creates two electrode surfaces exposed to vacuum (or vacuum above the electrolyte).</p>
+<p>The z-direction has a vacuum gap. This creates two electrode surfaces exposed to vacuum (or vacuum region above electrolyte).</p>
 <p><strong>Problem with slab geometry</strong>: electrostatics in 2D is different from 3D. The naive Ewald/PPPM sum would include artificial dipole-dipole interactions between periodic images in z.</p>
+<p><strong>Why this matters</strong>: Without correction, the computed electrostatic energy depends on how many times you replicate the cell in z — clearly wrong for a single interface.</p>
 <p><strong>Solution</strong>: 2D Ewald / slab correction</p>
 <pre class="lammps"><code>kspace_modify slab 3</code></pre>
-<p>This applies a correction for the slab geometry: - Assumes the system is infinitely periodic in x, y - Assumes finite (non-periodic) in z - Adds a dipole correction term</p>
+<p>This applies a correction for the slab geometry: - Assumes the system is infinitely periodic in x, y - Assumes finite (non-periodic) in z - Adds a dipole correction term that accounts for the missing images</p>
+<p>The number <code>3</code> refers to the dimensionality being treated as 2D (slab). LAMMPS automatically handles the correction.</p>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -492,17 +493,26 @@ kspace_style none                   # explicitly no long-range</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>If you use <code>boundary p p f</code> without <code>kspace_modify slab</code>, you will get: - Artificially high pressure in z-direction - Incorrect forces on atoms near the surface - Wrong double-layer structure</p>
-<p>Always add <code>kspace_modify slab N</code> for non-periodic z.</p>
+<p>If you use <code>boundary p p f</code> without <code>kspace_modify slab</code>, you will get: - Artificially high pressure in z-direction - Incorrect forces on atoms near the surface - Wrong double-layer structure and capacitance</p>
+<p>Always add <code>kspace_modify slab 3</code> (or equivalent) for non-periodic z.</p>
 </div>
 </div>
+</section>
+<section id="the-dipole-correction" class="level3">
+<h3 class="anchored" data-anchor-id="the-dipole-correction">The Dipole Correction</h3>
+<p>The slab correction adds a term that accounts for the net dipole moment of the slab interacting with its periodic images. It has the form:</p>
+<p><span class="math display">\[V_{dipole} = \frac{2\pi}{V} \left|\sum_i q_i z_i\right|^2\]</span></p>
+<p>Where the sum is over all charges in the cell. This term is added to the reciprocal-space energy.</p>
+<p><strong>Physical interpretation</strong>: a polar slab has a dipole moment. In 3D periodic boundaries, that dipole would interact with infinitely many images. In slab geometry, only the x,y periodicity remains, and the correction accounts for the missing z-interactions.</p>
 </section>
 <section id="periodic-z-with-finite-field" class="level3">
 <h3 class="anchored" data-anchor-id="periodic-z-with-finite-field">Periodic Z with Finite Field</h3>
 <pre class="lammps"><code>boundary p p p    # fully periodic
 # In fix electrode/conp:
 fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 ffield on</code></pre>
-<p>With <code>ffield on</code>, the system is treated as an infinite stack of identical cells: - No vacuum region - Smaller z-dimension possible (saves atoms) - Requires <code>symm on</code> (total charge neutrality) - Uses internal E-field to apply potential difference</p>
+<p>With <code>ffield on</code>, the system is treated as an infinite stack of identical cells: - No vacuum region needed - Smaller z-dimension possible (saves atoms) - Requires <code>symm on</code> (total charge neutrality) - Uses internal E-field to apply potential difference: <span class="math inline">\(E = V/d\)</span></p>
+<p><strong>Advantages</strong>: - Better scaling for large systems (fully periodic) - No slab correction needed - Smaller cell means fewer atoms</p>
+<p><strong>Disadvantages</strong>: - Electrodes must be symmetric (infinite stack assumption) - Can’t model single-surface experiments - Requires careful treatment of dipole moment</p>
 </section>
 </section>
 <section id="pair-style-kspace-consistency" class="level2">
@@ -510,11 +520,18 @@ fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 ffield on</code></pre>
 <section id="the-rule" class="level3">
 <h3 class="anchored" data-anchor-id="the-rule">The Rule</h3>
 <p>The <strong>pair style</strong> determines what forces are computed in real space. The <strong>kspace style</strong> handles the long-range correction.</p>
+<p>If you use <code>coul/long</code> or <code>coul/long</code> as part of a pair style, LAMMPS <strong>requires</strong> an appropriate kspace style. The <code>long</code> suffix means “long-range handled by kspace”.</p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 27%">
+<col style="width: 25%">
+<col style="width: 31%">
+<col style="width: 15%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Pair Style</th>
-<th>Real-Space</th>
+<th>Real Space</th>
 <th>Kspace Style</th>
 <th>Notes</th>
 </tr>
@@ -522,21 +539,21 @@ fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 ffield on</code></pre>
 <tbody>
 <tr class="odd">
 <td><code>lj/cut/coul/long</code></td>
-<td>LJ + Coulomb</td>
+<td>LJ + Coulomb (short-range)</td>
 <td><code>pppm</code> or <code>ewald</code></td>
-<td>Standard</td>
+<td><strong>Standard for electrolytes</strong></td>
 </tr>
 <tr class="even">
-<td><code>coul/long</code> only</td>
-<td>Coulomb only</td>
-<td><code>pppm</code></td>
-<td>No LJ</td>
+<td><code>lj/cut/coul/cut</code></td>
+<td>LJ + Coulomb (truncated)</td>
+<td><strong>none</strong></td>
+<td>Large error; only for testing</td>
 </tr>
 <tr class="odd">
-<td><code>lj/cut/coul/cut</code></td>
-<td>LJ + Coulomb</td>
-<td>none</td>
-<td>Direct only; large error</td>
+<td><code>coul/long</code> only</td>
+<td>Coulomb (short-range only)</td>
+<td><code>pppm</code> or <code>ewald</code></td>
+<td>No LJ</td>
 </tr>
 <tr class="even">
 <td><code>lj/cut</code> only</td>
@@ -549,39 +566,89 @@ fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 ffield on</code></pre>
 </section>
 <section id="why-consistency-matters" class="level3">
 <h3 class="anchored" data-anchor-id="why-consistency-matters">Why Consistency Matters</h3>
-<p>If you use <code>pair_style lj/cut/coul/long</code> but no kspace style:</p>
-<ul>
-<li>LAMMPS will error and tell you to use <code>kspace_style</code></li>
-<li>The long-range Coulomb is not computed (even though it should be)</li>
-</ul>
-<p>If you use <code>pair_style lj/cut/coul/cut</code> but <code>kspace_style pppm</code>:</p>
-<ul>
-<li>pppm tries to compute long-range on top of already-truncated Coulomb</li>
-<li>Double-counting or error</li>
-</ul>
+<p><strong>If you use <code>lj/cut/coul/long</code> but no kspace style</strong>:</p>
+<pre><code>ERROR: Kspace style required for coul/long pair style</code></pre>
+<p>LAMMPS will error. You must add kspace.</p>
+<p><strong>If you use <code>lj/cut/coul/cut</code> but <code>kspace_style pppm</code></strong>:</p>
+<p>The truncated Coulomb in real space already includes some long-range contribution. Adding PPPM double-counts or produces wrong results. LAMMPS may warn but will likely compute nonsense.</p>
+<p><strong>Always match pair style to kspace style</strong>: <code>coul/long</code> → <code>pppm</code>/<code>ewald</code>; <code>coul/cut</code> → <code>none</code>.</p>
 </section>
 <section id="electrode-specific-kspace-styles" class="level3">
 <h3 class="anchored" data-anchor-id="electrode-specific-kspace-styles">Electrode-Specific Kspace Styles</h3>
-<p>For ELECTRODE simulations, use:</p>
-<pre class="lammps"><code>kspace_style pppm/electrode 1e-5</code></pre>
-<p>This variant: - Provides electrode-electrode interaction matrix to the ELECTRODE fix - Handles the induced-charge electrostatics correctly - Is compatible with <code>electrode/conp</code>, <code>electrode/conq</code>, <code>electrode/thermo</code></p>
-<p>Available styles: - <code>kspace_style ewald/electrode</code> - <code>kspace_style pppm/electrode</code> - <code>kspace_style pppm/electrode/intel</code> (optimized for Intel hardware)</p>
+<p>For ELECTRODE simulations, you MUST use electrode-aware kspace styles:</p>
+<pre class="lammps"><code>kspace_style pppm/electrode 1e-5
+kspace_style ewald/electrode 1e-5</code></pre>
+<p>These variants: - Provide electrode-electrode interaction matrix to the ELECTRODE fix - Handle the induced-charge electrostatics correctly (electrode charges are not fixed) - Are compatible with <code>electrode/conp</code>, <code>electrode/conq</code>, <code>electrode/thermo</code></p>
+<p>Standard <code>pppm</code> or <code>ewald</code> will error with ELECTRODE fixes.</p>
 </section>
 </section>
 <section id="kspace-modify-options" class="level2">
 <h2 class="anchored" data-anchor-id="kspace-modify-options">Kspace Modify Options</h2>
 <pre class="lammps"><code>kspace_modify slab 3              # 2D Ewald for non-periodic z (default = 3)
 kspace_modify wire                 # wire boundary conditions
-kspace_modify one-step             # faster but less accurate elastance matrix
-kspace_modify force 1e-4          # override tolerance</code></pre>
+kspace_modify one-step            # faster but less accurate elastance matrix
+kspace_modify force 1e-4          # override tolerance
+kspace_modify order 5             # PPPM grid order (higher = more accurate but slower)</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 30%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Purpose</th>
+<th>When to Use</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>slab 3</code></td>
+<td>2D Ewald correction</td>
+<td>Non-periodic z (slab geometry)</td>
+</tr>
+<tr class="even">
+<td><code>wire</code></td>
+<td>Wire boundary conditions</td>
+<td>Cylindrical geometry</td>
+</tr>
+<tr class="odd">
+<td><code>one-step</code></td>
+<td>Faster elastance matrix calculation</td>
+<td>Large electrode systems; less accuracy needed</td>
+</tr>
+<tr class="even">
+<td><code>force</code></td>
+<td>Override tolerance</td>
+<td>When you want different accuracy than global setting</td>
+</tr>
+<tr class="odd">
+<td><code>order</code></td>
+<td>PPPM interpolation order</td>
+<td>Higher = more accurate but slower (default = 5)</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="output-and-diagnostics" class="level2">
 <h2 class="anchored" data-anchor-id="output-and-diagnostics">Output and Diagnostics</h2>
 <section id="kspace-energy" class="level3">
 <h3 class="anchored" data-anchor-id="kspace-energy">Kspace Energy</h3>
 <p>In thermodynamic output:</p>
-<pre><code>Kspace = 0.5 * sum_over_k(G(k) * |rho(k)|²)</code></pre>
-<p><code>KspaceEng</code> = reciprocal-space energy contribution. Large values indicate significant long-range interactions (expected for ionic systems).</p>
+<pre><code>Kspace = 0.5 * Σ_k G(k) * |ρ(k)|²</code></pre>
+<p><code>KspaceEng</code> = reciprocal-space energy contribution.</p>
+<p><strong>Large <code>KspaceEng</code> (relative to <code>PairEng</code>)</strong> indicates: - Many charged particles - Weak screening - Strong long-range interactions</p>
+<p>For pure water at 1 g/cm³, <code>KspaceEng</code> is typically ~30% of <code>PairEng</code>. For ionic solutions, it can be 50%+.</p>
+</section>
+<section id="checking-energy-conservation" class="level3">
+<h3 class="anchored" data-anchor-id="checking-energy-conservation">Checking Energy Conservation</h3>
+<p>With PPPM, energy is not strictly conserved (unlike NVE with exact Ewald). But drift should be small:</p>
+<pre class="lammps"><code># NVE with PPPM to check drift
+fix conservative all nve
+run 10000
+# Check TotEng drift over this run</code></pre>
+<p>Drift &gt; 0.1% over 10 ps indicates a problem (timestep, tolerance, overlapping atoms).</p>
 </section>
 <section id="performance" class="level3">
 <h3 class="anchored" data-anchor-id="performance">Performance</h3>
@@ -612,7 +679,13 @@ kspace_modify force 1e-4          # override tolerance</code></pre>
 </tr>
 </tbody>
 </table>
-<p>For electrode systems with 10,000+ atoms, PPPM is essential.</p>
+<p><strong>For electrode systems with 10,000+ atoms</strong>, PPPM is essential.</p>
+</section>
+<section id="grid-size-effects" class="level3">
+<h3 class="anchored" data-anchor-id="grid-size-effects">Grid Size Effects</h3>
+<p>PPPM uses a mesh. Too coarse mesh = inaccurate. LAMMPS chooses mesh size based on tolerance and cutoff.</p>
+<pre class="lammps"><code>kspace_modify mesh 32 32 32    # manually set mesh (not usually needed)</code></pre>
+<p>If you see “PPPM grid too small” warnings, the tolerance may be too tight for the mesh.</p>
 </section>
 </section>
 <section id="common-issues" class="level2">
@@ -637,7 +710,7 @@ kspace_modify force 1e-4          # override tolerance</code></pre>
 <td>Use <code>1e-6</code> or tighter</td>
 </tr>
 <tr class="even">
-<td>Pressure oscillations</td>
+<td>Pressure oscillations in z</td>
 <td>Slab correction wrong</td>
 <td>Check <code>kspace_modify slab</code></td>
 </tr>
@@ -655,6 +728,16 @@ kspace_modify force 1e-4          # override tolerance</code></pre>
 <td>NaN forces</td>
 <td>Overlapping atoms</td>
 <td>Minimize before dynamics</td>
+</tr>
+<tr class="even">
+<td><code>kspace style not supported</code></td>
+<td>Using standard pppm with ELECTRODE</td>
+<td>Use <code>pppm/electrode</code></td>
+</tr>
+<tr class="odd">
+<td>Warnings about PPPM accuracy</td>
+<td>Grid too coarse for tolerance</td>
+<td>Use tighter tolerance or larger grid</td>
 </tr>
 </tbody>
 </table>
@@ -681,9 +764,9 @@ kspace_modify force 1e-4          # override tolerance</code></pre>
 <td><code>pair_style ... cutoff</code></td>
 </tr>
 <tr class="even">
-<td>Ewald parameter</td>
+<td>Ewald parameter (α)</td>
 <td>Split between real/reciprocal</td>
-<td>Default chosen automatically</td>
+<td>Auto-computed; rarely need to set</td>
 </tr>
 <tr class="odd">
 <td>PPPM</td>
@@ -699,6 +782,11 @@ kspace_modify force 1e-4          # override tolerance</code></pre>
 <td>Electrode-aware kspace</td>
 <td>Supports induced charges</td>
 <td><code>kspace_style pppm/electrode</code></td>
+</tr>
+<tr class="even">
+<td>Pair-kspace consistency</td>
+<td>Must match</td>
+<td><code>coul/long</code> → <code>pppm</code></td>
 </tr>
 </tbody>
 </table>

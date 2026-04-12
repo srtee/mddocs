@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -243,28 +208,34 @@ window.Quarto = {
   <li><a href="#sec-physical-conditions" id="toc-sec-physical-conditions" class="nav-link active" data-scroll-target="#sec-physical-conditions">Physical Conditions</a>
   <ul class="collapse">
   <li><a href="#what-is-being-held-constant" id="toc-what-is-being-held-constant" class="nav-link" data-scroll-target="#what-is-being-held-constant">What Is Being Held Constant?</a></li>
+  <li><a href="#the-physical-meaning-of-temperature" id="toc-the-physical-meaning-of-temperature" class="nav-link" data-scroll-target="#the-physical-meaning-of-temperature">The Physical Meaning of Temperature</a>
+  <ul class="collapse">
+  <li><a href="#temperature-is-a-statistical-property" id="toc-temperature-is-a-statistical-property" class="nav-link" data-scroll-target="#temperature-is-a-statistical-property">Temperature Is a Statistical Property</a></li>
+  <li><a href="#temperature-vs.-kinetic-energy" id="toc-temperature-vs.-kinetic-energy" class="nav-link" data-scroll-target="#temperature-vs.-kinetic-energy">Temperature vs.&nbsp;Kinetic Energy</a></li>
+  </ul></li>
   <li><a href="#time-integration-and-timestep" id="toc-time-integration-and-timestep" class="nav-link" data-scroll-target="#time-integration-and-timestep">Time Integration and Timestep</a>
   <ul class="collapse">
-  <li><a href="#the-verlet-algorithm" id="toc-the-verlet-algorithm" class="nav-link" data-scroll-target="#the-verlet-algorithm">The Verlet Algorithm</a></li>
+  <li><a href="#the-velocity-verlet-algorithm" id="toc-the-velocity-verlet-algorithm" class="nav-link" data-scroll-target="#the-velocity-verlet-algorithm">The Velocity Verlet Algorithm</a></li>
+  <li><a href="#why-velocity-verlet" id="toc-why-velocity-verlet" class="nav-link" data-scroll-target="#why-velocity-verlet">Why Velocity Verlet?</a></li>
   <li><a href="#timestep-selection" id="toc-timestep-selection" class="nav-link" data-scroll-target="#timestep-selection">Timestep Selection</a></li>
-  <li><a href="#why-timestep-matters-for-output" id="toc-why-timestep-matters-for-output" class="nav-link" data-scroll-target="#why-timestep-matters-for-output">Why Timestep Matters for Output</a></li>
   <li><a href="#bond-constraints" id="toc-bond-constraints" class="nav-link" data-scroll-target="#bond-constraints">Bond Constraints</a></li>
   </ul></li>
   <li><a href="#thermostats-controlling-temperature" id="toc-thermostats-controlling-temperature" class="nav-link" data-scroll-target="#thermostats-controlling-temperature">Thermostats — Controlling Temperature</a>
   <ul class="collapse">
-  <li><a href="#temperature-in-md" id="toc-temperature-in-md" class="nav-link" data-scroll-target="#temperature-in-md">Temperature in MD</a></li>
+  <li><a href="#why-we-need-thermostats" id="toc-why-we-need-thermostats" class="nav-link" data-scroll-target="#why-we-need-thermostats">Why We Need Thermostats</a></li>
   <li><a href="#thermostat-algorithms" id="toc-thermostat-algorithms" class="nav-link" data-scroll-target="#thermostat-algorithms">Thermostat Algorithms</a></li>
-  <li><a href="#what-temperature-controls-physically" id="toc-what-temperature-controls-physically" class="nav-link" data-scroll-target="#what-temperature-controls-physically">What Temperature Controls Physically</a></li>
+  <li><a href="#what-temperature-actually-controls" id="toc-what-temperature-actually-controls" class="nav-link" data-scroll-target="#what-temperature-actually-controls">What Temperature Actually Controls</a></li>
   </ul></li>
   <li><a href="#barostats-controlling-pressure" id="toc-barostats-controlling-pressure" class="nav-link" data-scroll-target="#barostats-controlling-pressure">Barostats — Controlling Pressure</a>
   <ul class="collapse">
   <li><a href="#pressure-in-md" id="toc-pressure-in-md" class="nav-link" data-scroll-target="#pressure-in-md">Pressure in MD</a></li>
-  <li><a href="#barostat-algorithms" id="toc-barostat-algorithms" class="nav-link" data-scroll-target="#barostat-algorithms">Barostat Algorithms</a></li>
+  <li><a href="#barostat-types" id="toc-barostat-types" class="nav-link" data-scroll-target="#barostat-types">Barostat Types</a></li>
   <li><a href="#what-pressure-controls-physically" id="toc-what-pressure-controls-physically" class="nav-link" data-scroll-target="#what-pressure-controls-physically">What Pressure Controls Physically</a></li>
   </ul></li>
   <li><a href="#integrators-in-lammps" id="toc-integrators-in-lammps" class="nav-link" data-scroll-target="#integrators-in-lammps">Integrators in LAMMPS</a>
   <ul class="collapse">
-  <li><a href="#combinations-with-electrode" id="toc-combinations-with-electrode" class="nav-link" data-scroll-target="#combinations-with-electrode">Combinations with ELECTRODE</a></li>
+  <li><a href="#combining-thermostats-and-barostats" id="toc-combining-thermostats-and-barostats" class="nav-link" data-scroll-target="#combining-thermostats-and-barostats">Combining Thermostats and Barostats</a></li>
+  <li><a href="#for-electrode-simulations" id="toc-for-electrode-simulations" class="nav-link" data-scroll-target="#for-electrode-simulations">For ELECTRODE Simulations</a></li>
   </ul></li>
   <li><a href="#observables-what-you-actually-measure" id="toc-observables-what-you-actually-measure" class="nav-link" data-scroll-target="#observables-what-you-actually-measure">Observables — What You Actually Measure</a>
   <ul class="collapse">
@@ -299,11 +270,11 @@ window.Quarto = {
 </div>
 <div class="callout-body-container callout-body">
 <ul>
-<li>What NVE, NVT, NPT mean and when to use each</li>
+<li>What NVE, NVT, NPT mean physically and when to use each</li>
 <li>How thermostats work (algorithms, LAMMPS syntax, physical meaning)</li>
 <li>How barostats control pressure and volume</li>
 <li>Timestep selection and why it matters</li>
-<li>What observables you can measure</li>
+<li>What observables you can measure and what they tell you</li>
 </ul>
 </div>
 </div>
@@ -359,26 +330,76 @@ window.Quarto = {
 </tbody>
 </table>
 <p>The ensemble choice is not just convention — it determines which statistical mechanics formula you must use to connect simulation results to experimental observables.</p>
+<p><strong>Example</strong>: If you run NVT and compute the compressibility, you need to use the NVT formula for fluctuations, not the NPT formula. Using the wrong ensemble = wrong physics.</p>
+</section>
+<section id="the-physical-meaning-of-temperature" class="level2">
+<h2 class="anchored" data-anchor-id="the-physical-meaning-of-temperature">The Physical Meaning of Temperature</h2>
+<section id="temperature-is-a-statistical-property" class="level3">
+<h3 class="anchored" data-anchor-id="temperature-is-a-statistical-property">Temperature Is a Statistical Property</h3>
+<p>In MD, temperature is defined from kinetic energy:</p>
+<p><span class="math display">\[T = \frac{2}{3N_f k_B} \sum_i \frac{1}{2}m_i v_i^2\]</span></p>
+<p>Where <span class="math inline">\(N_f\)</span> is the number of degrees of freedom (3N minus constraints).</p>
+<p><strong>Key points</strong>: - Temperature is a <strong>mean quantity</strong> — the instantaneous value fluctuates - Fluctuations scale as <span class="math inline">\(1/\sqrt{N}\)</span> — larger systems have smaller relative fluctuations - For N=1000 water molecules, T fluctuates by about ±10 K even in equilibrium</p>
+</section>
+<section id="temperature-vs.-kinetic-energy" class="level3">
+<h3 class="anchored" data-anchor-id="temperature-vs.-kinetic-energy">Temperature vs.&nbsp;Kinetic Energy</h3>
+<p>For an ideal gas, <span class="math inline">\(T\)</span> is directly proportional to kinetic energy. But in a real system:</p>
+<p><span class="math display">\[T \propto \langle KE \rangle / N_f\]</span></p>
+<p>This means: - If you increase the timestep and integration becomes inaccurate, KE may “drift” - If atoms are constrained (shake), those degrees of freedom don’t contribute to T - A frozen atom (velocity set to zero) doesn’t contribute to temperature at all</p>
+<p><strong>Why this matters</strong>: <code>compute temp</code> uses the actual velocities of atoms in the group. If you thermostat only a subgroup, only those atoms’ velocities contribute to that compute.</p>
+</section>
 </section>
 <section id="time-integration-and-timestep" class="level2">
 <h2 class="anchored" data-anchor-id="time-integration-and-timestep">Time Integration and Timestep</h2>
-<section id="the-verlet-algorithm" class="level3">
-<h3 class="anchored" data-anchor-id="the-verlet-algorithm">The Verlet Algorithm</h3>
-<p>MD integrates Newton’s equations numerically. The velocity Verlet algorithm:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Velocity Verlet (per atom)</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>v(t <span class="op">+</span> dt<span class="op">/</span><span class="dv">2</span>) <span class="op">=</span> v(t) <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> F(t) <span class="op">/</span> m <span class="op">*</span> dt        <span class="co"># half-step velocity</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>x(t <span class="op">+</span> dt) <span class="op">=</span> x(t) <span class="op">+</span> v(t <span class="op">+</span> dt<span class="op">/</span><span class="dv">2</span>) <span class="op">*</span> dt             <span class="co"># full-step position</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>F(t <span class="op">+</span> dt) <span class="op">=</span> forces(x(t <span class="op">+</span> dt))                  <span class="co"># new forces</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>v(t <span class="op">+</span> dt) <span class="op">=</span> v(t <span class="op">+</span> dt<span class="op">/</span><span class="dv">2</span>) <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> F(t <span class="op">+</span> dt) <span class="op">/</span> m <span class="op">*</span> dt  <span class="co"># complete velocity</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="the-velocity-verlet-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="the-velocity-verlet-algorithm">The Velocity Verlet Algorithm</h3>
+<p>MD integrates Newton’s equations numerically. The velocity Verlet algorithm is:</p>
+<ol type="1">
+<li><strong>Half-step velocity</strong>: <span class="math inline">\(v(t + \Delta t/2) = v(t) + 0.5 \cdot F(t)/m \cdot \Delta t\)</span></li>
+<li><strong>Full-step position</strong>: <span class="math inline">\(x(t + \Delta t) = x(t) + v(t + \Delta t/2) \cdot \Delta t\)</span></li>
+<li><strong>Compute new forces</strong>: <span class="math inline">\(F(t + \Delta t) = -\nabla U(x(t + \Delta t))\)</span></li>
+<li><strong>Complete velocity</strong>: <span class="math inline">\(v(t + \Delta t) = v(t + \Delta t/2) + 0.5 \cdot F(t + \Delta t)/m \cdot \Delta t\)</span></li>
+</ol>
+<p><strong>Why this order?</strong> Because <span class="math inline">\(F(t + \Delta t)\)</span> depends on <span class="math inline">\(x(t + \Delta t)\)</span>, which is only known after step 2.</p>
+</section>
+<section id="why-velocity-verlet" class="level3">
+<h3 class="anchored" data-anchor-id="why-velocity-verlet">Why Velocity Verlet?</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 41%">
+<col style="width: 58%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Significance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Time-reversible</td>
+<td>Symplectic integrator; conserves phase space structure</td>
+</tr>
+<tr class="even">
+<td>Stable</td>
+<td>Energy drift is bounded over long simulations</td>
+</tr>
+<tr class="odd">
+<td>Velocity explicit</td>
+<td>Velocities are computed at full timestep (unlike position Verlet)</td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="timestep-selection" class="level3">
 <h3 class="anchored" data-anchor-id="timestep-selection">Timestep Selection</h3>
-<p>The timestep Δt must be small enough to resolve the fastest motion in the system:</p>
+<p>The timestep <span class="math inline">\(\Delta t\)</span> must be small enough to resolve the fastest motion in the system:</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Motion</th>
 <th>Characteristic Frequency</th>
+<th>Period</th>
 <th>Δt Limit</th>
 </tr>
 </thead>
@@ -386,102 +407,163 @@ window.Quarto = {
 <tr class="odd">
 <td>C-H bond stretch</td>
 <td>~3000 cm⁻¹</td>
+<td>~11 fs</td>
 <td>~0.5 fs</td>
 </tr>
 <tr class="even">
 <td>O-H bond stretch</td>
 <td>~3500 cm⁻¹</td>
+<td>~9.5 fs</td>
 <td>~0.5 fs</td>
 </tr>
 <tr class="odd">
 <td>H-O-H bend</td>
 <td>~1600 cm⁻¹</td>
+<td>~21 fs</td>
 <td>~1 fs</td>
 </tr>
 <tr class="even">
 <td>LJ repulsion</td>
 <td>Very fast</td>
-<td>requires small Δt</td>
+<td>~2–4 fs</td>
+<td>~0.5 fs</td>
 </tr>
 <tr class="odd">
 <td>Metal phonon</td>
 <td>~5–10 ps period</td>
+<td>ps scale</td>
 <td>~1–2 fs</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Typical values</strong>:</p>
-<ul>
-<li><strong>1 fs</strong> for explicit water with flexible bonds</li>
-<li><strong>0.5 fs</strong> for flexible molecules with H-bonds</li>
-<li><strong>2 fs</strong> with bond constraints (<code>fix shake</code> or <code>fix rattle</code>)</li>
-</ul>
-</section>
-<section id="why-timestep-matters-for-output" class="level3">
-<h3 class="anchored" data-anchor-id="why-timestep-matters-for-output">Why Timestep Matters for Output</h3>
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>Δt Too Large</th>
-<th>Δt Too Small</th>
+<th>System</th>
+<th>Timestep</th>
+<th>Reason</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Energy drift; simulation “blows up”</td>
-<td>Wasted computation</td>
+<td>Flexible molecules (methanol)</td>
+<td>0.5 fs</td>
+<td>Fast C-H stretch</td>
 </tr>
 <tr class="even">
-<td>Atoms overlap catastrophically</td>
-<td>Results unchanged</td>
+<td>SPC/E water (rigid)</td>
+<td>1 fs</td>
+<td>Fast O-H is constrained</td>
 </tr>
 <tr class="odd">
-<td>Timestep too large for physics</td>
-<td>Diminishing returns</td>
+<td>TIP4P water (rigid)</td>
+<td>1–2 fs</td>
+<td>Fast O-H is constrained</td>
+</tr>
+<tr class="even">
+<td>Metal (Ag, Au)</td>
+<td>2 fs</td>
+<td>Heavy atoms; slow phonons</td>
+</tr>
+<tr class="odd">
+<td>with <code>fix shake</code></td>
+<td>2 fs</td>
+<td>Constrains remove fast modes</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Validation</strong>: Run NVE and check energy conservation. Acceptable drift: &lt; 0.1% of total energy over 1 ns.</p>
+<p><strong>How to check if timestep is too large</strong>:</p>
+<pre class="lammps"><code># Run NVE and check energy drift
+fix conservative all nve
+run 10000    # 10 ps at 1 fs
+# In output, check TotEng drift
+# If TotEng changes by &gt;0.1%, reduce timestep</code></pre>
 </section>
 <section id="bond-constraints" class="level3">
 <h3 class="anchored" data-anchor-id="bond-constraints">Bond Constraints</h3>
-<p><code>fix shake</code> or <code>fix rattle</code> removes fast degrees of freedom (C-H, O-H bonds) by constraint:</p>
-<pre class="lammps"><code>fix constrain all shake 1e-4 200 0 a 1.0    # constrain bond with tolerance 1e-4</code></pre>
-<p>Allows Δt = 2 fs (2× faster simulation, same accuracy for bonded motion).</p>
+<p><code>fix shake</code> removes fast degrees of freedom by constraint:</p>
+<pre class="lammps"><code>fix constrain all shake 1e-4 200 0 a 1.0 b 1.0</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>1e-4</code></td>
+<td>Tolerance for constraint satisfaction</td>
+</tr>
+<tr class="even">
+<td><code>200</code></td>
+<td>Maximum iterations per step</td>
+</tr>
+<tr class="odd">
+<td><code>0</code></td>
+<td>Which atoms to NOT constrain (none)</td>
+</tr>
+<tr class="even">
+<td><code>a 1.0</code></td>
+<td>Bond type 1 has length 1.0 Å</td>
+</tr>
+<tr class="odd">
+<td><code>b 1.0</code></td>
+<td>Bond type 2 has length 1.0 Å</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Physical effect</strong>: Instead of integrating the fast O-H stretch (period ~9.5 fs), it’s held fixed. This removes the mode requiring small Δt.</p>
+<p><strong>Result</strong>: Can use Δt = 2 fs (2× faster simulation) with same accuracy for slower modes.</p>
 </section>
 </section>
 <section id="thermostats-controlling-temperature" class="level2">
 <h2 class="anchored" data-anchor-id="thermostats-controlling-temperature">Thermostats — Controlling Temperature</h2>
-<section id="temperature-in-md" class="level3">
-<h3 class="anchored" data-anchor-id="temperature-in-md">Temperature in MD</h3>
-<p>Temperature is a statistical property, not a direct control variable:</p>
-<p><span class="math display">\[T = \frac{2}{3Nk_B} \left\langle \frac{1}{2}mv^2 \right\rangle\]</span></p>
-<p>The <strong>instantaneous temperature</strong> fluctuates. Thermostats manipulate atom velocities to sample the canonical ensemble correctly.</p>
+<section id="why-we-need-thermostats" class="level3">
+<h3 class="anchored" data-anchor-id="why-we-need-thermostats">Why We Need Thermostats</h3>
+<p>NVE (microcanonical) samples an ensemble where total energy is conserved. But: - Initial velocities are drawn from a Maxwell-Boltzmann distribution at temperature T - As simulation proceeds, numerical errors slightly change total energy - The system doesn’t perfectly sample canonical (NVT) — it’s a quasi-ensemble</p>
+<p><strong>For production</strong>, we want true canonical ensemble sampling → use a thermostat.</p>
 </section>
 <section id="thermostat-algorithms" class="level3">
 <h3 class="anchored" data-anchor-id="thermostat-algorithms">Thermostat Algorithms</h3>
 <section id="velocity-rescaling-fix-temprescale" class="level4">
 <h4 class="anchored" data-anchor-id="velocity-rescaling-fix-temprescale">Velocity Rescaling (<code>fix temp/rescale</code>)</h4>
 <pre class="lammps"><code>fix tempctr all temp/rescale 10 300.0 300.0 0.02 1.0</code></pre>
-<p>Simple scaling: multiply all velocities to match target T. Not rigorous — does not produce correct fluctuations. Useful for quick equilibration.</p>
+<p>Simple scaling: multiply all velocities by a factor to match target T:</p>
+<p><span class="math display">\[v_{new} = v_{old} \sqrt{\frac{T_{target}}{T_{current}}}\]</span></p>
+<p><strong>Problems</strong>: - Does not produce correct fluctuations (variance too low) - Not physically motivated (invented for MD) - Can distort dynamics if coupling too tight</p>
+<p><strong>Use only for</strong>: quick equilibration before switching to a proper thermostat.</p>
 </section>
 <section id="berendsen-thermostat-fix-berendsen" class="level4">
 <h4 class="anchored" data-anchor-id="berendsen-thermostat-fix-berendsen">Berendsen Thermostat (<code>fix berendsen</code>)</h4>
 <pre class="lammps"><code>fix ber all berendsen temp 300.0 300.0 100.0</code></pre>
-<p>Weak coupling to heat bath. Produces incorrect fluctuations (variance too low). Not recommended for production.</p>
+<p>Weak coupling to heat bath:</p>
+<p><span class="math display">\[\frac{dT}{dt} = \frac{T_{bath} - T}{\tau}\]</span></p>
+<p><strong>Problems</strong>: - Produces temperature fluctuations that are too small by factor <span class="math inline">\(\sqrt{2/N_f}\)</span> - Does not sample canonical ensemble correctly - Not recommended for production</p>
+<p><strong>Advantage</strong>: very stable; good for systems that are hard to equilibrate.</p>
 </section>
 <section id="nosé-hoover-thermostat-fix-nvt" class="level4">
 <h4 class="anchored" data-anchor-id="nosé-hoover-thermostat-fix-nvt">Nosé-Hoover Thermostat (<code>fix nvt</code>)</h4>
 <pre class="lammps"><code>fix nvt_all all nvt temp 300.0 300.0 100.0</code></pre>
-<p>Extended system method. The system + thermostat share energy. Produces correct canonical distribution. Standard for most production runs.</p>
-<p>Variants: - <code>fix nvt/kk</code> — Kokkos version for GPU - <code>fix nvt/sphere</code> — for angular degrees of freedom</p>
+<p><strong>Extended system method</strong>: adds a degree of freedom <span class="math inline">\(s\)</span> (the “thermostat”) that shares energy with the system.</p>
+<p>The modified Hamiltonian:</p>
+<p><span class="math display">\[H' = \sum \frac{p_i^2}{2m_i} + U(\mathbf{r}) + \frac{Q}{2}\dot{s}^2 + (N_f+1)k_B T \ln s\]</span></p>
+<p>Where <span class="math inline">\(Q\)</span> is the ” thermostat mass” (related to <code>tdamp</code> in LAMMPS).</p>
+<p><strong>How it works</strong>: - If system is too hot → thermostat absorbs energy (s accelerates) - If system is too cold → thermostat gives energy (s decelerates) - Over time, correct canonical distribution is sampled</p>
+<p><strong>Parameters</strong>: - <code>300.0 300.0</code> = target temperature and damping source temperature (both same in NVT) - <code>100.0</code> = <code>tdamp</code> = coupling time in fs (should be ~100 fs for correct fluctuations)</p>
+<p><strong>Why 100 fs?</strong> The characteristic time for energy exchange between degrees of freedom is ~100 fs. Too small = over-damped; too large = slow equipartition.</p>
 </section>
 <section id="langevin-thermostat-fix-langevin" class="level4">
 <h4 class="anchored" data-anchor-id="langevin-thermostat-fix-langevin">Langevin Thermostat (<code>fix langevin</code>)</h4>
 <pre class="lammps"><code>fix mylang all langevin 300.0 300.0 100.0 12345</code></pre>
-<p>Stochastic differential equation:</p>
+<p><strong>Stochastic differential equation</strong>:</p>
 <p><span class="math display">\[m\frac{dv}{dt} = F - \gamma mv + \sqrt{2\gamma m k_B T} \, \xi(t)\]</span></p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 76%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Term</th>
@@ -490,83 +572,87 @@ window.Quarto = {
 </thead>
 <tbody>
 <tr class="odd">
-<td>F</td>
-<td>Conservative force</td>
+<td><span class="math inline">\(F\)</span></td>
+<td>Conservative force from potential</td>
 </tr>
 <tr class="even">
-<td>γmv</td>
-<td>Damping (friction)</td>
+<td><span class="math inline">\(-\gamma mv\)</span></td>
+<td>Friction (damping)</td>
 </tr>
 <tr class="odd">
-<td>√(2γmk_BT) ξ(t)</td>
-<td>Random noise (thermal fluctuations)</td>
+<td><span class="math inline">\(\sqrt{2\gamma m k_B T} \, \xi(t)\)</span></td>
+<td>Random noise; <span class="math inline">\(\xi(t)\)</span> is Gaussian white noise</td>
 </tr>
 </tbody>
 </table>
-<p>Good for: - Non-equilibrium dynamics (shear, field) - Systems with heterogeneous dynamics - When you want explicit noise</p>
-<p><strong>Parameter choice</strong>: - <code>100.0</code> = damping time (fd). Too small = over-damped; too large = slow equipartition - <code>12345</code> = random seed (set explicitly for reproducibility)</p>
+<p><strong>Physical interpretation</strong>: the system is coupled to a heat bath that: 1. Applies friction (energy dissipation) 2. Supplies random impulses (thermal fluctuations)</p>
+<p>Together, these produce correct canonical sampling (fluctuation-dissipation theorem).</p>
+<p><strong>Parameters</strong>: - <code>300.0 300.0</code> = target temperature, temperature of heat bath - <code>100.0</code> = damping time <span class="math inline">\(\tau_{damp} = m/\gamma\)</span> - <code>12345</code> = random seed (set explicitly for reproducibility)</p>
+<p><strong>Advantages</strong>: - Ergodic even for small systems (stochastic component) - Good for non-equilibrium dynamics (shear, external field) - Good for systems with heterogeneous dynamics (some atoms much heavier than others)</p>
+<p><strong>Disadvantages</strong>: - Adds artificial friction; modifies dynamics (no “true” Newtonian trajectory) - Inertial effects from friction alter short-time behavior</p>
 </section>
 <section id="thermostat-comparison" class="level4">
 <h4 class="anchored" data-anchor-id="thermostat-comparison">Thermostat Comparison</h4>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 15%">
-<col style="width: 28%">
+<col style="width: 16%">
+<col style="width: 29%">
 <col style="width: 14%">
-<col style="width: 27%">
+<col style="width: 25%">
 <col style="width: 13%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Thermostat</th>
-<th>Fluctuation Correct?</th>
-<th>ergodicity</th>
-<th>Computational Cost</th>
+<th>Fluctuations Correct?</th>
+<th>Ergodicity</th>
+<th>Affects Dynamics?</th>
 <th>Best Use</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>temp/rescale</td>
-<td>❌ No</td>
+<td>❌ No (all same T)</td>
 <td>N/A</td>
-<td>Low</td>
-<td>Quick equilibration</td>
+<td>Yes (artificial)</td>
+<td>Quick equilibration only</td>
 </tr>
 <tr class="even">
 <td>berendsen</td>
-<td>❌ No</td>
+<td>❌ No (too small)</td>
 <td>Poor</td>
-<td>Low</td>
+<td>Weakly</td>
 <td>Not recommended</td>
 </tr>
 <tr class="odd">
 <td>nvt (Nosé-Hoover)</td>
 <td>✅ Yes</td>
 <td>Good</td>
-<td>Medium</td>
+<td>Weakly</td>
 <td>Standard production</td>
 </tr>
 <tr class="even">
 <td>langevin</td>
 <td>✅ Yes</td>
-<td>Good</td>
-<td>Medium</td>
-<td>Non-equilibrium</td>
+<td>Good (stochastic)</td>
+<td>Yes (friction)</td>
+<td>Non-equilibrium; heterogeneous</td>
 </tr>
 <tr class="odd">
-<td>nvt + chain</td>
+<td>npt (with T-chain)</td>
 <td>✅ Yes</td>
 <td>Best</td>
-<td>High</td>
-<td>Difficult systems</td>
+<td>Weakly</td>
+<td>Difficult cases</td>
 </tr>
 </tbody>
 </table>
+<p><strong>For ELECTRODE simulations</strong>: Langevin on electrolyte is common because it ensures ergodicity even with constrained electrodes.</p>
 </section>
 </section>
-<section id="what-temperature-controls-physically" class="level3">
-<h3 class="anchored" data-anchor-id="what-temperature-controls-physically">What Temperature Controls Physically</h3>
+<section id="what-temperature-actually-controls" class="level3">
+<h3 class="anchored" data-anchor-id="what-temperature-actually-controls">What Temperature Actually Controls</h3>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 40%">
@@ -575,7 +661,7 @@ window.Quarto = {
 </colgroup>
 <thead>
 <tr class="header">
-<th>Temperature Change</th>
+<th>T Change</th>
 <th>Physical Effect</th>
 <th>Observable</th>
 </tr>
@@ -583,26 +669,29 @@ window.Quarto = {
 <tbody>
 <tr class="odd">
 <td>Increase T</td>
-<td>Higher kinetic energy → faster diffusion</td>
-<td>MSD, diffusion coefficient</td>
+<td>Higher kinetic energy → faster motion</td>
+<td>Higher diffusion coefficient</td>
 </tr>
 <tr class="even">
-<td>Too high T</td>
-<td>Bond breaking, chemical reactions (LAMMPS not suited)</td>
-<td>Decomposition</td>
+<td>T too high</td>
+<td>Bonds may break; chemical reactions</td>
+<td>System decomposes</td>
 </tr>
 <tr class="odd">
-<td>Too low T</td>
-<td>Slow dynamics, metastable states</td>
+<td>T too low</td>
+<td>Slow dynamics; metastable states</td>
 <td>Long equilibration times</td>
 </tr>
 <tr class="even">
 <td>T fluctuations too small</td>
 <td>Wrong ensemble (Berendsen)</td>
-<td>Incorrect heat capacity</td>
+<td>Wrong heat capacity</td>
 </tr>
 </tbody>
 </table>
+<p><strong>The diffusion coefficient</strong> <span class="math inline">\(D\)</span> depends on temperature:</p>
+<p><span class="math display">\[D(T) \approx D_0 \exp\left(-\frac{E_a}{k_B T}\right)\]</span></p>
+<p>For water, <span class="math inline">\(E_a\)</span> ≈ 0.2 eV, so doubling T roughly doubles D.</p>
 </section>
 </section>
 <section id="barostats-controlling-pressure" class="level2">
@@ -612,6 +701,10 @@ window.Quarto = {
 <p>Pressure from virial theorem:</p>
 <p><span class="math display">\[P = \frac{Nk_BT}{V} + \frac{1}{3V}\left\langle \sum_i \mathbf{r}_i \cdot \mathbf{F}_i \right\rangle\]</span></p>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 76%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Term</th>
@@ -620,33 +713,66 @@ window.Quarto = {
 </thead>
 <tbody>
 <tr class="odd">
-<td>Nk_B T / V</td>
-<td>Kinetic contribution (ideal gas)</td>
+<td><span class="math inline">\(Nk_BT/V\)</span></td>
+<td>Kinetic contribution (ideal gas pressure)</td>
 </tr>
 <tr class="even">
-<td>⟨Σ r·F⟩ / 3V</td>
-<td>Virial (force contribution)</td>
+<td><span class="math inline">\(\langle \sum \mathbf{r} \cdot \mathbf{F} \rangle / 3V\)</span></td>
+<td>Virial from interatomic forces</td>
 </tr>
 </tbody>
 </table>
-<p>The <strong>mechanical pressure</strong> is computed from atomic forces and positions. For anisotropic systems (slabs), the pressure tensor has different components.</p>
+<p><strong>For isotropic bulk</strong>: this scalar P is appropriate.</p>
+<p><strong>For anisotropic systems</strong> (slabs, interfaces): we have a <strong>pressure tensor</strong>:</p>
+<p><span class="math display">\[P_{\alpha\beta} = \frac{Nk_BT}{V}\delta_{\alpha\beta} + \frac{1}{V}\left\langle \sum_i r_{i\alpha} F_{i\beta} \right\rangle\]</span></p>
+<p>Where <span class="math inline">\(\alpha, \beta \in \{x, y, z\}\)</span>.</p>
 </section>
-<section id="barostat-algorithms" class="level3">
-<h3 class="anchored" data-anchor-id="barostat-algorithms">Barostat Algorithms</h3>
+<section id="barostat-types" class="level3">
+<h3 class="anchored" data-anchor-id="barostat-types">Barostat Types</h3>
 <section id="nose-hoover-barostat-fix-npt" class="level4">
 <h4 class="anchored" data-anchor-id="nose-hoover-barostat-fix-npt">Nose-Hoover Barostat (<code>fix npt</code>)</h4>
 <pre class="lammps"><code>fix npt_all all npt temp 300.0 300.0 100.0 iso 1.0 1.0 500.0</code></pre>
-<p>Controls T (Nosé-Hoover) and P (Nosé-Hoover). The <code>iso</code> keyword applies isotropic pressure control.</p>
-<p><strong>Keywords</strong>: - <code>iso</code> — isotropic (all components same P) - <code>aniso</code> — anisotropic (x, y, z independently) - <code>semiiso</code> — semi-isotropic (xy coupled, z separate)</p>
-<p>For <strong>slab geometries</strong> with non-periodic z:</p>
-<pre class="lammps"><code>fix npt_xz all npt temp 300.0 300.0 100.0 semiiso 1.0 1.0 500.0</code></pre>
-<p>This controls P_x = P_y, but allows P_z to adjust independently (or vice versa depending on setup).</p>
+<p><strong>Keywords for pressure coupling</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 47%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Keyword</th>
+<th>What It Controls</th>
+<th>Use When</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>iso</code></td>
+<td>All three components equally</td>
+<td>Isotropic bulk liquid</td>
+</tr>
+<tr class="even">
+<td><code>aniso</code></td>
+<td>x, y, z independently</td>
+<td>Anisotropic crystals; allow volume changes in each direction</td>
+</tr>
+<tr class="odd">
+<td><code>semiiso</code></td>
+<td>xy coupled, z separate</td>
+<td>Slab geometry with non-periodic z</td>
+</tr>
+</tbody>
+</table>
+<p>For <strong>slab geometries</strong> (electrode-electrolyte):</p>
+<pre class="lammps"><code>fix npt_slab all npt temp 300.0 300.0 100.0 semiiso 1.0 1.0 500.0</code></pre>
+<p>This controls P_x = P_y (the periodic directions), but allows P_z to be different (the non-periodic direction). The volume adjusts to satisfy the x,y pressure constraint.</p>
+<p><strong>Why semiiso?</strong> In slab geometry with non-periodic z: - x and y are periodic → pressure in those directions makes sense - z has vacuum/fixed boundaries → the pressure tensor component is less meaningful - Allowing P_z to float lets the system find its natural spacing</p>
 </section>
-<section id="mtk-barostat" class="level4">
-<h4 class="anchored" data-anchor-id="mtk-barostat">MTK Barostat</h4>
-<p>Martyna-Tobias-Klein barostat (more reliable for non-equilibrium):</p>
+<section id="mtk-barostat-martyna-tobias-klein" class="level4">
+<h4 class="anchored" data-anchor-id="mtk-barostat-martyna-tobias-klein">MTK Barostat (Martyna-Tobias-Klein)</h4>
 <pre class="lammps"><code>fix npt_mtk all npt temp 300.0 300.0 100.0 aniso 1.0 1.0 500.0</code></pre>
-<p>Use for: - Anisotropic systems - Systems with external fields - When pressure tensor components matter</p>
+<p>The MTK formulation is more reliable for: - Non-equilibrium systems (with external fields) - Anisotropic stress states - Systems where pressure tensor components matter independently</p>
 </section>
 </section>
 <section id="what-pressure-controls-physically" class="level3">
@@ -673,20 +799,21 @@ window.Quarto = {
 <tr class="even">
 <td>NPT equilibration</td>
 <td>System reaches correct density</td>
-<td>Density ~1 g/cm³ for water</td>
+<td>Density ~1 g/cm³ for water at 1 atm</td>
 </tr>
 <tr class="odd">
 <td>Anisotropic P</td>
 <td>Different stress in different directions</td>
-<td>Lattice parameters</td>
+<td>Cell angles change (for crystals)</td>
 </tr>
 <tr class="even">
-<td>Too high P</td>
-<td>Over-compression; unrealistic</td>
-<td>Density too high</td>
+<td>P too high</td>
+<td>Over-compression; atoms too close</td>
+<td>Density too high; forces too large</td>
 </tr>
 </tbody>
 </table>
+<p><strong>For water at 298 K and 1 atm</strong>: expected density ≈ 0.997 g/cm³ (SPC/E gives ~0.98 g/cm³, a known limitation).</p>
 </section>
 </section>
 <section id="integrators-in-lammps" class="level2">
@@ -698,43 +825,59 @@ window.Quarto = {
 <th>Ensemble</th>
 <th>Velocity Update</th>
 <th>Position Update</th>
+<th>Box</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>fix nve</code></td>
 <td>NVE</td>
-<td>Verlet (no thermostat)</td>
 <td>Verlet</td>
+<td>Verlet</td>
+<td>Fixed</td>
 </tr>
 <tr class="even">
 <td><code>fix nvt</code></td>
 <td>NVT</td>
 <td>Nosé-Hoover</td>
 <td>Verlet</td>
+<td>Fixed</td>
 </tr>
 <tr class="odd">
 <td><code>fix npt</code></td>
 <td>NPT</td>
 <td>Nosé-Hoover (T) + barostat</td>
 <td>Box changes</td>
+<td>Changes</td>
 </tr>
 <tr class="even">
 <td><code>fix nph</code></td>
 <td>NPH</td>
 <td>Barostat only</td>
 <td>Box changes</td>
+<td>Changes</td>
 </tr>
 </tbody>
 </table>
-<section id="combinations-with-electrode" class="level3">
-<h3 class="anchored" data-anchor-id="combinations-with-electrode">Combinations with ELECTRODE</h3>
-<p>For constant potential simulations:</p>
-<pre class="lammps"><code>fix frozen all nve                      # frozen electrodes (default)
-fix mylang elyte langevin 300 300 100 12345  # electrolyte thermostat
-
-# OR for frozen electrodes with NVT on electrolyte:
-fix mynvt elyte nvt temp 300.0 300.0 100.0</code></pre>
+<section id="combining-thermostats-and-barostats" class="level3">
+<h3 class="anchored" data-anchor-id="combining-thermostats-and-barostats">Combining Thermostats and Barostats</h3>
+<p><code>fix npt</code> combines both thermostat and barostat. To use them separately:</p>
+<pre class="lammps"><code>fix mytemp all nvt temp 300.0 300.0 100.0    # thermostat only
+fix mybar all npt temp 300.0 300.0 100.0 iso 1.0 1.0 500.0  # barostat only (and thermostat)</code></pre>
+<p>Actually, <code>npt</code> already thermostats. Separate use is rare.</p>
+</section>
+<section id="for-electrode-simulations" class="level3">
+<h3 class="anchored" data-anchor-id="for-electrode-simulations">For ELECTRODE Simulations</h3>
+<p>Standard approach for static electrodes:</p>
+<pre class="lammps"><code>fix frozen all nve                  # No dynamics on any atoms
+fix mytemp elyte langevin 300 300 100 12345  # Only electrolyte is thermostatted</code></pre>
+<p><strong>Why freeze electrodes?</strong> - Most electrode models don’t have realistic dynamics (no phonons, wrong masses) - The ELECTRODE fix computes induced charges, not forces that move atoms - Performance: fewer atoms to integrate</p>
+<p><strong>If electrodes should move</strong> (charging/discharging dynamics):</p>
+<pre class="lammps"><code>fix elec_nvt electrode nvt temp 300 300 100
+fix elyte_nvt elyte nvt temp 300 300 100</code></pre>
+<p>Or use Langevin on both:</p>
+<pre class="lammps"><code>fix elec_langevin electrode langevin 300 300 100 12345
+fix elyte_langevin elyte langevin 300 300 100 12345</code></pre>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -793,7 +936,7 @@ thermo_style custom step temp pe ke vol density</code></pre>
 <tr class="even">
 <td><code>Density</code></td>
 <td>Mass/volume</td>
-<td>Should match experimental density</td>
+<td>Should match experimental ~1 g/cm³</td>
 </tr>
 <tr class="odd">
 <td><code>Press</code></td>
@@ -805,23 +948,25 @@ thermo_style custom step temp pe ke vol density</code></pre>
 </section>
 <section id="computes-for-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="computes-for-analysis">Computes for Analysis</h3>
-<pre class="lammps"><code>compute temp_elec elyte temp     # electrolyte temperature (exclude frozen)
-compute stress all stress/atom  # per-atom stress tensor
-compute RDF all rdf 2 * 500     # radial distribution function</code></pre>
+<pre class="lammps"><code>compute temp_elec elyte temp     # Temperature of electrolyte only
+compute stress all stress/atom  # Per-atom stress tensor (for local pressure)
+compute RDF all rdf 2 * 500     # Radial distribution function g(r)
+compute msd all msd            # Mean squared displacement (diffusion)</code></pre>
 </section>
 <section id="fix-specific-output-electrode" class="level3">
 <h3 class="anchored" data-anchor-id="fix-specific-output-electrode">Fix-Specific Output (ELECTRODE)</h3>
-<p>For <code>fix electrode/conp</code>:</p>
-<pre class="lammps"><code>variable Q_bot equal f_fxconp[5]    # charge on bottom electrode (check index)
+<p>For <code>fix electrode/conp</code>, the fix stores values that can be accessed:</p>
+<pre class="lammps"><code>variable Q_bot equal f_fxconp[5]    # charge on bottom electrode
 variable Q_top equal f_fxconp[6]    # charge on top electrode
-variable V_bot equal f_fxconp[2]    # potential on bottom (for conq)</code></pre>
-<p>The exact indices depend on the fix configuration. Check LAMMPS documentation or print all fix values.</p>
+variable V_bot equal f_fxconp[2]   # potential on bottom (for conq mode)</code></pre>
+<p>The exact indices depend on the fix configuration. To find them:</p>
+<pre class="lammps"><code>print "Fix values: $(f_fxconp)"</code></pre>
 </section>
 <section id="trajectory-output" class="level3">
 <h3 class="anchored" data-anchor-id="trajectory-output">Trajectory Output</h3>
 <pre class="lammps"><code>dump 1 all custom 100 traj.lammpstrj id type x y z q
-dump 2 all dcd 100 traj.dcd    # binary; smaller file</code></pre>
-<p>Post-processing tools: - <strong>Python</strong>: MDAnalysis, pytim, mdtraj - <strong>VMD</strong>: visualization and analysis - <strong>Ovito</strong>: visualization and statistical analysis</p>
+dump 2 all dcd 100 traj.dcd    # binary format; much smaller files</code></pre>
+<p><strong>Post-processing tools</strong>: - <strong>Python</strong>: MDAnalysis, pytim, mdtraj, ovito-python - <strong>VMD</strong>: visualization and analysis - <strong>Ovito</strong>: visualization and statistical analysis</p>
 </section>
 </section>
 <section id="physical-conditions-output-summary" class="level2">
@@ -852,7 +997,7 @@ dump 2 all dcd 100 traj.dcd    # binary; smaller file</code></pre>
 <td>P = 1 atm</td>
 <td>External pressure</td>
 <td><code>Press</code></td>
-<td>Mean = 1 atm, fluctuates</td>
+<td>Mean ≈ 1 atm, fluctuates</td>
 </tr>
 <tr class="odd">
 <td>NVE</td>
@@ -870,7 +1015,7 @@ dump 2 all dcd 100 traj.dcd    # binary; smaller file</code></pre>
 <td>NPT</td>
 <td>Isobaric</td>
 <td><code>Vol</code>, <code>Density</code></td>
-<td>Matches experiment</td>
+<td>Matches experimental density</td>
 </tr>
 </tbody>
 </table>
@@ -915,6 +1060,16 @@ dump 2 all dcd 100 traj.dcd    # binary; smaller file</code></pre>
 <td>Anisotropic pressure for isotropic system</td>
 <td>Stressed state, wrong density</td>
 <td>Use <code>iso</code> pressure control</td>
+</tr>
+<tr class="even">
+<td>Coupling time too small</td>
+<td>Over-damped; slow equilibration</td>
+<td>Use ~100 fs for NVT, ~500 fs for NPT</td>
+</tr>
+<tr class="odd">
+<td>Double thermostatting</td>
+<td>System fights itself; weird behavior</td>
+<td>Check <code>fix</code> commands; only one thermostat per group</td>
 </tr>
 </tbody>
 </table>
