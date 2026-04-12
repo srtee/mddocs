@@ -1,4 +1,4 @@
-# Molecular Dynamics Fundamentals
+# Molecular Dynamics Fundamentals {#sec-fundamentals}
 
 ::: {.callout-tip}
 ## In this section

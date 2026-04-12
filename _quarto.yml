@@ -35,9 +35,6 @@ website:
     style: "docked"
     collapse-level: 1
     search: true
-  page-footer:
-    copyright: "2024"
-    github-url: "https://github.com/lammps/lammps"
 
 format:
   html:
@@ -56,6 +53,6 @@ metadata-files:
 crossref:
   fig-title: "Figure"
   tbl-title: "Table"
-  ex-title: "Example"
+  exm-title: "Example"
 
 bibliography: references.bib

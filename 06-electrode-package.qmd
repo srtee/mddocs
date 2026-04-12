@@ -1,4 +1,4 @@
-# The ELECTRODE Package in LAMMPS
+# The ELECTRODE Package {#sec-electrode-package}
 
 ::: {.callout-tip}
 ## In this section

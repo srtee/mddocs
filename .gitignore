@@ -18,3 +18,5 @@ log.*
 *.lammpstrj
 *.dcd
 restart.elast
+
+**/*.quarto_ipynb

@@ -1,4 +1,4 @@
-# Electrodes and the Constant Potential Method
+# Electrodes and the Constant Potential Method {#sec-electrodes-cpm}
 
 ::: {.callout-tip}
 ## In this section

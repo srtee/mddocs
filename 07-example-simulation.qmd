@@ -1,4 +1,4 @@
-# A Complete Constant Potential Simulation
+# A Complete Constant Potential Simulation {#sec-example}
 
 ::: {.callout-tip}
 ## In this section

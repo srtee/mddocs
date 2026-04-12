@@ -1,4 +1,4 @@
-# Electrostatics in Molecular Simulations
+# Electrostatics {#sec-electrostatics}
 
 ::: {.callout-tip}
 ## In this section
