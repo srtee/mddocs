@@ -4,10 +4,11 @@
 ## In this section
 
 - Why long-range Coulomb is computationally hard
-- How Ewald summation splits the problem
+- How Ewald summation splits the problem conceptually
 - How PPPM achieves O(N log N) scaling
 - Why slab geometry needs special treatment
-- Pair-kpace consistency rules
+- Pair-kspace consistency rules
+- Practical guidance on choosing tolerance and debugging
 :::
 
 ## The Coulomb Problem
@@ -21,9 +22,14 @@ Unlike LJ (which decays as r⁻⁶), Coulomb falls off slowly. In a periodic sys
 | Direct summation | Cost | Problem |
 |------------------|------|---------|
 | All pairs (N²/2) | O(N²) | Prohibitive for large N |
-| Cutoff at 10 Å | O(N) | ~10% error for ionic systems |
+| Cutoff at 10 Å | O(N) | ~10–50% error for ionic systems |
 
 The challenge: we need the **long-range part** of Coulomb for accuracy, but we cannot sum it directly because there are too many pairs.
+
+**Why Coulomb is harder than LJ**:
+- For unit charges at 3 Å: V ≈ 110 kcal/mol (real units)
+- For LJ minimum at same distance: V ≈ -1 kcal/mol
+- Coulomb is 100× larger and decays slower
 
 ## Ewald Summation — The Conceptual Basis
 
@@ -46,18 +52,18 @@ $$V_{Coul} = V_{real} + V_{recip} + V_{self}$$
 3. **Reciprocal space**: interaction of Gaussians with each other in Fourier space (long-range, also convergent)
 4. **Self term**: subtract the interaction of each charge with its own Gaussian
 
-### The Ewald Parameter (α)
+### Why the Split Works
 
-α controls the width of the Gaussian smearing:
+The problem with direct Coulomb sum is that $1/r$ is slowly decaying. By smearing charges into Gaussians:
 
-| α (large) | α (small) |
-|-----------|-----------|
-| Narrow Gaussians | Wide Gaussians |
-| Real space converges quickly | Real space converges slowly |
-| Reciprocal space expensive | Reciprocal space cheaper |
-| Overall: fast for small systems | Overall: better for large systems |
+- The short-range interaction (original charge × Gaussian of neighbor) converges quickly
+- The long-range interaction (Gaussian × Gaussian) becomes smooth and amenable to Fourier methods
 
-Typical α ≈ 0.2–0.5 Å⁻¹ (real units). LAMMPS usually chooses a reasonable default, but for very asymmetric boxes (very thin in one direction), tuning helps.
+**The Ewald parameter α controls the split**:
+- Large α: Gaussian is narrow → real-space converges fast → reciprocal space slow
+- Small α: Gaussian is wide → real-space converges slow → reciprocal space fast
+
+For typical systems, α ≈ 0.2–0.5 Å⁻¹ (real units). LAMMPS chooses a reasonable default based on the system size and cutoff.
 
 ### Ewald in LAMMPS
 
@@ -67,25 +73,27 @@ kspace_style ewald 1e-5
 
 `1e-5` = desired RMS force accuracy (relative to force magnitude). Tighter tolerance = more accurate = slower.
 
+**How to interpret tolerance**: If the RMS force on atoms is ~100 kcal/mol/Å, a tolerance of `1e-5` means the kspace force error is ~0.001 kcal/mol/Å (negligible).
+
 ## PPPM — Particle-Particle Particle-Mesh
 
 ### Why PPPM?
 
 Ewald scales as O(N³/²). For very large systems, this is still prohibitive.
 
-PPPM (also called PME — Particle Mesh Ewald) maps charges to a regular mesh and uses FFT for the reciprocal space sum:
+PPPM (Particle-Particle Particle-Mesh, also called PME — Particle Mesh Ewald) maps charges to a regular mesh and uses FFT for the reciprocal space sum:
 
 $$O(N \log N) \text{ scaling}$$
 
 ### How PPPM Works
 
-1. **Distribute charges to mesh**: each charge assigned to nearby mesh points (Gaussian or cloud-in-cell)
-2. **FFT to reciprocal space**: `charge density(r)` → `charge density(k)`
-3. **Multiply by Green's function**: apply the Coulomb kernel in k-space
-4. **FFT back to real space**: forces on mesh
-5. **Interpolate forces to particles**: mesh forces → atomic forces
+1. **Distribute charges to mesh**: each charge assigned to nearby mesh points (Gaussian or cloud-in-cell scheme)
+2. **FFT to reciprocal space**: `ρ(r)` → `ρ(k)` (charge density in k-space)
+3. **Multiply by Green's function**: apply the Coulomb kernel $4π/k²$ in k-space
+4. **FFT back to real space**: get the long-range potential on the mesh
+5. **Interpolate forces to particles**: mesh → atom forces via shape function
 
-The key advantage: FFT is O(N log N), so the reciprocal space part scales much better than Ewald.
+**The key insight**: convolution with Green's function becomes multiplication in Fourier space. FFT does this efficiently.
 
 ### PPPM in LAMMPS
 
@@ -93,15 +101,22 @@ The key advantage: FFT is O(N log N), so the reciprocal space part scales much b
 kspace_style pppm 1e-5
 ```
 
-### PPPM Accuracy
+**For ELECTRODE systems**, use the electrode-aware variant:
 
-| Tolerance | Force Accuracy | Speed |
-|-----------|---------------|-------|
-| `1e-4` | ~0.1% | Fastest |
-| `1e-5` | ~0.01% | Standard |
-| `1e-6` | ~0.001% | Slowest |
+```lammps
+kspace_style pppm/electrode 1e-5
+```
 
-For production: `1e-5` is usually sufficient. For precise energy calculations: `1e-6`.
+### PPPM Accuracy vs. Speed
+
+| Tolerance | Force RMS Error | Relative Error | Speed |
+|-----------|----------------|----------------|-------|
+| `1e-3` | ~1% | Large | Fastest |
+| `1e-4` | ~0.1% | Noticeable | Fast |
+| `1e-5` | ~0.01% | Usually fine | Medium |
+| `1e-6` | ~0.001% | Precise | Slow |
+
+For production: `1e-5` is standard. For precise energy calculations (e.g., comparing binding energies): `1e-6`.
 
 ## Cutoff-Based Methods (When to Use Them)
 
@@ -116,19 +131,26 @@ kspace_style none                   # explicitly no long-range
 
 ### When Cutoff-Based Is Acceptable
 
-- Neutral, sparse systems (gases)
+- Neutral, sparse systems (gases at low pressure)
 - Very short simulations where speed matters more than accuracy
 - Testing/debugging before production
+- Systems with all charges screened by high dielectric (but even then, be careful)
 
-### Performance Note
+### The Error from Truncating Coulomb
 
-For small systems (N < 1000) with short simulation times (ns), cutoff-based may be acceptable. For anything involving ions, water, or electrode interfaces: use PPPM.
+For 1M NaCl solution:
+- Bulk screening length ≈ 10 Å
+- But at electrode surfaces, unscreened charges persist
+- Cutting off at 10 Å means you miss the long-range surface interactions entirely
+- This changes capacitance by 20–50%
+
+**Conclusion**: for electrode-electrolyte simulations, always use PPPM.
 
 ## Boundary Conditions and Electrostatics
 
 ### Periodic Boundary Conditions in 3D
 
-With `boundary p p p`, the system is a periodic tile. Ewald/PPPM works straightforwardly.
+With `boundary p p p`, the system is a periodic tile repeating infinitely. Ewald/PPPM works straightforwardly.
 
 ### Slab Geometry (Non-Periodic Z)
 
@@ -138,9 +160,11 @@ For electrode-electrolyte simulations:
 boundary p p f    # non-periodic z
 ```
 
-The z-direction has a vacuum gap. This creates two electrode surfaces exposed to vacuum (or vacuum above the electrolyte).
+The z-direction has a vacuum gap. This creates two electrode surfaces exposed to vacuum (or vacuum region above electrolyte).
 
 **Problem with slab geometry**: electrostatics in 2D is different from 3D. The naive Ewald/PPPM sum would include artificial dipole-dipole interactions between periodic images in z.
+
+**Why this matters**: Without correction, the computed electrostatic energy depends on how many times you replicate the cell in z — clearly wrong for a single interface.
 
 **Solution**: 2D Ewald / slab correction
 
@@ -151,7 +175,9 @@ kspace_modify slab 3
 This applies a correction for the slab geometry:
 - Assumes the system is infinitely periodic in x, y
 - Assumes finite (non-periodic) in z
-- Adds a dipole correction term
+- Adds a dipole correction term that accounts for the missing images
+
+The number `3` refers to the dimensionality being treated as 2D (slab). LAMMPS automatically handles the correction.
 
 ::: {.callout-warning}
 ## Forgot `kspace_modify slab`?
@@ -159,10 +185,20 @@ This applies a correction for the slab geometry:
 If you use `boundary p p f` without `kspace_modify slab`, you will get:
 - Artificially high pressure in z-direction
 - Incorrect forces on atoms near the surface
-- Wrong double-layer structure
+- Wrong double-layer structure and capacitance
 
-Always add `kspace_modify slab N` for non-periodic z.
+Always add `kspace_modify slab 3` (or equivalent) for non-periodic z.
 :::
+
+### The Dipole Correction
+
+The slab correction adds a term that accounts for the net dipole moment of the slab interacting with its periodic images. It has the form:
+
+$$V_{dipole} = \frac{2\pi}{V} \left|\sum_i q_i z_i\right|^2$$
+
+Where the sum is over all charges in the cell. This term is added to the reciprocal-space energy.
+
+**Physical interpretation**: a polar slab has a dipole moment. In 3D periodic boundaries, that dipole would interact with infinitely many images. In slab geometry, only the x,y periodicity remains, and the correction accounts for the missing z-interactions.
 
 ### Periodic Z with Finite Field
 
@@ -173,10 +209,20 @@ fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 ffield on
 ```
 
 With `ffield on`, the system is treated as an infinite stack of identical cells:
-- No vacuum region
+- No vacuum region needed
 - Smaller z-dimension possible (saves atoms)
 - Requires `symm on` (total charge neutrality)
-- Uses internal E-field to apply potential difference
+- Uses internal E-field to apply potential difference: $E = V/d$
+
+**Advantages**:
+- Better scaling for large systems (fully periodic)
+- No slab correction needed
+- Smaller cell means fewer atoms
+
+**Disadvantages**:
+- Electrodes must be symmetric (infinite stack assumption)
+- Can't model single-surface experiments
+- Requires careful treatment of dipole moment
 
 ## Pair Style — Kspace Consistency
 
@@ -184,51 +230,64 @@ With `ffield on`, the system is treated as an infinite stack of identical cells:
 
 The **pair style** determines what forces are computed in real space. The **kspace style** handles the long-range correction.
 
-| Pair Style | Real-Space | Kspace Style | Notes |
+If you use `coul/long` or `coul/long` as part of a pair style, LAMMPS **requires** an appropriate kspace style. The `long` suffix means "long-range handled by kspace".
+
+| Pair Style | Real Space | Kspace Style | Notes |
 |------------|-----------|--------------|-------|
-| `lj/cut/coul/long` | LJ + Coulomb | `pppm` or `ewald` | Standard |
-| `coul/long` only | Coulomb only | `pppm` | No LJ |
-| `lj/cut/coul/cut` | LJ + Coulomb | none | Direct only; large error |
+| `lj/cut/coul/long` | LJ + Coulomb (short-range) | `pppm` or `ewald` | **Standard for electrolytes** |
+| `lj/cut/coul/cut` | LJ + Coulomb (truncated) | **none** | Large error; only for testing |
+| `coul/long` only | Coulomb (short-range only) | `pppm` or `ewald` | No LJ |
 | `lj/cut` only | LJ only | none | No electrostatics |
 
 ### Why Consistency Matters
 
-If you use `pair_style lj/cut/coul/long` but no kspace style:
+**If you use `lj/cut/coul/long` but no kspace style**:
 
-- LAMMPS will error and tell you to use `kspace_style`
-- The long-range Coulomb is not computed (even though it should be)
+```
+ERROR: Kspace style required for coul/long pair style
+```
 
-If you use `pair_style lj/cut/coul/cut` but `kspace_style pppm`:
+LAMMPS will error. You must add kspace.
 
-- pppm tries to compute long-range on top of already-truncated Coulomb
-- Double-counting or error
+**If you use `lj/cut/coul/cut` but `kspace_style pppm`**:
+
+The truncated Coulomb in real space already includes some long-range contribution. Adding PPPM double-counts or produces wrong results. LAMMPS may warn but will likely compute nonsense.
+
+**Always match pair style to kspace style**: `coul/long` → `pppm`/`ewald`; `coul/cut` → `none`.
 
 ### Electrode-Specific Kspace Styles
 
-For ELECTRODE simulations, use:
+For ELECTRODE simulations, you MUST use electrode-aware kspace styles:
 
 ```lammps
 kspace_style pppm/electrode 1e-5
+kspace_style ewald/electrode 1e-5
 ```
 
-This variant:
-- Provides electrode-electrode interaction matrix to the ELECTRODE fix
-- Handles the induced-charge electrostatics correctly
-- Is compatible with `electrode/conp`, `electrode/conq`, `electrode/thermo`
+These variants:
+- Provide electrode-electrode interaction matrix to the ELECTRODE fix
+- Handle the induced-charge electrostatics correctly (electrode charges are not fixed)
+- Are compatible with `electrode/conp`, `electrode/conq`, `electrode/thermo`
 
-Available styles:
-- `kspace_style ewald/electrode`
-- `kspace_style pppm/electrode`
-- `kspace_style pppm/electrode/intel` (optimized for Intel hardware)
+Standard `pppm` or `ewald` will error with ELECTRODE fixes.
 
 ## Kspace Modify Options
 
 ```lammps
 kspace_modify slab 3              # 2D Ewald for non-periodic z (default = 3)
 kspace_modify wire                 # wire boundary conditions
-kspace_modify one-step             # faster but less accurate elastance matrix
+kspace_modify one-step            # faster but less accurate elastance matrix
 kspace_modify force 1e-4          # override tolerance
+kspace_modify order 5             # PPPM grid order (higher = more accurate but slower)
 ```
+
+| Option | Purpose | When to Use |
+|--------|---------|-------------|
+| `slab 3` | 2D Ewald correction | Non-periodic z (slab geometry) |
+| `wire` | Wire boundary conditions | Cylindrical geometry |
+| `one-step` | Faster elastance matrix calculation | Large electrode systems; less accuracy needed |
+| `force` | Override tolerance | When you want different accuracy than global setting |
+| `order` | PPPM interpolation order | Higher = more accurate but slower (default = 5) |
 
 ## Output and Diagnostics
 
@@ -237,10 +296,30 @@ kspace_modify force 1e-4          # override tolerance
 In thermodynamic output:
 
 ```
-Kspace = 0.5 * sum_over_k(G(k) * |rho(k)|²)
+Kspace = 0.5 * Σ_k G(k) * |ρ(k)|²
 ```
 
-`KspaceEng` = reciprocal-space energy contribution. Large values indicate significant long-range interactions (expected for ionic systems).
+`KspaceEng` = reciprocal-space energy contribution. 
+
+**Large `KspaceEng` (relative to `PairEng`)** indicates:
+- Many charged particles
+- Weak screening
+- Strong long-range interactions
+
+For pure water at 1 g/cm³, `KspaceEng` is typically ~30% of `PairEng`. For ionic solutions, it can be 50%+.
+
+### Checking Energy Conservation
+
+With PPPM, energy is not strictly conserved (unlike NVE with exact Ewald). But drift should be small:
+
+```lammps
+# NVE with PPPM to check drift
+fix conservative all nve
+run 10000
+# Check TotEng drift over this run
+```
+
+Drift > 0.1% over 10 ps indicates a problem (timestep, tolerance, overlapping atoms).
 
 ### Performance
 
@@ -249,27 +328,40 @@ Kspace = 0.5 * sum_over_k(G(k) * |rho(k)|²)
 | `ewald` | O(N³/²) | ~1s/step | ~10s/step | ~100s/step |
 | `pppm` | O(N log N) | ~0.5s | ~2s | ~10s |
 
-For electrode systems with 10,000+ atoms, PPPM is essential.
+**For electrode systems with 10,000+ atoms**, PPPM is essential.
+
+### Grid Size Effects
+
+PPPM uses a mesh. Too coarse mesh = inaccurate. LAMMPS chooses mesh size based on tolerance and cutoff.
+
+```lammps
+kspace_modify mesh 32 32 32    # manually set mesh (not usually needed)
+```
+
+If you see "PPPM grid too small" warnings, the tolerance may be too tight for the mesh.
 
 ## Common Issues
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
 | Very large `KspaceEng` | kspace tolerance too loose | Use `1e-6` or tighter |
-| Pressure oscillations | Slab correction wrong | Check `kspace_modify slab` |
+| Pressure oscillations in z | Slab correction wrong | Check `kspace_modify slab` |
 | Energy not conserving | Missing kspace or wrong pair style | Add kspace or check pair style |
 | Slow performance | Using ewald instead of pppm | Switch to `pppm` |
 | NaN forces | Overlapping atoms | Minimize before dynamics |
+| `kspace style not supported` | Using standard pppm with ELECTRODE | Use `pppm/electrode` |
+| Warnings about PPPM accuracy | Grid too coarse for tolerance | Use tighter tolerance or larger grid |
 
 ## Summary Table
 
 | Concept | Physical Meaning | LAMMPS Command |
 |---------|------------------|----------------|
 | Real-space cutoff | Truncate short-range interaction | `pair_style ... cutoff` |
-| Ewald parameter | Split between real/reciprocal | Default chosen automatically |
+| Ewald parameter (α) | Split between real/reciprocal | Auto-computed; rarely need to set |
 | PPPM | O(N log N) long-range solver | `kspace_style pppm` |
 | Slab correction | 2D Ewald for non-periodic z | `kspace_modify slab 3` |
 | Electrode-aware kspace | Supports induced charges | `kspace_style pppm/electrode` |
+| Pair-kspace consistency | Must match | `coul/long` → `pppm` |
 
 ## Next Steps
 

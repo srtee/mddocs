@@ -5,28 +5,37 @@
 
 - Non-bonded interactions (LJ, Coulomb): formula, meaning, parameters
 - Bonded interactions (bonds, angles, dihedrals): when they're needed
-- Cross-terms and mixing rules
+- Cross-terms and mixing rules with physical interpretation
 - How force field choices affect simulation output
+- Common force field configurations for electrode-electrolyte systems
 :::
 
 ## What Is a Force Field?
 
-A **force field** is a set of mathematical functions and parameters that describe interatomic forces. It is an approximation — no force field is "correct", only more or less appropriate for a given system.
+A **force field** is a set of mathematical functions and parameters that describe interatomic forces. It is an approximation — no force field is "correct", only more or less appropriate for a given system and question.
 
-The components of a force field:
+The force field determines:
+
+1. **What interactions exist** — which pairs have attractive/repulsive forces
+2. **How strong they are** — the energy scale of binding
+3. **What is neglected** — polarizability, electronic structure, chemical reactions
+
+### Force Field Components
 
 | Component | What It Describes | Typical Functional Form |
 |-----------|-------------------|--------------------------|
-| Non-bonded | Van der Waals, electrostatics | LJ, Coulomb |
-| Bonded | Chemical bonds | Harmonic, Morse |
-| Angle | Three-body bending | Harmonic, cosine |
-| Dihedral | Four-body torsion | Trigonometric series |
+| **Non-bonded** | Van der Waals, electrostatics | LJ, Coulomb |
+| **Bonded** | Chemical bonds | Harmonic, Morse |
+| **Angle** | Three-body bending | Harmonic, cosine |
+| **Dihedral** | Four-body torsion | Trigonometric series |
+
+For simple electrolytes (salt in water), only non-bonded interactions are needed. For explicit water models, bonds and angles are also required.
 
 ## Non-Bonded Interactions
 
 ### Van der Waals (Dispersion/Repulsion)
 
-The Lennard-Jones (LJ) potential is the most common:
+The Lennard-Jones (LJ) potential is the workhorse of MD:
 
 $$V(r) = 4\epsilon \left[ \left(\frac{\sigma}{r}\right)^{12} - \left(\frac{\sigma}{r}\right)^6 \right]$$
 
@@ -35,180 +44,299 @@ $$V(r) = 4\epsilon \left[ \left(\frac{\sigma}{r}\right)^{12} - \left(\frac{\sigm
 | $\epsilon$ | Depth of energy well (binding strength) | 0.1–0.2 kcal/mol for atoms |
 | $\sigma$ | Distance where energy = zero | 3.0–4.0 Å for light atoms |
 
-**Term-by-term breakdown**:
+#### Term-by-Term Breakdown
 
-- **r⁻¹² term**: Steep repulsion at short range (Pauli exclusion)
-- **r⁻⁶ term**: Softer attraction at longer range (London dispersion)
+| Term | Physical Origin | Behavior |
+|------|----------------|----------|
+| $r^{-12}$ | Pauli exclusion (electron cloud repulsion) | Very steep; only matters at short range |
+| $r^{-6}$ | London dispersion (induced dipole attraction) | Softer; dominant at intermediate range |
 
-**Visual representation**:
+**The r⁻¹² term is 4096× steeper than r⁻⁶ at r = σ.** This is why LJ produces a hard-sphere-like repulsion at short distances while having a soft attractive well.
+
+**Why r⁻¹² specifically?** It's computationally convenient (easy to square), not because it represents any specific physical interaction. Other repulsion forms (Born-Mayer, exp) are more physically grounded but less common.
+
+#### Visual Representation
 
 ```{python}
 #| echo: false
 #| label: fig-lj-potential
-#| fig-cap: "Lennard-Jones potential: repulsion at short range, attraction at longer range"
+#| fig-cap: "Lennard-Jones potential: repulsion dominates at short range, attraction at intermediate range, zero at r=σ"
 import numpy as np
 import matplotlib.pyplot as plt
 
-r = np.linspace(0.8, 3.0, 200)
+r = np.linspace(0.7, 3.0, 300)
 V = 4 * 0.15 * ((1/r)**12 - (1/r)**6)
 
-plt.figure(figsize=(6, 4))
-plt.plot(r, V, 'b-', linewidth=2)
-plt.axhline(0, color='gray', linestyle='--', linewidth=0.5)
-plt.xlabel(r'$r / \sigma$')
-plt.ylabel(r'$V(r) / \epsilon$')
-plt.title('Lennard-Jones Potential')
-plt.ylim(-1.5, 2)
-plt.xlim(0.8, 3.0)
-plt.fill_between(r, V, where=(V < 0), color='lightblue', alpha=0.5, label='Attractive')
-plt.fill_between(r, V, where=(V > 0), color='salmon', alpha=0.5, label='Repulsive')
-plt.legend()
+plt.figure(figsize=(7, 5))
+plt.plot(r, V, 'b-', linewidth=2.5)
+
+# Mark key points
+r_min = 2**(1/6)
+V_min = -1.0
+plt.annotate(f'r_min = 2^(1/6)σ ≈ 1.12σ', 
+             xy=(r_min, V_min), xytext=(1.5, -0.5),
+             arrowprops=dict(arrowstyle='->', color='gray'),
+             fontsize=10, color='gray')
+plt.scatter([r_min], [V_min], color='red', s=50, zorder=5)
+
+plt.axhline(0, color='gray', linestyle='--', linewidth=0.8)
+plt.xlabel(r'$r / \sigma$', fontsize=12)
+plt.ylabel(r'$V(r) / \epsilon$', fontsize=12)
+plt.title('Lennard-Jones Potential', fontsize=14)
+plt.ylim(-1.5, 2.5)
+plt.xlim(0.7, 3.0)
+
+# Shade regions
+plt.fill_between(r, V, where=(V < 0), color='lightblue', alpha=0.4, label='Attractive (r⁻⁶)')
+plt.fill_between(r, V, where=(V > 0), color='salmon', alpha=0.4, label='Repulsive (r⁻¹²)')
+plt.legend(loc='upper right')
+
 plt.tight_layout()
 plt.show()
 ```
 
-The minimum of the LJ potential is at $r_{min} = 2^{1/6}\sigma \approx 1.12\sigma$.
+#### Key Properties of LJ
+
+| Property | Value | Significance |
+|----------|-------|--------------|
+| Energy minimum | $V_{min} = -\epsilon$ at $r_{min} = 2^{1/6}\sigma \approx 1.12\sigma$ | Determines equilibrium spacing |
+| Zero crossing | $r = \sigma$ | Convenient reference point |
+| Force zero | $r = 2^{1/6}\sigma$ | Where attraction balances repulsion |
 
 #### LJ in LAMMPS
 
 ```lammps
 pair_style lj/cut 10.0    # LJ with cutoff at 10 Å
-pair_coeff 1 1 0.15 3.5   # type 1-type 1: epsilon=0.15, sigma=3.5
-pair_coeff 1 2 0.10 3.3   # type 1-type 2: mixed values
+pair_coeff 1 1 0.15 3.5   # epsilon=0.15, sigma=3.5 (real units)
 ```
 
 **Cutoff considerations**:
-- LJ is truncated at `rcut` — introduces error
-- Typical `rcut` = 10–12 Å for water
-- Energy drift indicates cutoff too small
-- Never exceed half the minimum box dimension
+- LJ is truncated at `rcut` — introduces error, but necessary for speed
+- Typical `rcut` = 10–12 Å for water; energy drift < 0.1% if cutoff is appropriate
+- **Never exceed half the minimum box dimension** — you would double-count interactions
+- Some use "shifted" LJ to make potential go smoothly to zero at cutoff:
+  ```lammps
+  pair_style lj/cut/coul/long 10.0  # no shift
+  pair_style lj/charmm/coul/long 10.0 12.0  # with shift
+  ```
 
 ### Coulombic Electrostatics
 
 $$V(r) = k \frac{q_1 q_2}{r}$$
 
-Long-range and never truly zero. This is why special methods (Ewald, PPPM) are needed — see @sec-electrostatics.
+| Property | Value |
+|----------|-------|
+| Constant $k$ | 332.07 Å·kcal/mol·e² (real) or 14.3996 Å·eV·e² (metal) |
+| Decay | $r^{-1}$ — long-range, never truly zero |
+| Energy scale | Much larger than LJ for charged systems |
 
-**In LAMMPS**:
+**Why Coulomb is the hard problem**: A pair of unit charges at 3 Å has $V$ ≈ 110 kcal/mol (real units) — far larger than LJ well depths. And it doesn't decay to zero at typical cutoffs.
+
+This is why special methods (Ewald, PPPM) are needed — see @sec-electrostatics.
+
+#### In LAMMPS
 
 ```lammps
-pair_style lj/cut/coul/long 10.0   # LJ + real-space Coulomb; k-space handles long-range
-pair_coeff * * 0.15 3.5            # LJ parameters for all pairs
-pair_coeff 1 1 0.0 0.0             # no LJ for some pairs
-kspace_style pppm 1e-5             # long-range solver
+pair_style lj/cut/coul/long 10.0   # LJ + real-space Coulomb
+pair_coeff * * 0.15 3.5            # LJ for all pairs
+pair_coeff 1 1 0.0 0.0             # no LJ for specific pairs
+kspace_style pppm 1e-5             # long-range solver (REQUIRED)
 ```
 
-### Combined Short-Range Potentials
+**Key rule**: If you use `coul/long`, you MUST use a kspace style like `pppm` or `ewald`. The `long` designation means "long-range handled by kspace", not "I don't need kspace".
+
+### Pair Style Compatibility
+
+The pair style determines what is computed in real space. The kspace style must complement it:
+
+| Pair Style | Real Space | Kspace Style | Notes |
+|------------|-----------|--------------|-------|
+| `lj/cut/coul/long` | LJ + Coulomb (short-range) | `pppm` or `ewald` | **Standard for electrolytes** |
+| `lj/cut/coul/cut` | LJ + Coulomb (truncated) | **none** | Large error; only for testing |
+| `coul/long` only | Coulomb (short-range only) | `pppm` or `ewald` | No LJ |
+| `lj/cut` only | LJ only | none | No electrostatics |
+
+::: {.callout-warning}
+## Mismatch Causes Error or Crash
+
+If you use `lj/cut/coul/long` but forget kspace, LAMMPS will error: "Kspace style required for coul/long pair style."
+
+If you use `lj/cut/coul/cut` but have kspace, the long-range Coulomb is double-counted or handled incorrectly.
+:::
+
+### Other Non-Bonded Styles
+
+For specialized systems:
 
 ```lammps
-pair_style lj/cut/coul/long 10.0    # Most common for electrolyte simulations
-pair_style born/coul/long 10.0       # For ionic crystals with repulsion term
-pair_style 12-6-4/long               # For metal oxides (adds 1/r⁴ term)
+pair_style born/coul/long 10.0    # Born-Mayer repulsion + Coulomb (ionic crystals)
+pair_style 12-6-4/long 10.0       # Adds 1/r⁴ term (metal oxides, halides)
+pair_style buck/coul/long 10.0   # Buckingham (exp) repulsion + Coulomb
 ```
 
-The pair style MUST be compatible with the kspace style:
+## Bonded Interactions
 
-| Pair Style | Kspace Style | Notes |
-|------------|--------------|-------|
-| `lj/cut/coul/long` | `pppm` or `ewald` | Standard for electrolytes |
-| `lj/cut/coul/cut` | none | Direct Coulomb only; error if cutoff too small |
-| `coul/long` only | `pppm` | No LJ; pure Coulomb |
+When molecules have explicit chemical bonds (water, organics), bonded terms are needed.
 
-### Bonded Interactions
-
-#### Bonds
+### Bonds
 
 Harmonic bond (most common):
 
 $$V(r) = k (r - r_0)^2$$
 
+| Parameter | Physical Meaning | Typical Values (real) |
+|-----------|------------------|----------------------|
+| $k$ | Stiffness (force constant) | 300–600 kcal/mol/Å² |
+| $r_0$ | Equilibrium bond length | 0.96–1.0 Å for O-H |
+
+In LAMMPS:
+
 ```lammps
 bond_style harmonic
-bond_coeff 1 300 1.0    # k=300 kcal/mol/Å², r0=1.0 Å
+bond_coeff 1 300 1.0    # k=300, r0=1.0 Å
 ```
 
-#### Angles
+**Why harmonic?** It's a good approximation near the minimum. For large deviations, Morse or cubic terms are better.
+
+### Angles
 
 Harmonic angle:
 
 $$V(\theta) = k (\theta - \theta_0)^2$$
+
+| Parameter | Typical Values |
+|-----------|----------------|
+| $k$ | 30–60 kcal/mol/rad² |
+| $\theta_0$ | ~104.5° for water H-O-H |
 
 ```lammps
 angle_style harmonic
 angle_coeff 1 40 109.5    # k=40 kcal/mol/rad², theta0=109.5°
 ```
 
-#### Dihedrals
+### Dihedrals
 
-Proper dihedral (trigonometric series):
+Proper dihedral (torsion around a bond):
 
 $$V(\phi) = \sum_{n=0}^{N} k_n \cos(n\phi - \phi_n)$$
 
+| Style | Use Case |
+|-------|----------|
+| `opls` | OPLS force field; multiple terms |
+| `charmm` | CHARMM; Fourier series |
+| `harmonic` | Simple harmonic dihedral |
+
 ```lammps
-dihedral_style opls              # OPLS-style dihedrals
-dihedral_coeff 1 0.5 0.0 3 0.0  # k, n, phi0 parameters
+dihedral_style opls
+dihedral_coeff 1 0.5 0.0 3 0.0    # k, n, phi0 per term
 ```
 
+### When Bonded Interactions Matter
+
+| System | Bonds/Angles Needed? |
+|--------|----------------------|
+| Simple electrolyte (NaCl in water) | No — only non-bonded |
+| SPC/E water | Yes — 3 atoms, 2 bonds, 1 angle |
+| TIP4P water | Yes — 4 atoms, 2 bonds, 1 angle (rigid) |
+| Organic molecules | Yes — for conformational properties |
+| Ionic crystals (NaCl) | Typically no — implicit in pair potential |
+
 ::: {.callout-note}
-## When Bonded Interactions Matter
+## Water Model Checklist
 
-- **Water models** (TIP3P, TIP4P): explicit O-H bonds and H-O-H angle
-- **Organic molecules**: bonds, angles, dihedrals all needed
-- **Simple electrolytes (NaCl in water)**: no bonds; only non-bonded interactions
-- **Ionic crystals**: bonds may be implicit (pair_style only)
+For a new water model, check:
+1. How many atoms? → `atom_style charge` (3 or 4 sites)
+2. Are there bonds? → `bond_style` + `bond_coeff` if yes
+3. Are there angles? → `angle_style` + `angle_coeff` if yes
+4. Is it rigid? → Use `fix rigid` or `fix shake` instead of dynamics on bonds
 
-When in doubt: check your water model's structure. If it has `bond_style` and `angle_style`, you need those coefficients.
+SPC/E and TIP4P are commonly used rigid models — no bond/angle dynamics needed.
 :::
 
 ## Cross-Terms and Mixing Rules
 
-When two different atom types interact, we need parameters for the cross-pair.
+When two different atom types interact, we need cross-pair parameters.
 
 ### Lorentz-Berthelot Mixing
 
-```lammps
-pair_coeff 1 1 epsilon1 sigma1    # type 1 - type 1
-pair_coeff 2 2 epsilon2 sigma2    # type 2 - type 2
-# type 1 - type 2 is computed as:
-epsilon_12 = sqrt(epsilon1 * epsilon2)
-sigma_12 = (sigma1 + sigma2) / 2
-```
+Default mixing rule in most force fields:
+
+$$\epsilon_{ij} = \sqrt{\epsilon_{ii} \cdot \epsilon_{jj}}$$
+$$\sigma_{ij} = \frac{\sigma_{ii} + \sigma_{jj}}{2}$$
+
+**Physical meaning**: 
+- $\sigma$ averaging = geometric mean of sizes (reasonable for van der Waals radii)
+- $\epsilon$ averaging = arithmetic mean of energy depths
+
+In LAMMPS, this is the default. If you specify only `pair_coeff 1 1` and `pair_coeff 2 2`, the cross-term is computed automatically.
 
 ### Explicit Cross-Parameters
 
+Sometimes mixing rules give poor results. Override with explicit values:
+
 ```lammps
-pair_coeff 1 2 epsilon12 sigma12    # override mixing rule
+pair_coeff 1 1 0.01 3.0    # type 1 - type 1
+pair_coeff 2 2 0.05 3.5    # type 2 - type 2
+pair_coeff 1 2 0.025 3.25  # type 1 - type 2 (explicit override)
 ```
 
-For electrolyte-electrode interactions: explicit cross-parameters are often better than mixing rules.
+**When explicit is better**:
+- Electrode-electrolyte interactions (metal-water cross terms often poorly described by mixing)
+- Systems with very different chemistries
+- When fitted to quantum calculations or experiment
 
 ## Force Field Parameters — Where They Come From
 
 ### Water Models
 
-| Model | Atoms | Bonds | Angles | ε (kcal/mol) | σ (Å) | Notes |
+Water models are parameterized to reproduce:
+- Density of liquid water at 298 K and 1 atm
+- Heat of vaporization
+- Dielectric constant (for polarizable models)
+
+| Model | Sites | Bonds | Angles | ε (kcal/mol) | σ (Å) | Notes |
 |-------|-------|-------|--------|-------------|-------|-------|
-| SPC/E | 3 | 1 | 1 | 0.155 | 3.166 | Rigid; commonly used |
-| TIP3P | 3 | 1 | 1 | 0.155 | 3.150 | O-H = 0.957 Å |
-| TIP4P | 4 | 2 | 1 | 0.155 | 3.154 | 4-site; better density |
+| SPC | 3 | 2 | 1 | 0.155 | 3.166 | Rigid; 3-site pioneer |
+| SPC/E | 3 | 2 | 1 | 0.155 | 3.166 | SPC with corrected energy |
+| TIP3P | 3 | 2 | 1 | 0.155 | 3.150 |CHARMM version; O-H=0.957Å |
+| TIP4P | 4 | 2 | 1 | 0.155 | 3.154 | 4-site; M-site for electrostatics |
+| TIP5P | 5 | 2 | 1 | 0.155 | 3.12 | 5-site; better for ice |
+
+**SPC/E vs TIP4P**: TIP4P gives better density (~1.0 g/cm³ vs ~0.98 for SPC/E) but is slower (extra site). For electrode simulations, SPC/E is common.
 
 ### Ion Parameters
 
-From Joung & Cheatham (2008): parameters matched to specific water models.
+Ions are parameterized to match:
+- Solvation free energy
+- Ion-water RDF from quantum calculations
+- Hydration structure
+
+From Joung & Cheatham (2008) for SPC/E:
 
 | Ion | ε (kcal/mol) | σ (Å) | Notes |
 |-----|-------------|-------|-------|
-| Na⁺ | 0.0874 | 3.40 | Matched to SPC/E |
-| Cl⁻ | 0.100 | 4.45 | Matched to SPC/E |
-| K⁺ | 0.100 | 4.47 | Larger than Na⁺ |
+| Na⁺ | 0.0874 | 3.40 | Small; tightly hydrated |
+| K⁺ | 0.100 | 4.47 | Larger; more diffuse hydration |
+| Cl⁻ | 0.100 | 4.45 | Similar size to K⁺ |
+| Mg²⁺ | 0.111 | 3.47 | Small; highly charged |
+| Ca²⁺ | 0.449 | 2.95 | Divalent; strong binding |
+
+**Always match ion parameters to your water model.** Using NaCl parameters fitted for SPC/E with TIP4P water will give incorrect behavior.
 
 ### Electrode Parameters
 
-Electrode LJ parameters are typically:
+Electrodes in classical MD are typically:
+- **Neutral atoms** (no Coulomb contribution — metal screens electrostatics)
+- **Soft repulsion** (large ε prevents penetration; not real bonding)
+- **No explicit electronic structure** (classical approximation)
 
-- **Large ε**: creates hard-wall repulsion to prevent electrolyte penetration
-- **No Coulomb**: metal screens electrostatic interactions internally
-- **Typical values**: ε = 0.01–0.1 eV, σ = 2.5–3.5 Å (metal units)
+| Parameter | Typical Values (metal units) | Physical Effect |
+|-----------|---------------------------|-----------------|
+| ε | 0.01–0.1 eV | Soft repulsion; prevents electrolyte penetration |
+| σ | 2.5–3.5 Å | Atomic size; matches electrode lattice constant |
+| q | 0 (for standard LJ) | No Coulomb; screening is implicit in dielectric |
+
+**What LJ on electrodes does NOT model**: actual metallic bonding, d-band chemistry, charge-transfer (CPM handles this separately).
 
 ## Force Field → Output Connection
 
@@ -216,22 +344,29 @@ Understanding how force field choices affect observable properties:
 
 | Input Change | Physical Effect | Observable Change |
 |--------------|-----------------|-------------------|
-| Increase ε (LJ) | Stronger binding | Lower diffusivity; higher density |
+| Increase ε (LJ) | Stronger binding; lower energy | Lower diffusivity; higher density |
 | Increase σ | Larger effective size | Lower density; slower diffusion |
-| Increase cutoff | More accurate (to a point) | Lower energy drift; more computation |
-| Add bond constraints | Remove fast vibrations | Can use larger timestep; affects vibrational spectra |
-| Change water model | Different H-bonding | Different density (~1 g/cm³ vs ~0.98); different dielectric |
+| Increase cutoff | More accurate (to a point) | Lower energy drift; slower |
+| Add bond constraints | Remove fast vibrations | Can use larger Δt; affects vibrational spectra |
+| Change water model | Different H-bonding structure | Different density, diffusion, dielectric |
 
 ### Energy Components Breakdown
 
 ```
-Potential Energy = Pair + Bond + Angle + Dihedral + Kspace
-                = (LJ + Coulomb_real) + bonded terms + Coulomb_recip
+Potential Energy = PairEng + BondEng + AngleEng + DihedralEng + KspaceEng
+                 = (LJ + Coulomb_real) + bonded terms + Coulomb_recip
 ```
 
-- `PairEng` dominates for simple electrolytes
-- `KspaceEng` is significant for charged systems (long-range electrostatics)
-- Large `BondEng` or `AngleEng` indicates instability (atoms too close)
+For a typical electrolyte system:
+
+| Component | Typical Fraction | Notes |
+|-----------|-----------------|-------|
+| `PairEng` | 60–80% | Dominates for simple electrolytes |
+| `KspaceEng` | 20–40% | Significant for charged systems |
+| `BondEng` | 0–5% | Only if flexible molecules |
+| `AngleEng` | 0–2% | Only if flexible angles |
+
+**Large `BondEng` or `AngleEng` = atoms too close or bonds overstretched.** Check geometry.
 
 ## Common Force Field Configurations
 
@@ -241,14 +376,22 @@ Potential Energy = Pair + Bond + Angle + Dihedral + Kspace
 units real
 atom_style charge
 pair_style lj/cut/coul/long 10.0
+
+# Ion LJ (Joung & Cheatham for SPC/E)
 pair_coeff Na Na 0.0874 3.40
 pair_coeff Cl Cl 0.100 4.45
 pair_coeff Na Cl 0.0935 3.925    # Lorentz-Berthelot mixed
-pair_coeff OW OW 0.155 3.166    # water O (SPC/E)
-pair_coeff HW HW 0.0 0.0        # water H (no LJ)
+
+# Water LJ (SPC/E)
+pair_coeff OW OW 0.155 3.166    # water oxygen
+pair_coeff HW HW 0.0 0.0         # water hydrogen (no LJ)
+
+# Cross terms
 pair_coeff Na OW 0.114 3.28
 pair_coeff Cl OW 0.124 3.81
+
 kspace_style pppm 1e-5
+kspace_modify order 5    # for better accuracy with ions
 ```
 
 ### Electrode-Electrolyte Interface
@@ -258,19 +401,37 @@ units metal
 atom_style charge
 pair_style lj/cut/coul/long 10.0
 
-# Electrode LJ (soft repulsion, not bonding)
-pair_coeff 1 1 0.01 3.0          # Au-Au (typical metal electrode)
+# Electrode-electrode (soft repulsion, not bonding)
+pair_coeff 1 1 0.01 3.0          # Au-Au typical values
+pair_coeff 2 2 0.01 3.0          # top electrode same type
+pair_coeff 1 2 0.005 3.0         # cross-interaction
 
-# Electrolyte LJ (water + ions)
-pair_coeff 2 2 0.01 3.0          # counter-electrode same type
-pair_coeff 3 3 0.155 3.166       # SPC/E water O
-pair_coeff 3 4 0.0 0.0           # water H
+# Electrolyte LJ (SPC/E water)
+pair_coeff 3 3 0.155 3.166       # water O
+pair_coeff 4 4 0.0 0.0          # water H (no LJ)
 
-# Cross terms (electrode-electrolyte)
-pair_coeff 1 3 0.005 3.1
-pair_coeff 2 3 0.005 3.1
+# Electrode-electrolyte cross terms
+# (explicit is often better than Lorentz-Berthelot)
+pair_coeff 1 3 0.005 3.1         # electrode1 - water
+pair_coeff 2 3 0.005 3.1         # electrode2 - water
+pair_coeff 1 4 0.0 0.0           # no LJ with H
+pair_coeff 2 4 0.0 0.0
 
 kspace_style pppm/electrode 1e-5
+kspace_modify slab 3
+```
+
+### Checking Your Force Field
+
+```lammps
+# After setup, use these to verify:
+compute pe all pe/atom              # per-atom potential energy
+compute ke all ke/atom             # per-atom kinetic energy
+
+# Sum should match thermo PotEng + KinEng
+# Run for a few steps and check:
+print "Total PE: $(c_pe)"
+print "Total KE: $(c_ke)"
 ```
 
 ## Next Steps

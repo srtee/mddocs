@@ -4,9 +4,11 @@
 ## In this section
 
 - Three fix styles: `electrode/conp`, `electrode/conq`, `electrode/thermo`
+- Complete syntax reference with all options
 - Algorithm choices and when to use each
-- Kspace compatibility and slab modifications
-- Output interpretation
+- Kspace compatibility requirements and slab modifications
+- Output interpretation with concrete examples
+- Complete working input script template
 :::
 
 ## Package Overview
@@ -20,7 +22,7 @@ The ELECTRODE package implements constant potential, constant charge, and thermo
 - Model thermal fluctuations (Johnson-Nyquist noise) in electrochemistry
 
 **Requirements**:
-- KSPACE package
+- KSPACE package (must be enabled)
 - LAPACK and BLAS (or `-D USE_INTERNAL_LINALG=yes` with CMake)
 
 ## Installing the ELECTRODE Package
@@ -35,9 +37,15 @@ cmake -B build -S . \
 cmake --build build
 ```
 
-### With make (pre-CMake LAMMPS)
+**Note**: The ELECTRODE package requires the KSPACE package to be enabled as well, because it relies on the kspace solvers for the electrode-electrode and electrode-electrolyte interaction matrices.
 
-Not supported. ELECTRODE requires CMake.
+### Verifying Installation
+
+```bash
+lmp -h | grep electrode
+```
+
+Should show `ELECTRODE` in the list of installed packages.
 
 ## The Three Fix Styles
 
@@ -45,71 +53,123 @@ Not supported. ELECTRODE requires CMake.
 
 **Purpose**: Hold the electrostatic potential on each electrode group fixed; charges fluctuate to maintain the constraint.
 
-**Physical meaning**: Models a potentiostat — the voltage is controlled, charge is the response.
+**Physical meaning**: Models a potentiostat — the voltage is controlled, charge is the response. This is what you want for comparing to electrochemical experiments.
 
+**Syntax**:
+```lammps
+fix fxconp groupName electrode/conp potential eta keyword value ...
+```
+
+| Argument | Description | Typical Values |
+|----------|-------------|-----------------|
+| `groupName` | Electrode group to constrain | Must exist before fix |
+| `potential` | Electrode potential in volts | -2.0 to +2.0 V typical |
+| `eta` | Gaussian smearing width (Å⁻¹) | 1.0–2.0 (real) or 0.2–0.5 (metal) |
+
+**Complete example**:
 ```lammps
 fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on
 ```
 
-| Argument | Description | Notes |
-|----------|-------------|-------|
-| `group` | Electrode group to constrain | Must be defined with `group` command |
-| `potential` | Electrode potential in volts | Can be variable for dynamic control |
-| `eta` | Gaussian smearing width (Å⁻¹) | Typical: 1.0–2.0 (real) or 0.2–0.5 (metal) |
-| `couple groupName V` | Additional electrode at potential V | Can specify multiple couples |
-| `symm on/off` | Enforce total charge neutrality | Usually `on` for capacitor-like systems |
+**Keywords**:
+
+| Keyword | Description | Values |
+|---------|-------------|--------|
+| `couple` | Add additional electrode at specified potential | `groupName V` |
+| `symm` | Enforce total electrode charge neutrality | `on` or `off` |
+| `algo` | Solver algorithm | `mat_inv`, `mat_cg`, `cg` |
+| `etypes` | Use type-based neighbor lists | `on` or `off` |
+| `ffield` | Finite-field mode (periodic z) | `on` or `off` |
+| `write_mat` | Write capacitance matrix to file | filename |
+| `read_mat` | Read capacitance matrix from file | filename |
+| `write_inv` | Write elastance matrix to file | filename |
+| `read_inv` | Read elastance matrix from file | filename |
 
 #### Dynamic Potential Control
 
-Any `equal-style` variable can be used for potential:
+Any `equal-style` variable can be used for potential. This enables:
 
+**Linear sweep** (cyclic voltammetry-like):
 ```lammps
-variable V equal ramp(-1.0, 1.0)    # sweep from -1 to +1 V over run
+variable V equal ramp(-1.0, 1.0)
 fix fxconp bot electrode/conp v_V 1.805 couple top 1.0
 ```
 
+**Sinusoidal** (AC perturbation):
 ```lammps
-variable V equal "2.0 * sin(time * 0.01)"    # oscillating potential
+variable V equal "2.0 * sin(time * 0.01)"
 fix fxconp bot electrode/conp v_V 1.805
+```
+
+**Stepped potential**:
+```lammps
+variable V equal 0.5
+fix fxconp bot electrode/conp v_V 1.805 couple top -0.5
+run 10000
+variable V equal 1.0
+run 10000
 ```
 
 ### `fix electrode/conq` — Constant Charge
 
 **Purpose**: Set the total charge on each electrode group; potentials fluctuate.
 
-**Physical meaning**: Models a galvanostat — charge injection/extraction is controlled, voltage is the response.
+**Physical meaning**: Models a galvanostat — charge injection/extraction is controlled, voltage is the response. Use when you know the charge dynamics rather than voltage.
 
+**Syntax**:
 ```lammps
-fix fxconq bot electrode/conq -0.5 1.805 couple top 0.5 symm on
+fix fxconq groupName electrode/conq charge eta keyword value ...
 ```
 
 | Argument | Description | Notes |
 |----------|-------------|-------|
+| `groupName` | Electrode group to constrain | Must exist before fix |
 | `charge` | Total charge on electrode group | In units consistent with `units` setting |
-| `eta` | Gaussian smearing width | Same as conp |
-| `couple` | Additional electrode at charge Q | Not potential |
+| `eta` | Gaussian smearing width | Same units as conp |
+
+**Complete example**:
+```lammps
+fix fxconq bot electrode/conq -0.5 1.805 couple top 0.5 symm on
+```
 
 **Output**: The vector component `f_fxconq[2]`, `f_fxconq[3]`, etc. gives the actual potential on each electrode — can be monitored to compute voltage response.
+
+**Accessing potentials**:
+```lammps
+variable V_bot equal f_fxconq[2]
+variable V_top equal f_fxconq[3]
+fix print all print 100 "V_bot = $(v_V_bot), V_top = $(v_V_top)"
+```
 
 ### `fix electrode/thermo` — Thermopotentiostat
 
 **Purpose**: Add thermal fluctuations (Johnson-Nyquist noise) to both potential and charge.
 
-**Physical meaning**: Models the thermodynamic consistency of charge/potential fluctuations. Essential for fluctuation-dissipation studies and non-equilibrium dynamics.
+**Physical meaning**: Models the thermodynamic consistency of charge/potential fluctuations. Essential for fluctuation-dissipation studies, non-equilibrium dynamics, and realistic finite-temperature electrode behavior.
 
+**Syntax**:
 ```lammps
-fix fxthermo bot electrode/thermo -1.0 1.805 300.0 12345 50.0
+fix fxthermo groupName electrode/thermo potential eta temp seed tau_v keyword value ...
 ```
 
 | Argument | Description | Notes |
 |----------|-------------|-------|
+| `groupName` | Electrode group | Must exist |
 | `potential` | Mean potential | Fluctuates around this |
 | `eta` | Gaussian smearing | Same as other fixes |
 | `temp` | Temperature (K) | For thermal noise amplitude |
-| `seed` | Random seed | Set explicitly for reproducibility |
-| `tau_v` | Potential relaxation time | Controls how fast potential relaxes |
+| `seed` | Random seed | Must be set for reproducibility |
+| `tau_v` | Potential relaxation time | ~50 fs typical |
 
-**Physical basis**: The fluctuation-dissipation theorem relates thermal noise to dissipative properties. For electrochemistry, the thermopotentiostat adds fluctuations to both potential and charge with correct statistics.
+**Complete example**:
+```lammps
+fix fxthermo bot electrode/thermo -1.0 1.805 300.0 12345 50.0 symm on
+```
+
+**Physical basis**: The fluctuation-dissipation theorem relates thermal noise to dissipative properties. For electrochemistry, the thermopotentiostat adds fluctuations to both potential and charge with correct statistics. This is important for:
+- Understanding noise in electrochemical sensors
+- Modeling electrochemical impedance spectroscopy (EIS)
+- Studying thermal effects on charging dynamics
 
 ## Algorithm Choices
 
@@ -121,35 +181,50 @@ The `algo` keyword controls how the capacitance/elastance problem is solved:
 | `mat_cg` | Elastance matrix S (N²) | Medium | Medium | Static only |
 | `cg` | None | Low | Slowest | Allowed |
 
-Where N = number of electrode groups (not atoms).
+Where N = number of electrode groups (not atoms). For two electrodes (bot, top), N=2.
 
 ### `algo mat_inv` (Default)
 
-- Precompute and invert the capacitance matrix at startup
-- On-the-fly charge calculation: `q = C⁻¹ · (V - V0)`
-- **Fast** for small-to-medium electrode systems
-- **Memory-intensive**: stores full N×N matrix
-- Electrodes must remain fixed (matrix is geometry-specific)
+**How it works**:
+1. At startup: compute capacitance matrix C and store it
+2. At each step: solve `q = C · V` directly (matrix-vector multiply)
 
-**Use when**: < 10,000 electrode atoms, static electrodes, need fastest per-step performance
+**Trade-offs**:
+- **Fast** per step (just multiplication)
+- **High memory** (stores N×N matrix)
+- Electrodes must remain **fixed** (matrix is geometry-specific)
+- If electrodes move, matrix becomes invalid
+
+**When to use**: < 10,000 electrode atoms, static electrodes, need fastest per-step performance
+
+**Memory estimate**: For N_electrode_groups = 2, matrix is 2×2 = trivial. For N = 100 (complex geometry), matrix is 100×100 = 40 KB. For N = 10,000, matrix is 10000×10000 = 800 MB.
 
 ### `algo mat_cg`
 
-- Precompute the elastance matrix (inverse of capacitance)
-- Use conjugate gradient solver to find charges
-- **Less memory** than `mat_inv` (same matrix size, but CG is iterative)
-- **Slower per step** than `mat_inv` but comparable overall for medium systems
+**How it works**:
+1. At startup: compute and store elastance matrix S (inverse of C)
+2. At each step: solve `S · q = V` via conjugate gradient (iterative)
 
-**Use when**: Medium systems where memory matters; limited electrode motion
+**Trade-offs**:
+- **Medium memory** (same matrix size as mat_inv, but stored differently)
+- **Slower per step** (iterative solver)
+- Can handle slightly larger systems
+- Still requires fixed electrodes
+
+**When to use**: Medium systems where memory matters; limited electrode motion
 
 ### `algo cg`
 
-- No precomputation
-- Solve full linear system each timestep via conjugate gradient
-- **Slowest** per step
-- **Required** for moving electrodes (charging/discharging dynamics)
+**How it works**:
+1. No precomputation
+2. At each step: solve full `A · q = b` via conjugate gradient
 
-**Use when**: Electrodes move significantly; very large electrode systems
+**Trade-offs**:
+- **Slowest per step** (full iterative solve every step)
+- **Lowest memory** (no matrix storage)
+- **Required for moving electrodes** (charging/discharging dynamics)
+
+**When to use**: Electrodes move significantly; very large electrode systems where memory is limiting
 
 ### Choosing the Right Algorithm
 
@@ -172,6 +247,8 @@ ELECTRODE requires electrode-aware kspace styles that provide:
 1. Electrode-electrode interaction matrix
 2. Electrode-electrolyte interaction vector
 
+**Standard `ewald` or `pppm` will not work** — they lack the electrode interaction matrices.
+
 ### Compatible Kspace Styles
 
 ```lammps
@@ -180,17 +257,16 @@ kspace_style pppm/electrode 1e-5
 kspace_style pppm/electrode/intel 1e-5    # Intel-optimized
 ```
 
-**DO NOT use** standard `ewald` or `pppm` with ELECTRODE — they lack the electrode interaction matrices.
+**Note**: You cannot combine standard `pppm` with ELECTRODE fixes. You must use `pppm/electrode`.
 
 ### Kspace Modify Options
 
 ```lammps
 kspace_modify slab 3          # 2D Ewald correction (non-periodic z)
 kspace_modify one-step        # faster elastance computation; less accurate
-kspace_modify force 1e-4     # override tolerance
+kspace_modify force 1e-4     # override tolerance for kspace only
+kspace_modify order 5        # PPPM interpolation order (higher = more accurate)
 ```
-
-`slab 3` is standard for non-periodic z geometries. The number 3 refers to the dimension being non-periodic (z).
 
 ## Key Fix Options Reference
 
@@ -202,7 +278,23 @@ kspace_modify force 1e-4     # override tolerance
 | `symm` | Charge neutrality | `on`, `off` |
 | `ffield` | Finite-field mode | `on`, `off` |
 | `etypes` | Type-based neighbor lists | `on`, `off` |
-| `couple` | Additional electrode group | `groupName V_or_Q` |
+| `couple` | Additional electrode group | `groupName V` or `groupName Q` |
+
+### Symmetry Mode (`symm`)
+
+For capacitor-like systems with two electrodes:
+```lammps
+symm on    # Total electrode charge = 0 (system is neutral)
+```
+
+With `symm on`:
+- `electrode/conp`: if bot = -1 V, top automatically adjusts to maintain symm
+- `electrode/conq`: if bot = -0.5 e/atom, top = +0.5 e/atom
+
+For asymmetric systems or single electrodes:
+```lammps
+symm off    # No charge neutrality constraint
+```
 
 ### Finite Field Mode (`ffield on`)
 
@@ -210,31 +302,43 @@ kspace_modify force 1e-4     # override tolerance
 fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 ffield on symm on
 ```
 
-- Uses periodic boundary in z
-- Potential difference applied via internal E-field: `E = V / dz`
-- No vacuum region needed; smaller z-dimension possible
+**What it does**:
+- Uses periodic boundary in z (not slab geometry)
+- Potential difference applied via internal E-field: $E = V / d$
+- No vacuum region needed
+- Smaller z-dimension possible (saves atoms)
+
+**Requirements**:
+- Must use `boundary p p p` (fully periodic)
 - Requires `symm on` (total charge neutrality)
 
-**Use when**: you want smaller cells; better for some geometries; want infinite stack model
+**When to use**: You want smaller cells; better for some geometries; want infinite stack model; no surface effects needed
 
 ### Matrix Save/Load
 
+Since LAMMPS restart files don't yet save ELECTRODE state, use matrix I/O for restart:
+
 ```lammps
-fix fxconp bot electrode/conp -1.0 1.805 write_inv 1000    # save every 1000 steps
-fix fxconp bot electrode/conp -1.0 1.805 read_inv restart.elast    # load at startup
+# Save during run
+fix fxconp bot electrode/conp -1.0 1.805 write_inv 1000 filename.elast
+
+# Load at startup
+fix fxconp bot electrode/conp -1.0 1.805 read_inv filename.elast
 ```
 
-The write_inv saves the elastance matrix. Use read_inv to reload on restart. (Standard LAMMPS restart files don't yet support ELECTRODE state.)
+**Why this matters**: Without matrix I/O, you must recompute the matrix from scratch on restart, which can be slow for large electrode systems.
 
 ### Thomas-Fermi Model
 
-For real metal response (quantum corrections):
+For real metal response (quantum corrections to simple dielectric):
 
 ```lammps
-fix_modify fxconp tf 0.001    # Thomas-Fermi screening length
+fix_modify fxconp tf 0.001    # Thomas-Fermi screening length (Å)
 ```
 
-Adds metallic screening beyond the simple dielectric model. Use when electrode is a real metal (Au, Pt, etc.) and quantum effects matter.
+**Physical effect**: Adds metallic screening beyond the simple dielectric model. The screening length λ_TF characterizes how charges distribute in a real metal.
+
+**When to use**: Electrode is a real metal (Au, Pt, Ag) and quantum effects matter for your application.
 
 ## Output from ELECTRODE Fixes
 
@@ -246,30 +350,60 @@ For constant potential: `-Σ q_i V_i` (work done by electrodes on the system)
 
 Check this for energy conservation (should be small fluctuations around constant in NVE).
 
-### Vector (Electrode Potentials)
+### Vector (Electrode Potentials and Charges)
 
-`f_ID[2]`, `f_ID[3]`, ... — potential on each electrode group.
+For `electrode/conp`:
 
-For `electrode/conq`: these are the **fluctuating** potentials (computed response)
-For `electrode/conp`: these should match the specified potentials (convergence check)
+| Index | Meaning |
+|-------|---------|
+| `f_ID[1]` | Energy (same as scalar) |
+| `f_ID[2]` | Potential on electrode 1 (should match specified) |
+| `f_ID[3]` | Potential on electrode 2 (if couple used) |
+| ... | ... |
 
-Access in variable:
-```lammps
-variable V_bot equal f_fxconp[2]
-variable V_top equal f_fxconp[3]
-```
+For `electrode/conq`:
 
-### Array (Capacitance Matrix)
+| Index | Meaning |
+|-------|---------|
+| `f_ID[1]` | Energy |
+| `f_ID[2]` | Potential on electrode 1 (fluctuates!) |
+| `f_ID[3]` | Potential on electrode 2 |
+| ... | ... |
+
+### Array (Capacitance Matrix Rows)
 
 `f_ID[4]` through `f_ID[4+N]` — rows of the capacitance matrix.
 
-For analysis of C_ij structure.
+For a two-electrode system:
+```
+f_ID[4] = C_11 (charge response of electrode 1 to electrode 1 potential)
+f_ID[5] = C_12 (charge response of electrode 1 to electrode 2 potential)
+f_ID[6] = C_21 (charge response of electrode 2 to electrode 1 potential)
+f_ID[7] = C_22 (charge response of electrode 2 to electrode 2 potential)
+```
+
+### Accessing Output in Variables
+
+```lammps
+# For conp fix named fxconp
+variable Q_bot equal f_fxconp[5]    # bottom electrode charge
+variable Q_top equal f_fxconp[6]    # top electrode charge
+variable E_elec equal f_fxconp[1]   # electrode work term
+
+# For conq fix named fxconq
+variable V_bot equal f_fxconq[2]    # bottom electrode potential
+variable V_top equal f_fxconq[3]    # top electrode potential
+
+# Print during run
+fix printQ all print 100 "Q_bot = $(v_Q_bot) Q_top = $(v_Q_top)"
+```
 
 ## Complete Input Script Template
 
 ```lammps
 # ============================================
-# Constant Potential Electrode-Electrolyte
+# Constant Potential Supercapacitor
+# Au electrodes, SPC/E water, 1M NaCl
 # ============================================
 
 units metal
@@ -282,15 +416,15 @@ variable Ly equal 20
 variable Lz equal 60
 
 region box block 0 $Lx 0 $Ly 0 $Lz
-create_box 3 box    # 3 atom types: bot, top, electrolyte
+create_box 5 box    # 1=bot electrode, 2=top, 3=O, 4=H, 5=Na, 6=Cl
 
 region bot block 0 $Lx 0 $Ly 0 5
 region top block 0 $Lx 0 $Ly 55 $Lz
 region elyte block 0 $Lx 0 $Ly 5 55
 
-create_atoms 1 region bot
-create_atoms 2 region top
-create_atoms 3 region elyte
+create_atoms 1 region bot    # bottom electrode
+create_atoms 2 region top    # top electrode
+# (Water and ions added separately - use moltemplate or similar)
 
 group bot region bot
 group top region top
@@ -305,11 +439,22 @@ pair_coeff 1 1 0.01 3.0
 pair_coeff 2 2 0.01 3.0
 pair_coeff 1 2 0.005 3.0
 
-# Electrolyte LJ (SPC/E water + ions)
-pair_coeff 3 3 0.155 3.166    # water O
-pair_coeff 3 4 0.0 0.0        # water H (if present)
-pair_coeff 1 3 0.005 3.1      # bot-water
-pair_coeff 2 3 0.005 3.1      # top-water
+# Water LJ (SPC/E)
+pair_coeff 3 3 0.155 3.166    # O
+pair_coeff 4 4 0.0 0.0        # H
+
+# Ion LJ
+pair_coeff 5 5 0.0874 3.40    # Na
+pair_coeff 6 6 0.100 4.45     # Cl
+
+# Cross terms
+pair_coeff 1 3 0.005 3.1
+pair_coeff 2 3 0.005 3.1
+pair_coeff 1 4 0.0 0.0
+pair_coeff 2 4 0.0 0.0
+pair_coeff 5 3 0.114 3.28    # Na-O
+pair_coeff 6 3 0.124 3.81    # Cl-O
+# ... all other cross terms needed ...
 
 kspace_style pppm/electrode 1e-5
 kspace_modify slab 3
@@ -323,7 +468,11 @@ fix mytemp elyte langevin 300.0 300.0 100.0 12345
 
 # --- Output ---
 thermo 100
-thermo_style custom step temp pe ke vol density f_fxconp
+thermo_style custom step temp pe ke vol density f_fxconp[1]
+
+variable Q_bot equal f_fxconp[5]
+variable Q_top equal f_fxconp[6]
+fix printQ all print 100 "Q_bot = $(v_Q_bot) Q_top = $(v_Q_top)"
 
 dump 1 all custom 100 traj.lammpstrj id type x y z q
 
@@ -341,6 +490,7 @@ run 10000
 | NaN in output | Overlapping atoms | Minimize before dynamics |
 | Slow performance | Large matrix storage | Use `algo mat_cg` or `algo cg` |
 | `kspace style not supported` | Wrong kspace for ELECTRODE | Use `pppm/electrode` |
+| Energy not conserved | Electrode motion with mat_inv | Use `algo cg` or freeze electrodes |
 
 ## Next Steps
 

@@ -3,9 +3,11 @@
 ::: {.callout-tip}
 ## In this section
 
-- What the simulation loop actually does
+- What the simulation loop actually does and why it matters
+- How Newton's laws connect to the trajectories MD produces
 - Key LAMMPS concepts mapped to physical meaning
-- How to read thermodynamic output
+- How to read and interpret thermodynamic output
+- What the conserved quantity tells you about simulation quality
 :::
 
 ## The Core Loop
@@ -21,39 +23,117 @@ for timestep in range(N_steps):
     positions, velocities = integrate(positions, velocities, forces, dt)
 ```
 
-The **trajectory** — the sequence of positions and velocities — is the primary output. From it, we compute thermodynamic properties by averaging over time.
+The **trajectory** — the sequence of positions and velocities — is the primary output. From it, we compute thermodynamic properties by averaging over many timesteps.
+
+### Why This Is Computationally Expensive
+
+For each of $N$ atoms, we must compute:
+- Force from every other atom: $O(N^2)$ interactions
+- With $N = 10{,}000$ water molecules, that's 100 million pair calculations per step
+- At 1 fs timestep, a 1 ns simulation needs 1 million steps
+
+This is why long-range interactions (Coulomb) need special treatment (Ewald/PPPM) and why MD is routinely run on HPC clusters.
+
+### What MD Actually Computes
+
+MD produces **deterministic trajectories** — given the same initial conditions, the same code produces identical results (in exact arithmetic). Real randomness comes from initial velocity sampling:
+
+```lammps
+velocity all create 300.0 492845 rot yes mom yes
+```
+
+The `492845` is the random seed. Change it, get different initial velocities, same ensemble-averaged properties.
+
+## Newton's Laws in MD
+
+### The Equations
+
+For each atom $i$:
+
+$$m_i \frac{d^2\mathbf{r}_i}{dt^2} = \mathbf{F}_i = -\nabla_i U(\mathbf{r}_1, \mathbf{r}_2, \ldots, \mathbf{r}_N)$$
+
+The force $\mathbf{F}_i$ is the negative gradient of the potential energy $U$ with respect to atom $i$'s position.
+
+### Integration: Velocity Verlet
+
+The standard integrator in LAMMPS is **velocity Verlet**:
+
+```python
+# Step 1: Half-step velocity
+v(t + Δt/2) = v(t) + 0.5 * F(t) / m * Δt
+
+# Step 2: Full-step position
+x(t + Δt) = x(t) + v(t + Δt/2) * Δt
+
+# Step 3: Compute new forces at new positions
+F(t + Δt) = -∇U(x(t + Δt))
+
+# Step 4: Complete velocity
+v(t + Δt) = v(t + Δt/2) + 0.5 * F(t + Δt) / m * Δt
+```
+
+Why this order? Because $F(t + Δt)$ depends on $x(t + Δt)$, which is only known after step 2.
+
+### The Timestep
+
+The timestep $\Delta t$ must be small enough to resolve the fastest motion in the system:
+
+| Motion | Period | Timestep Constraint |
+|--------|--------|-------------------|
+| C-H bond stretch | ~10 fs | Δt < 0.5 fs |
+| O-H bond stretch | ~9 fs | Δt < 0.5 fs |
+| H-O-H bend | ~20 fs | Δt < 1 fs |
+| Lennard-Jones repulsion | ~2–4 fs | Δt < 1 fs |
+| Metal phonon | ps scale | Δt ~1–2 fs |
+
+For flexible water (SPC/F): Δt = 0.5 fs
+For rigid water (SPC/E, TIP4P): Δt = 1–2 fs with bond constraints
+
+### Why Bond Constraints Help
+
+`fix shake` removes the fastest degrees of freedom by constraint:
+
+```lammps
+fix constrain all shake 1e-4 200 0 a 1.0 b 1.0
+```
+
+This fixes O-H bond lengths to 1.0 Å and H-H distance appropriately. The algorithm solves these constraints analytically at each integration step, allowing a larger Δt without instability.
 
 ## Physical Meaning of Key LAMMPS Commands
 
 ### Units
 
-LAMMPS supports multiple unit systems. The choice affects every physical quantity.
+LAMMPS supports multiple unit systems. The choice affects every physical quantity — energy, distance, time, charge.
 
-| Unit Set | Distance | Energy | Time | Use Case |
-|----------|----------|--------|------|----------|
-| `real` | Å | kcal/mol | fs | Organic molecules, proteins |
-| `metal` | Å | eV | ps | Materials science, metals |
-| `si` | m | J | s | Academic; rarely used |
-| `lj` | σ | ε | τ | Simplified units; for testing |
+| Unit Set | Distance | Energy | Time | Charge | Use Case |
+|----------|----------|--------|------|--------|----------|
+| `real` | Å | **kcal/mol** | fs | e | Organic molecules, proteins |
+| `metal` | Å | **eV** | ps | e | Materials science, metals |
+| `si` | m | J | s | C | Academic; rarely used |
+| `lj` | σ | ε | τ | q | Simplified units; for testing |
+
+**Electrode potentials are ALWAYS in volts** regardless of unit system. This is a LAMMPS convention.
 
 ::: {.callout-warning}
 ## Units Mismatch Causes Garbage
 
-If you set `units metal` but provide `pair_coeff` values in kcal/mol, all energies will be wrong by ~43×. Always verify consistency.
+If you set `units metal` but provide `pair_coeff` values in kcal/mol, all energies will be wrong by ~43× (1 eV = 23.06 kcal/mol).
+
+Always verify: what units does your force field use? What units did the original paper use?
 :::
 
 ### Atom Style
 
-The `atom_style` determines what properties each particle carries.
+The `atom_style` determines what properties each particle carries. More properties = more memory.
 
-| Atom Style | Properties | Use When |
-|------------|-----------|----------|
-| `full` | id, type, molecule, charge, mass, position, velocity, bonds, angles | Standard molecular systems (water, organics) |
-| `charge` | id, type, charge, mass, position, velocity | Electrolytes, electrode systems (no bonds needed) |
-| `atomic` | id, type, mass, position, velocity | Pure metals, noble gases |
-| `bonded` | id, type, molecule, charge, mass, position, velocity, bonds, angles, dihedrals | Complex molecules with explicit torsions |
+| Atom Style | Properties | Memory | Use When |
+|------------|-----------|--------|----------|
+| `full` | id, type, molecule, charge, mass, position, velocity, bonds, angles, dihedrals | High | Standard molecular (water, organics) |
+| `charge` | id, type, charge, mass, position, velocity | Medium | Electrolytes, electrode systems |
+| `atomic` | id, type, mass, position, velocity | Low | Pure metals, noble gases |
+| `bonded` | id, type, molecule, charge, mass, position, velocity, bonds, angles, dihedrals | High | Complex organics |
 
-For constant potential simulations with simple electrolytes, `atom_style charge` is sufficient and faster than `full`.
+For constant potential simulations with simple electrolytes (water + ions), `atom_style charge` is sufficient and faster than `full`.
 
 ### Boundary Conditions
 
@@ -61,72 +141,186 @@ For constant potential simulations with simple electrolytes, `atom_style charge`
 boundary p p f
 ```
 
-`p` = periodic, `f` = fixed (non-periodic), `s` = shrink-wrapped.
+Each character specifies the boundary type for x, y, z:
 
-For electrode-electrolyte slab simulations:
+| Character | Meaning | Effect |
+|-----------|---------|--------|
+| `p` | periodic | Wrapping; continuous across boundary |
+| `f` | fixed | Non-periodic; no wrapping |
+| `s` | shrink-wrapped | Periodic only if needed; auto-computes size |
+| `m` | shrink-wrapped with minimum | Like `s` but with minimum extent |
 
-- **x, y**: periodic — allows long-range electrostatics in these directions
-- **z**: fixed — creates a slab geometry with two surfaces exposed to vacuum (or vacuum region above electrolyte)
-
-The non-periodic z-direction requires the `kspace_modify slab` correction for electrostatics (see @sec-electrostatics).
-
-### Groups
-
-Groups are named subsets of atoms. They are essential for:
-
-- Distinguishing electrode atoms from electrolyte
-- Applying different thermostats to different components
-- Computing properties for specific regions
+**For electrode-electrolyte slab simulations**:
 
 ```lammps
-group bot region bottom_electrode
-group top region top_electrode
-group elyte region electrolyte
+boundary p p f    # periodic in x,y; non-periodic in z
+```
+
+This creates:
+- Two electrode surfaces (top and bottom)
+- A vacuum region above the electrolyte
+- Non-periodic z requires the `kspace_modify slab` correction for electrostatics
+
+**Why non-periodic z?** Because you have two surfaces exposed to vacuum, not an infinite bulk material.
+
+### Regions and Groups
+
+**Regions** define spatial volumes:
+
+```lammps
+region bot block 0 20 0 20 0 5    # rectangular box from x=0-20, y=0-20, z=0-5
+region sphere sphere 10 10 10 5    # sphere centered at (10,10,10) with radius 5
+```
+
+**Groups** are collections of atoms for targeting commands:
+
+```lammps
+group bot region bot
+group top region top
+group elyte region elyte
 group electrode union bot top
 group mobile subtract all electrode
 ```
 
+| Operation | Meaning |
+|-----------|---------|
+| `union group1 group2` | Atoms in either group |
+| `intersect group1 group2` | Atoms in both groups |
+| `subtract group1 group2` | Atoms in group1 but not group2 |
+
+**Why groups matter for ELECTRODE**: You apply `fix electrode/conp` to a group, so the group must contain exactly the atoms you want as your electrode.
+
 ::: {.callout-note}
 ## Group Naming Convention
 
-Use descriptive names: `bot`, `top`, `elyte`, `mobile`. Avoid names like `g1` which are meaningless in isolation.
+Use descriptive names: `bot`, `top`, `elyte`, `mobile`, `electrode`. Avoid names like `g1` which are meaningless in isolation.
 :::
+
+## The LAMMPS Input Script Structure
+
+A LAMMPS input script has a logical flow:
+
+```lammps
+# 1. INITIALIZATION
+units metal
+atom_style charge
+boundary p p f
+
+# 2. ATOM CREATION
+region box block 0 20 0 20 0 60
+create_box 3 box
+create_atoms 1 region bot
+create_atoms 2 region top
+create_atoms 3 region elyte
+
+# 3. GROUPS
+group bot region bot
+group top region top
+group elyte region elyte
+
+# 4. FORCE FIELD
+pair_style lj/cut/coul/long 10.0
+pair_coeff 1 1 0.01 3.0
+pair_coeff 2 2 0.01 3.0
+pair_coeff 3 3 0.155 3.166
+...
+kspace_style pppm/electrode 1e-5
+
+# 5. ELECTRODE FIX
+fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on
+
+# 6. INTEGRATION
+fix frozen all nve
+fix mytemp elyte langevin 300 300 100 12345
+
+# 7. OUTPUT
+thermo 100
+thermo_style custom step temp pe ke vol density
+dump 1 all custom 100 traj.lammpstrj id type x y z q
+
+# 8. RUN
+minimize 1e-6 1e-9 1000 10000
+run 10000
+```
+
+**Order matters**: you cannot set a force field before creating atoms, and you cannot define groups before atoms exist.
 
 ## Forces and Energy
 
-### Potential Energy Components
+### Where Energy Comes From
 
-LAMMPS's thermodynamic output breaks down the potential energy:
+The potential energy $U$ is the sum of all interatomic interactions:
 
-| Component | Meaning |
-|-----------|---------|
-| `PotEng` | Total potential energy = sum of all contributions |
-| `KinEng` | Kinetic energy = ½mv² summed over all atoms |
-| `TotEng` | Total energy = PotEng + KinEng (conserved in NVE) |
-| `PairEng` | Non-bonded pairwise interactions (LJ + Coulomb real-space) |
-| `BondEng` | Bond stretching energy |
-| `AngleEng` | Angle bending energy |
-| `KspaceEng` | Long-range electrostatics (reciprocal space) |
+$$U_{total} = U_{pair} + U_{bond} + U_{angle} + U_{dihedral} + U_{kspace}$$
+
+| Term | Source | Computation |
+|------|--------|-------------|
+| `PairEng` | Non-bonded pairs (LJ + real-space Coulomb) | Sum over all unique pairs |
+| `BondEng` | Chemical bonds | Sum over all bonds |
+| `AngleEng` | Angle bending | Sum over all angles |
+| `KspaceEng` | Long-range electrostatics | Reciprocal-space sum |
+
+### Reading Thermodynamic Output
+
+```
+Step Temp PotEng KinEng Volume Density f_fxconp[1]
+0 0 -58234.35 0 24000 0.98234 0
+100 299.45 -58421.23 4412.34 24000 0.98312 -0.234
+```
+
+| Column | Meaning | Normal Behavior |
+|--------|---------|-----------------|
+| `Step` | Timestep number | Increases by `thermo` interval |
+| `Temp` | Instantaneous temperature | Fluctuates ±10 K around target |
+| `PotEng` | Potential energy | Should be stable (small drift OK) |
+| `KinEng` | Kinetic energy | Fluctuates with T |
+| `TotEng` | Total energy = PotEng + KinEng | Conserved in NVE |
+| `Volume` | System volume | Constant in NVT; adjusts in NPT |
+| `Density` | Mass/volume | Should match experimental ~1 g/cm³ |
+| `f_fxconp[1]` | ELECTRODE energy | Small fluctuations; near zero |
 
 ### Energy Conservation Check
 
-In a well-behaved NVE simulation (no thermostat), `TotEng` should drift by less than 0.1% over 1 ns. Drift indicates:
+In a well-behaved NVE simulation (no thermostat), `TotEng` should drift by less than 0.1% over 1 ns.
 
-- Timestep too large
-- Cutoff too small causing large force spikes
-- Numerical instability in integration
+**Example**: 1 ns at 1 fs timestep = 1,000,000 steps
+- If `TotEng` changes by 1 eV over this time, that's ~0.002% (excellent)
+- If it changes by 100 eV, that's ~0.2% (acceptable)
+- If it changes by 1000 eV, that's ~2% (problematic)
+
+Drift sources:
+- Timestep too large → numerical instability
+- Cutoff too small → large force errors accumulate
+- Bad initial geometry → atoms overlapping
+
+**Always run NVE first** to check if your simulation is well-behaved before adding thermostats.
+
+### How to Check Conservation
+
+```lammps
+# Run NVE for 10 ps
+fix conservative all nve
+thermo 100
+thermo_style custom step temp pe ke vol TotEng
+
+run 10000    # 10 ps at 1 fs timestep
+```
+
+Then plot `TotEng` vs step — it should be flat (plus small random fluctuations).
 
 ## Key Concepts Summary
 
-| Concept | LAMMPS Term | Physical Meaning |
-|---------|-------------|------------------|
-| Interaction function | `pair_style` | Functional form of interatomic potential |
-| Force field parameters | `pair_coeff`, `bond_coeff` | Numerical values (ε, σ, k, etc.) |
-| Time integration | `fix nve`, `fix nvt` | Newton's laws numerical solution |
-| Temperature control | `fix langevin`, `fix nvt` | Sampling from correct ensemble |
-| Long-range electrostatics | `kspace_style pppm` | Handling Coulomb's law in periodic systems |
+| Physical Concept | LAMMPS Term | What It Means |
+|-----------------|-------------|---------------|
+| Functional form of interaction | `pair_style` | Mathematical formula (LJ, Coulomb, etc.) |
+| Numerical parameters | `pair_coeff`, `bond_coeff` | The ε, σ, k, r₀ values |
+| Time integration | `fix nve`, `fix nvt` | How positions/velocities evolve |
+| Temperature control | `fix langevin`, `fix nvt` | How system samples canonical ensemble |
+| Pressure control | `fix npt`, `fix barostat` | How system samples isobaric ensemble |
+| Long-range electrostatics | `kspace_style pppm` | How Coulomb's law is solved efficiently |
 | On-the-fly calculation | `compute` | Quantities computed during simulation |
-| Property storage | `fix ave/time` | Time-averaged output |
+| Time-averaged output | `fix ave/time` | Accumulate data over run |
+| Trajectory recording | `dump` | Write positions to file |
 
 ## Next Steps
 
