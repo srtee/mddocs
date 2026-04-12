@@ -1,0 +1,226 @@
+# Electrodes and the Constant Potential Method
+
+::: {.callout-tip}
+## In this section
+
+- Why conductors need different treatment than insulators in MD
+- What the constant potential method does (and why it matters for electrochemistry)
+- How induced charges emerge from energy minimization
+- The capacitance matrix and what it tells you
+:::
+
+## Conductors vs. Insulators in Molecular Dynamics
+
+### Insulator: Fixed Charges
+
+In a typical molecular simulation (water, proteins, simple electrolytes):
+
+- Atomic charges are fixed at their initial values
+- The electrostatic potential within the material varies freely depending on charge distribution
+- No charge redistribution occurs during the simulation
+
+This is appropriate for insulators, where charges cannot move through the material.
+
+### Conductor: Induced Charges
+
+In a metal (electrode):
+
+- Charges (electrons) can move freely within the material
+- The material adjusts its charge distribution to equalize the electrostatic potential
+- This happens on timescales much faster than atomic motion (effectively instantaneous)
+
+If we treat a metal electrode with fixed charges, we're getting the physics wrong — the electrode cannot maintain arbitrary charge distributions.
+
+## The Electrode-Electrolyte Interface
+
+### Structure of the Interface
+
+When an electrode is placed in electrolyte:
+
+1. **Electric double layer**: ions accumulate near the charged surface
+2. **Solvation shells**: water molecules orient near the surface
+3. **Applied potential**: changing the electrode voltage changes ion adsorption
+
+### What Control Do We Have?
+
+In real electrochemistry, the **potential** (voltage) of the electrode is the controlled variable, measured and maintained by a potentiostat.
+
+In a typical MD simulation with fixed atom charges, we can only control the **total charge** on the electrode — not the potential. This is wrong for electrochemistry.
+
+| Controlled Variable | Physical Reality | Fixed-Charge MD | Constant Potential |
+|---------------------|-------------------|-----------------|-------------------|
+| Electrode potential | What the potentiostat controls | ❌ Cannot enforce | ✅ Direct control |
+| Electrode charge | Flows from potential | ✅ Can set | ❌ Fluctuates |
+
+### Why Fixed Charge Fails for Electrodes
+
+Consider a simulation of charging a supercapacitor:
+
+1. We start with neutral electrodes
+2. We want to apply 1 V between electrodes
+3. With fixed charges: we must choose some total charge on each electrode — but what charge gives 1 V?
+4. The relationship between charge and potential depends on the electrolyte structure (which we don't know a priori)
+
+With constant potential, the charges **emerge** from the physics — we specify the voltage and the simulation determines the induced charge.
+
+## The Constant Potential Method: Theory
+
+### The Problem Formulation
+
+We have a system with:
+- Electrode atoms with unknown charges $q_i$
+- Electrolyte atoms with known charges $Q_j$
+- A constraint: each electrode surface must be at potential $V$
+
+The electrostatic energy:
+
+$$E(\mathbf{q}, \mathbf{Q}) = \frac{1}{2} \sum_{i,j} q_i \, A_{ij} \, q_j + \sum_{i,j} q_i \, A_{ij} \, Q_j + \frac{1}{2} \sum_{i,j} Q_i \, A_{ij} \, Q_j$$
+
+Where $A_{ij}$ is the inverse capacitance matrix (from the kspace solver).
+
+We want to minimize $E$ subject to the constraint that each electrode group is at potential $V_k$.
+
+### Energy Minimization Under Constraint
+
+Mathematically:
+- Minimize $E(\mathbf{q})$
+- Subject to $\mathbf{V} = \mathbf{A}\mathbf{q}$ (the potential constraints)
+
+The solution gives **induced charges** that depend on:
+- Electrode geometry
+- Electrolyte structure
+- Applied potential
+
+These are NOT predetermined — they emerge from the minimization.
+
+### Gaussian Charge Smearing
+
+#### Why Smearing?
+
+Point charges at the electrode surface create a singularity — as an electrolyte ion approaches the surface, the interaction energy diverges (Coulomb catastrophe). This makes the matrix ill-conditioned and difficult to invert.
+
+#### The Solution
+
+Smear each electrode charge over a Gaussian distribution:
+
+$$\rho_i(\mathbf{r}) = q_i \left(\frac{\eta_i}{\pi}\right)^{3/2} \exp(-\eta_i |\mathbf{r} - \mathbf{R}_i|^2)$$
+
+The smearing width η (eta) controls:
+
+| η (large) | η (small) |
+|-----------|-----------|
+| Narrow distribution (more like point charge) | Wide distribution (smoother, better conditioned) |
+| More accurate electrostatics near surface | Better matrix convergence; smoother potential |
+| Harder to converge (singular matrix) | Easier to solve |
+
+Typical η ≈ 1.0–2.0 Å⁻² (real units) or 0.2–0.5 (metal units).
+
+::: {.callout-note}
+## Physical Interpretation of Smearing
+
+Smearing mimics the fact that real metals have a finite electron density at the surface — the charges are not point-like. The Gaussian width parameter should be chosen to match the electron gas density of the electrode material.
+:::
+
+### The Capacitance Matrix
+
+The N×N capacitance matrix $\mathbf{C}$ relates electrode potentials to electrode charges:
+
+$$\mathbf{Q} = \mathbf{Q}_{0V} + \mathbf{C} \cdot \mathbf{V}$$
+
+| Symbol | Meaning |
+|--------|---------|
+| $\mathbf{Q}$ | Total charge on each electrode group |
+| $\mathbf{Q}_{0V}$ | Charge configuration at zero applied potential (influenced by electrolyte) |
+| $\mathbf{C}$ | Capacitance matrix; depends only on geometry and dielectric |
+| $\mathbf{V}$ | Applied potentials on each electrode group |
+
+**Physical meaning of C_ij**: How much charge on electrode *i* changes when electrode *j*'s potential changes, with all other potentials held constant.
+
+**What you can compute from C**:
+- Total capacitance: $C_{total} = \sum_{i,j} C_{ij}$
+- Differential capacitance: $dQ/dV$ at given V
+- Potential distribution in complex geometries
+
+### Constant Potential vs. Constant Charge
+
+| Aspect | Constant Potential (`electrode/conp`) | Constant Charge (`electrode/conq`) |
+|--------|---------------------------------------|-----------------------------------|
+| What is fixed | Voltage on each electrode group | Total charge on each electrode group |
+| What fluctuates | Electrode atom charges | Electrode potentials |
+| Physical analog | Potentiostat | Galvanostat |
+| Use case | Electrochemical experiments | Battery discharge (known charge flux) |
+| Output | Induced charges | Measured potentials |
+
+#### When to Use Each
+
+**Constant potential** (`electrode/conp`):
+- Comparing to electrochemical experiments
+- Studying double-layer structure at controlled voltage
+- Capacitance measurements
+
+**Constant charge** (`electrode/conq`):
+- Modeling battery cycling (known current → known charge change)
+- When you know the amount of charge injected/extracted
+- Studying potential response to charging
+
+## The Physical Chemistry of Electrode Interfaces
+
+### Double Layer Structure
+
+The electric double layer has characteristic regions:
+
+1. **Inner layer (Helmholtz)**: specifically adsorbed ions, water molecules
+2. **Outer layer**: solvated ions attracted by coulomb
+3. **Diffuse layer**: decaying ion concentration into bulk
+
+CPM captures all of these — ion density profiles near electrodes reflect the balance of electrostatic attraction and ionic excluded-volume effects.
+
+### Solvent Structure Near Electrodes
+
+Water molecules near electrodes:
+- Orient with H atoms toward negative electrode, O toward positive
+- Form layers (oscillating density) near the surface
+- This structure affects capacitance (Frumkin correction)
+
+The force field (water model) determines how realistic this structure is.
+
+### How Capacitance Depends on Physical Parameters
+
+| Parameter | Effect on Capacitance |
+|-----------|----------------------|
+| Ion size | Larger ions → lower capacitance (excluded volume) |
+| Ion charge | Higher charge → stronger adsorption → different capacitance |
+| Electrode structure | Sharp features (tips, edges) → field enhancement → higher local capacitance |
+| Water model | Dielectric constant determines screening → affects capacitance |
+| Temperature | Higher T → lower capacitance (thermal disruption of structure) |
+
+## Practical Implications
+
+### Why CPM Is Necessary for Electrochemistry
+
+1. **Voltage control**: only CPM lets you specify the actual voltage (not just charge)
+2. **Induced charges**: the correct charge distribution emerges from the physics
+3. **Complex geometries**: for nanostructured electrodes, charge distribution is highly non-uniform — fixed charge models cannot capture this
+4. **Screening**: electrolyte screening of electrode charges is properly accounted for
+
+### Comparison to Other Polarizable Methods
+
+| Method | What It Does | How CPM Differs |
+|--------|--------------|-----------------|
+| Drude oscillators | Adds extra particles for electronic polarizability | CPM controls boundary potential, not internal polarizability |
+| Core-shell | Adds massless shell for ionic polarizability | CPM is for electrode boundaries |
+| QEq (charge equilibration) | Redistributes charges within a single molecule | CPM handles electrode-electrolyte boundary |
+| Fixed charge | No polarizability | Wrong for metals |
+
+### CPM and Density Functional Theory
+
+CPM is a classical method. It does not compute electronic structure. For:
+- Accurate metal electronic response → use jellium models or DFT-based MD
+-QM/MM coupling → couple CPM to quantum region
+
+The approximation in CPM: electrode charges respond instantly to electrostatic environment. This is reasonable for metals (electronic response is fast).
+
+## Next Steps
+
+- @sec-electrode-package — The LAMMPS ELECTRODE package syntax and options
+- @sec-example — A complete example of a constant potential simulation

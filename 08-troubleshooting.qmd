@@ -1,0 +1,290 @@
+# Troubleshooting Guide
+
+::: {.callout-tip}
+## In this section
+
+- Diagnosing convergence problems
+- Fixing energy drift and NaN values
+- Resolving performance bottlenecks
+- Common pitfalls and their solutions
+:::
+
+## Diagnostic Approach
+
+When a simulation fails or produces unexpected results, systematic diagnosis is essential:
+
+1. **Check energy conservation** — does `TotEng` drift? Is `PotEng` stable?
+2. **Check forces** — are any atoms experiencing huge forces?
+3. **Check charges** — are electrode charges oscillating wildly?
+4. **Check geometry** — are atoms overlapping? Are regions correct?
+
+## Convergence Problems
+
+### Symptom: Charge Oscillation
+
+Electrode charges oscillate wildly between timesteps (e.g., ±10 e on one electrode per step).
+
+| Cause | Solution |
+|-------|----------|
+| `eta` too small | Increase eta (try 1.0, 1.5, 2.0 Å⁻¹) |
+| `eta` too large | Decrease eta (try 0.5, 0.3 Å⁻¹) |
+| Timestep too large | Reduce dt to 0.5 fs |
+| Overlapping atoms | Run minimization before dynamics |
+| Tolerance too tight | Use `kspace_style pppm 1e-4` |
+
+### Symptom: NaN in Thermodynamic Output
+
+`NaN` or `Inf` appears in `PotEng`, `Temp`, or other quantities.
+
+| Cause | Solution |
+|-------|----------|
+| Atoms overlapping | Minimize before dynamics; check `pair_coeff` |
+| Bonds too stretched | Use `fix shake` to constrain; reduce timestep |
+| Kspace tolerance | Use looser tolerance (`1e-4`) |
+| Electrode too close | Increase electrode separation |
+| `eta` too small | Increase eta for better matrix conditioning |
+
+### Symptom: Matrix Inversion Fails
+
+```
+ERROR: Fix electrode: matrix inversion failed
+```
+
+| Cause | Solution |
+|-------|----------|
+| Singular matrix | Increase eta; check for overlapping atoms |
+| Too many electrode atoms | Use `algo mat_cg` or `algo cg` |
+| Geometric issue | Verify electrode geometry is valid |
+
+### Symptom: Cannot Converge Electrostatics
+
+PPPM cannot achieve requested tolerance.
+
+| Cause | Solution |
+|-------|----------|
+| Too many close contacts | Minimize; separate overlapping atoms |
+| Box too anisotropic | Adjust kspace parameters |
+| Tolerance too tight | Use `1e-4` instead of `1e-5` |
+
+## Energy Problems
+
+### Symptom: Energy Drift in NVE
+
+Total energy increases or decreases monotonically over time.
+
+| Cause | Solution |
+|-------|----------|
+| Timestep too large | Reduce dt (try 0.5 fs, 1 fs) |
+| Cutoff too small | Increase cutoff (12 Å for water) |
+| Thermostat conflict | Remove one thermostat |
+| Force spike | Minimize before running |
+
+**Check energy conservation**:
+
+```lammps
+# Run NVE for 10 ps
+fix conservative all nve
+run 10000    # 10 ps at 1 fs
+
+# In output, check TotEng drift
+# Acceptable: < 0.1% over 10 ps
+```
+
+### Symptom: Potential Energy Explodes
+
+`PotEng` goes to large negative or positive values.
+
+| Cause | Solution |
+|-------|----------|
+| Atoms too close | Minimize; check `pair_coeff` (epsilon too large) |
+| Electrode atoms too close to electrolyte | Increase LJ repulsion |
+| Bonds over-stretched | Use `fix shake`; reduce timestep |
+
+### Symptom: Temperature Too High or Low
+
+`Temp` is far from target even with thermostat.
+
+| Cause | Solution |
+|-------|----------|
+| Damping time wrong | For Langevin, `100.0` is reasonable; try `50.0` or `200.0` |
+| Thermostat on frozen atoms | Only thermostat mobile atoms |
+| Initial velocities too hot/cold | Use `velocity all create 300.0 12345` before dynamics |
+
+## Geometry Problems
+
+### Checking Your System
+
+```lammps
+# Print atom positions near problematic region
+dump debug all custom 1 debug.xyz id type x y z
+
+# Check which atoms are in which group
+group bot print
+
+# Check box dimensions
+print "Box: $(xhi) $(yhi) $(zhi)"
+
+# Check for overlapping regions
+region bot check overlap
+```
+
+### Overlapping Atoms
+
+Common when creating atoms in overlapping regions.
+
+```lammps
+# Don't do this:
+region bot block 0 20 0 20 0 10
+create_atoms 1 region bot
+region top block 0 20 0 20 0 10    # OVERLAPS with bot
+create_atoms 2 region top
+```
+
+**Fix**: Ensure regions don't overlap.
+
+### Region Definition Errors
+
+```lammps
+# Correct: regions cover full box height with gap for electrolyte
+region box block 0 20 0 20 0 60
+region bot block 0 20 0 20 0 5
+region top block 0 20 0 20 55 60
+region elyte block 0 20 0 20 5 55    # Gap between 5 and 55
+```
+
+## ELECTRODE-Specific Problems
+
+### Wrong Kspace Style
+
+```
+ERROR: kspace style pppm is not supported with fix electrode
+```
+
+**Cause**: Standard `pppm` doesn't provide electrode interaction matrices.
+
+**Fix**:
+```lammps
+kspace_style pppm/electrode 1e-5    # Electrode-aware version
+```
+
+### Electrode Group Empty
+
+```
+ERROR: Fix electrode group has no atoms
+```
+
+**Cause**: Group name doesn't exist or has no atoms.
+
+**Fix**:
+```lammps
+group bot region bot    # Define group BEFORE fix
+fix fxconp bot electrode/conp ...
+```
+
+### Potential Units Wrong
+
+Electrode potentials are **always in volts** regardless of `units` setting.
+
+```lammps
+units metal    # eV, but potential is still in VOLTS, not eV
+fix fxconp bot electrode/conp -1.0 1.805    # -1.0 V, not -1.0 eV
+```
+
+## Performance Problems
+
+### Slow Charge Equilibration
+
+If electrode charges take too long to equilibrate:
+
+| Cause | Solution |
+|-------|----------|
+| Matrix too large | Use `algo mat_cg` instead of `mat_inv` |
+| Tolerance too tight | Loosen kspace tolerance |
+| Too many electrode atoms | Reduce electrode thickness (3-4 Å sufficient) |
+
+### Memory Issues
+
+For large systems with many electrode atoms:
+
+| System Size | Algorithm | Memory Estimate |
+|-------------|-----------|-----------------|
+| < 5000 electrode atoms | `mat_inv` | ~200 MB |
+| 5000–20000 | `mat_cg` | ~100 MB |
+| > 20000 | `cg` | < 50 MB |
+
+If memory is exceeded, use `algo mat_cg` or `algo cg`.
+
+### Parallel Scaling
+
+ELECTRODE can be communication-heavy:
+
+```lammps
+# For slab geometry: 2D decomposition helps
+processors * * 2    # 2 ranks in z-direction
+```
+
+## Units Checklist
+
+Critical: LAMMPS units and your force field parameters must match.
+
+| Quantity | `units real` | `units metal` |
+|----------|-------------|---------------|
+| Distance | Å | Å |
+| Energy | **kcal/mol** | **eV** |
+| Time | fs | fs |
+| Temperature | K | K |
+| Pressure | atm | bar |
+| Potential | kcal/mol/e | **V** (always!) |
+| eta | Å⁻¹ | Å⁻¹ |
+
+**Common mistake**: Providing kcal/mol parameters with `units metal`.
+
+## Common Pitfalls Summary
+
+| Pitfall | Consequence | Prevention |
+|---------|-------------|------------|
+| Wrong units for `pair_coeff` | Garbage energies | Verify parameter units match `units` |
+| Forgot `kspace_modify slab` | Artificially high z-pressure | Add for non-periodic z |
+| Double thermostatting | System doesn't equilibrate | Only one thermostat per group |
+| Overlapping atoms | NaN, crash | Minimize before dynamics |
+| Mismatch pair + kspace | Error or wrong forces | `coul/long` → `pppm` |
+| Electrode group empty | Error | Define groups before fix |
+| `eta` wrong magnitude | No convergence | Check units: 1.0–2.0 (real) or 0.2–0.5 (metal) |
+| Potential in wrong units | Wrong voltage | Potentials are always in volts |
+
+## Debugging Script Template
+
+```lammps
+# Debug script: run short simulation with heavy output
+units metal
+atom_style charge
+boundary p p f
+
+# ... (your setup) ...
+
+# Minimize first
+minimize 1e-6 1e-9 1000 10000
+
+# Run with maximum output
+thermo 1
+thermo_style custom step temp pe ke vol f_fxconp[1] f_fxconp[2] f_fxconp[3] f_fxconp[4] f_fxconp[5]
+
+dump 1 all custom 1 debug.xyz id type x y z q
+
+# Short run to see what's happening
+run 100
+
+# Check debug.xyz for overlapping atoms
+# Check thermo output for energy behavior
+```
+
+## Getting Help
+
+1. **Check LAMMPS documentation**: [fix electrode](https://docs.lammps.org/fix_electrode.html)
+2. **Check ELECTRODE examples**: `examples/PACKAGES/electrode` in LAMMPS distribution
+3. **Post on LAMMPS forum**: Include your input script, error message, and LAMMPS version
+4. **Check the literature**: Reed et al. 2007; Ahrens-Iwers & Meissner 2021
+
+## Next Steps
+
+- @sec-references — Further reading and key papers

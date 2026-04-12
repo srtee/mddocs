@@ -1,0 +1,69 @@
+---
+title: "Constant Potential Molecular Dynamics in LAMMPS"
+subtitle: "A practical guide to the ELECTRODE package"
+---
+
+## What Is This Guide?
+
+This guide walks you through running **constant potential molecular dynamics (MD)** simulations using the [LAMMPS](https://lammps.org) ELECTRODE package. It is written for researchers and students who have a working LAMMPS installation and want to understand the physics behind the commands — not just the syntax.
+
+## What You Will Learn
+
+By the end of this guide you will be able to:
+
+- **Interpret** LAMMPS input commands in terms of physical meaning
+- **Connect** force field choices to simulation observables (energy, density, capacitance)
+- **Design** electrode-electrolyte simulations with appropriate boundary conditions and physical parameters
+- **Run** constant potential simulations and diagnose common problems
+- **Analyze** output including trajectories, thermodynamic data, and electrode properties
+
+## How to Use This Guide
+
+The guide is organized as a sequence of topics, each building on the previous:
+
+```{mermaid}
+flowchart LR
+    A[1. Fundamentals] --> B[2. Force Fields]
+    A --> C[4. Electrostatics]
+    B --> C
+    C --> D[5. Electrodes & CPM]
+    D --> E[6. ELECTRODE Package]
+    E --> F[7. Example]
+    F --> G[8. Troubleshooting]
+```
+
+| Section | Topic | What You Will Understand |
+|---------|-------|--------------------------|
+| 1 | Fundamentals | What MD actually computes; key LAMMPS concepts |
+| 2 | Force Fields | What interactions exist; how to configure them |
+| 3 | Physical Conditions | How temperature, pressure, and time are controlled |
+| 4 | Electrostatics | How long-range Coulomb is handled (Ewald, PPPM) |
+| 5 | Electrodes & CPM | Why electrodes need special treatment; what CPM does |
+| 6 | ELECTRODE Package | LAMMPS syntax for constant potential, charge, thermo |
+| 7 | Example | A complete input script with output interpretation |
+| 8 | Troubleshooting | Common problems and how to fix them |
+
+## Prerequisites
+
+This guide assumes you have:
+
+- Completed introductory physics (mechanics, electromagnetism basics)
+- Completed one semester of general chemistry (ions, Coulomb's law)
+- Basic programming experience (any language)
+- **Access to a LAMMPS installation** (binary or source; CMake-built with ELECTRODE and KSPACE packages)
+
+No prior MD experience is required.
+
+## Computing Environment
+
+All examples in this guide assume a standard LAMMPS installation. Commands shown in `code blocks` like:
+
+```{.bash}
+lmp -in in.electrode -pk gpu 1 -l yes
+```
+
+should be run in a terminal where LAMMPS is available.
+
+## Contributing
+
+This guide is open source. If you find an error or want to add content, open an issue or PR on the [GitHub repository](https://github.com/srtee/mddocs).

@@ -1,0 +1,134 @@
+# Molecular Dynamics Fundamentals
+
+::: {.callout-tip}
+## In this section
+
+- What the simulation loop actually does
+- Key LAMMPS concepts mapped to physical meaning
+- How to read thermodynamic output
+:::
+
+## The Core Loop
+
+Molecular dynamics (MD) simulates atomic motion by solving Newton's equations of motion numerically. At each timestep:
+
+1. **Forces** are computed from atom positions using an interatomic potential (the force field)
+2. **Velocities and positions** are updated via numerical integration
+
+```python
+for timestep in range(N_steps):
+    forces = compute_forces(positions, force_field)
+    positions, velocities = integrate(positions, velocities, forces, dt)
+```
+
+The **trajectory** — the sequence of positions and velocities — is the primary output. From it, we compute thermodynamic properties by averaging over time.
+
+## Physical Meaning of Key LAMMPS Commands
+
+### Units
+
+LAMMPS supports multiple unit systems. The choice affects every physical quantity.
+
+| Unit Set | Distance | Energy | Time | Use Case |
+|----------|----------|--------|------|----------|
+| `real` | Å | kcal/mol | fs | Organic molecules, proteins |
+| `metal` | Å | eV | ps | Materials science, metals |
+| `si` | m | J | s | Academic; rarely used |
+| `lj` | σ | ε | τ | Simplified units; for testing |
+
+::: {.callout-warning}
+## Units Mismatch Causes Garbage
+
+If you set `units metal` but provide `pair_coeff` values in kcal/mol, all energies will be wrong by ~43×. Always verify consistency.
+:::
+
+### Atom Style
+
+The `atom_style` determines what properties each particle carries.
+
+| Atom Style | Properties | Use When |
+|------------|-----------|----------|
+| `full` | id, type, molecule, charge, mass, position, velocity, bonds, angles | Standard molecular systems (water, organics) |
+| `charge` | id, type, charge, mass, position, velocity | Electrolytes, electrode systems (no bonds needed) |
+| `atomic` | id, type, mass, position, velocity | Pure metals, noble gases |
+| `bonded` | id, type, molecule, charge, mass, position, velocity, bonds, angles, dihedrals | Complex molecules with explicit torsions |
+
+For constant potential simulations with simple electrolytes, `atom_style charge` is sufficient and faster than `full`.
+
+### Boundary Conditions
+
+```lammps
+boundary p p f
+```
+
+`p` = periodic, `f` = fixed (non-periodic), `s` = shrink-wrapped.
+
+For electrode-electrolyte slab simulations:
+
+- **x, y**: periodic — allows long-range electrostatics in these directions
+- **z**: fixed — creates a slab geometry with two surfaces exposed to vacuum (or vacuum region above electrolyte)
+
+The non-periodic z-direction requires the `kspace_modify slab` correction for electrostatics (see @sec-electrostatics).
+
+### Groups
+
+Groups are named subsets of atoms. They are essential for:
+
+- Distinguishing electrode atoms from electrolyte
+- Applying different thermostats to different components
+- Computing properties for specific regions
+
+```lammps
+group bot region bottom_electrode
+group top region top_electrode
+group elyte region electrolyte
+group electrode union bot top
+group mobile subtract all electrode
+```
+
+::: {.callout-note}
+## Group Naming Convention
+
+Use descriptive names: `bot`, `top`, `elyte`, `mobile`. Avoid names like `g1` which are meaningless in isolation.
+:::
+
+## Forces and Energy
+
+### Potential Energy Components
+
+LAMMPS's thermodynamic output breaks down the potential energy:
+
+| Component | Meaning |
+|-----------|---------|
+| `PotEng` | Total potential energy = sum of all contributions |
+| `KinEng` | Kinetic energy = ½mv² summed over all atoms |
+| `TotEng` | Total energy = PotEng + KinEng (conserved in NVE) |
+| `PairEng` | Non-bonded pairwise interactions (LJ + Coulomb real-space) |
+| `BondEng` | Bond stretching energy |
+| `AngleEng` | Angle bending energy |
+| `KspaceEng` | Long-range electrostatics (reciprocal space) |
+
+### Energy Conservation Check
+
+In a well-behaved NVE simulation (no thermostat), `TotEng` should drift by less than 0.1% over 1 ns. Drift indicates:
+
+- Timestep too large
+- Cutoff too small causing large force spikes
+- Numerical instability in integration
+
+## Key Concepts Summary
+
+| Concept | LAMMPS Term | Physical Meaning |
+|---------|-------------|------------------|
+| Interaction function | `pair_style` | Functional form of interatomic potential |
+| Force field parameters | `pair_coeff`, `bond_coeff` | Numerical values (ε, σ, k, etc.) |
+| Time integration | `fix nve`, `fix nvt` | Newton's laws numerical solution |
+| Temperature control | `fix langevin`, `fix nvt` | Sampling from correct ensemble |
+| Long-range electrostatics | `kspace_style pppm` | Handling Coulomb's law in periodic systems |
+| On-the-fly calculation | `compute` | Quantities computed during simulation |
+| Property storage | `fix ave/time` | Time-averaged output |
+
+## Next Steps
+
+- @sec-force-fields — What interactions are available and how to configure them
+- @sec-physical-conditions — How thermostats and barostats control the physical conditions

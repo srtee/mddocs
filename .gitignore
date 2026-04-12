@@ -1,2 +1,20 @@
 /.quarto/
 /_site/
+/_freeze/
+/_rendered/
+
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# LAMMPS outputs (not inputs)
+log.*
+*.lammpstrj
+*.dcd
+restart.elast

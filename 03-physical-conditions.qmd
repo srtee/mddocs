@@ -1,0 +1,323 @@
+# Physical Conditions — Temperature, Pressure, and Time
+
+::: {.callout-tip}
+## In this section
+
+- What NVE, NVT, NPT mean and when to use each
+- How thermostats work (algorithms, LAMMPS syntax, physical meaning)
+- How barostats control pressure and volume
+- Timestep selection and why it matters
+- What observables you can measure
+:::
+
+## What Is Being Held Constant?
+
+Real experiments control temperature, pressure, and composition. In MD, we choose which of these to hold fixed — this determines the **statistical ensemble** and thus which thermodynamic properties we can legitimately compute.
+
+| Ensemble | LAMMPS Fix | What's Fixed | What Fluctuates | Use Case |
+|----------|-----------|--------------|------------------|----------|
+| NVE | `fix nve` | E, V, N | T, P | Microcanonical; equilibrium check |
+| NVT | `fix nvt` or `fix npt` | T, V, N | E, P | Canonical; most production |
+| NPT | `fix npt` | T, P, N | E, V | Isobaric; density-sensitive properties |
+| NPH | `fix nph` | P, H, N | T, V | Isobaric without thermostat (rare) |
+
+The ensemble choice is not just convention — it determines which statistical mechanics formula you must use to connect simulation results to experimental observables.
+
+## Time Integration and Timestep
+
+### The Verlet Algorithm
+
+MD integrates Newton's equations numerically. The velocity Verlet algorithm:
+
+```python
+# Velocity Verlet (per atom)
+v(t + dt/2) = v(t) + 0.5 * F(t) / m * dt        # half-step velocity
+x(t + dt) = x(t) + v(t + dt/2) * dt             # full-step position
+F(t + dt) = forces(x(t + dt))                  # new forces
+v(t + dt) = v(t + dt/2) + 0.5 * F(t + dt) / m * dt  # complete velocity
+```
+
+### Timestep Selection
+
+The timestep Δt must be small enough to resolve the fastest motion in the system:
+
+| Motion | Characteristic Frequency | Δt Limit |
+|--------|-------------------------|----------|
+| C-H bond stretch | ~3000 cm⁻¹ | ~0.5 fs |
+| O-H bond stretch | ~3500 cm⁻¹ | ~0.5 fs |
+| H-O-H bend | ~1600 cm⁻¹ | ~1 fs |
+| LJ repulsion | Very fast | requires small Δt |
+| Metal phonon | ~5–10 ps period | ~1–2 fs |
+
+**Typical values**:
+
+- **1 fs** for explicit water with flexible bonds
+- **0.5 fs** for flexible molecules with H-bonds
+- **2 fs** with bond constraints (`fix shake` or `fix rattle`)
+
+### Why Timestep Matters for Output
+
+| Δt Too Large | Δt Too Small |
+|-------------|--------------|
+| Energy drift; simulation "blows up" | Wasted computation |
+| Atoms overlap catastrophically | Results unchanged |
+| Timestep too large for physics | Diminishing returns |
+
+**Validation**: Run NVE and check energy conservation. Acceptable drift: < 0.1% of total energy over 1 ns.
+
+### Bond Constraints
+
+`fix shake` or `fix rattle` removes fast degrees of freedom (C-H, O-H bonds) by constraint:
+
+```lammps
+fix constrain all shake 1e-4 200 0 a 1.0    # constrain bond with tolerance 1e-4
+```
+
+Allows Δt = 2 fs (2× faster simulation, same accuracy for bonded motion).
+
+## Thermostats — Controlling Temperature
+
+### Temperature in MD
+
+Temperature is a statistical property, not a direct control variable:
+
+$$T = \frac{2}{3Nk_B} \left\langle \frac{1}{2}mv^2 \right\rangle$$
+
+The **instantaneous temperature** fluctuates. Thermostats manipulate atom velocities to sample the canonical ensemble correctly.
+
+### Thermostat Algorithms
+
+#### Velocity Rescaling (`fix temp/rescale`)
+
+```lammps
+fix tempctr all temp/rescale 10 300.0 300.0 0.02 1.0
+```
+
+Simple scaling: multiply all velocities to match target T. Not rigorous — does not produce correct fluctuations. Useful for quick equilibration.
+
+#### Berendsen Thermostat (`fix berendsen`)
+
+```lammps
+fix ber all berendsen temp 300.0 300.0 100.0
+```
+
+Weak coupling to heat bath. Produces incorrect fluctuations (variance too low). Not recommended for production.
+
+#### Nosé-Hoover Thermostat (`fix nvt`)
+
+```lammps
+fix nvt_all all nvt temp 300.0 300.0 100.0
+```
+
+Extended system method. The system + thermostat share energy. Produces correct canonical distribution. Standard for most production runs.
+
+Variants:
+- `fix nvt/kk` — Kokkos version for GPU
+- `fix nvt/sphere` — for angular degrees of freedom
+
+#### Langevin Thermostat (`fix langevin`)
+
+```lammps
+fix mylang all langevin 300.0 300.0 100.0 12345
+```
+
+Stochastic differential equation:
+
+$$m\frac{dv}{dt} = F - \gamma mv + \sqrt{2\gamma m k_B T} \, \xi(t)$$
+
+| Term | Physical Meaning |
+|------|-------------------|
+| F | Conservative force |
+| γmv | Damping (friction) |
+| √(2γmk_BT) ξ(t) | Random noise (thermal fluctuations) |
+
+Good for:
+- Non-equilibrium dynamics (shear, field)
+- Systems with heterogeneous dynamics
+- When you want explicit noise
+
+**Parameter choice**:
+- `100.0` = damping time (fd). Too small = over-damped; too large = slow equipartition
+- `12345` = random seed (set explicitly for reproducibility)
+
+#### Thermostat Comparison
+
+| Thermostat | Fluctuation Correct? |ergodicity | Computational Cost | Best Use |
+|------------|----------------------|-----------|---------------------|----------|
+| temp/rescale | ❌ No | N/A | Low | Quick equilibration |
+| berendsen | ❌ No | Poor | Low | Not recommended |
+| nvt (Nosé-Hoover) | ✅ Yes | Good | Medium | Standard production |
+| langevin | ✅ Yes | Good | Medium | Non-equilibrium |
+| nvt + chain | ✅ Yes | Best | High | Difficult systems |
+
+### What Temperature Controls Physically
+
+| Temperature Change | Physical Effect | Observable |
+|--------------------|-----------------|-------------|
+| Increase T | Higher kinetic energy → faster diffusion | MSD, diffusion coefficient |
+| Too high T | Bond breaking, chemical reactions (LAMMPS not suited) | Decomposition |
+| Too low T | Slow dynamics, metastable states | Long equilibration times |
+| T fluctuations too small | Wrong ensemble (Berendsen) | Incorrect heat capacity |
+
+## Barostats — Controlling Pressure
+
+### Pressure in MD
+
+Pressure from virial theorem:
+
+$$P = \frac{Nk_BT}{V} + \frac{1}{3V}\left\langle \sum_i \mathbf{r}_i \cdot \mathbf{F}_i \right\rangle$$
+
+| Term | Physical Meaning |
+|------|-------------------|
+| Nk_B T / V | Kinetic contribution (ideal gas) |
+| ⟨Σ r·F⟩ / 3V | Virial (force contribution) |
+
+The **mechanical pressure** is computed from atomic forces and positions. For anisotropic systems (slabs), the pressure tensor has different components.
+
+### Barostat Algorithms
+
+#### Nose-Hoover Barostat (`fix npt`)
+
+```lammps
+fix npt_all all npt temp 300.0 300.0 100.0 iso 1.0 1.0 500.0
+```
+
+Controls T (Nosé-Hoover) and P (Nosé-Hoover). The `iso` keyword applies isotropic pressure control.
+
+**Keywords**:
+- `iso` — isotropic (all components same P)
+- `aniso` — anisotropic (x, y, z independently)
+- `semiiso` — semi-isotropic (xy coupled, z separate)
+
+For **slab geometries** with non-periodic z:
+
+```lammps
+fix npt_xz all npt temp 300.0 300.0 100.0 semiiso 1.0 1.0 500.0
+```
+
+This controls P_x = P_y, but allows P_z to adjust independently (or vice versa depending on setup).
+
+#### MTK Barostat
+
+Martyna-Tobias-Klein barostat (more reliable for non-equilibrium):
+
+```lammps
+fix npt_mtk all npt temp 300.0 300.0 100.0 aniso 1.0 1.0 500.0
+```
+
+Use for:
+- Anisotropic systems
+- Systems with external fields
+- When pressure tensor components matter
+
+### What Pressure Controls Physically
+
+| Pressure Change | Physical Effect | Observable |
+|-----------------|-----------------|------------|
+| Increase P | Compress system; atoms closer | Lower volume; higher density |
+| NPT equilibration | System reaches correct density | Density ~1 g/cm³ for water |
+| Anisotropic P | Different stress in different directions | Lattice parameters |
+| Too high P | Over-compression; unrealistic | Density too high |
+
+## Integrators in LAMMPS
+
+| Fix | Ensemble | Velocity Update | Position Update |
+|-----|----------|-----------------|-----------------|
+| `fix nve` | NVE | Verlet (no thermostat) | Verlet |
+| `fix nvt` | NVT | Nosé-Hoover | Verlet |
+| `fix npt` | NPT | Nosé-Hoover (T) + barostat | Box changes |
+| `fix nph` | NPH | Barostat only | Box changes |
+
+### Combinations with ELECTRODE
+
+For constant potential simulations:
+
+```lammps
+fix frozen all nve                      # frozen electrodes (default)
+fix mylang elyte langevin 300 300 100 12345  # electrolyte thermostat
+
+# OR for frozen electrodes with NVT on electrolyte:
+fix mynvt elyte nvt temp 300.0 300.0 100.0
+```
+
+::: {.callout-warning}
+## Don't Double-Thermostat
+
+If you apply two thermostats to the same atoms, they will fight each other. Use EITHER `fix nvt` OR `fix langevin` on a given group — not both.
+:::
+
+## Observables — What You Actually Measure
+
+### Thermodynamic Output
+
+```lammps
+thermo 100
+thermo_style custom step temp pe ke vol density
+```
+
+| Variable | Physical Meaning | Normal Behavior |
+|----------|------------------|-----------------|
+| `Temp` | Instantaneous temperature | Fluctuates ±10 K around target |
+| `PotEng` | Potential energy | Stable; small drift acceptable |
+| `KinEng` | Kinetic energy | Fluctuates with T |
+| `TotEng` | Total energy | Conserved in NVE; drifts in NVT/NPT |
+| `Vol` | System volume | Constant in NVT; adjusts in NPT |
+| `Density` | Mass/volume | Should match experimental density |
+| `Press` | Total pressure | Fluctuates; mean matches external P |
+
+### Computes for Analysis
+
+```lammps
+compute temp_elec elyte temp     # electrolyte temperature (exclude frozen)
+compute stress all stress/atom  # per-atom stress tensor
+compute RDF all rdf 2 * 500     # radial distribution function
+```
+
+### Fix-Specific Output (ELECTRODE)
+
+For `fix electrode/conp`:
+
+```lammps
+variable Q_bot equal f_fxconp[5]    # charge on bottom electrode (check index)
+variable Q_top equal f_fxconp[6]    # charge on top electrode
+variable V_bot equal f_fxconp[2]    # potential on bottom (for conq)
+```
+
+The exact indices depend on the fix configuration. Check LAMMPS documentation or print all fix values.
+
+### Trajectory Output
+
+```lammps
+dump 1 all custom 100 traj.lammpstrj id type x y z q
+dump 2 all dcd 100 traj.dcd    # binary; smaller file
+```
+
+Post-processing tools:
+- **Python**: MDAnalysis, pytim, mdtraj
+- **VMD**: visualization and analysis
+- **Ovito**: visualization and statistical analysis
+
+## Physical Conditions → Output Summary
+
+| Control Parameter | Physical Meaning | Observable in LAMMPS | Expected Behavior |
+|-------------------|------------------|---------------------|-------------------|
+| T = 300 K | Mean kinetic energy = 3/2 k_B T | `Temp` | ±10 K fluctuations |
+| P = 1 atm | External pressure | `Press` | Mean = 1 atm, fluctuates |
+| NVE | Isolated system | `TotEng` | < 0.1% drift over 1 ns |
+| NVT | Canonical ensemble | `Temp` fixed | Correct fluctuations |
+| NPT | Isobaric | `Vol`, `Density` | Matches experiment |
+
+## Common Mistakes
+
+| Mistake | Consequence | Correction |
+|---------|-------------|------------|
+| Thermostatting frozen atoms | No dynamics (atoms can't move) | Only thermostat mobile atoms |
+| Using Berendsen for production | Wrong heat capacity | Use Nosé-Hoover or Langevin |
+| Timestep too large | Energy drift, crash | Reduce Δt or constrain bonds |
+| Forgetting barostat for density | Wrong equilibrium density | Use NPT to equilibrate density |
+| Anisotropic pressure for isotropic system | Stressed state, wrong density | Use `iso` pressure control |
+
+## Next Steps
+
+- @sec-electrostatics — How long-range electrostatics is handled
+- @sec-electrodes-cpm — Why electrodes need constant potential (not constant charge)

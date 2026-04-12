@@ -1,0 +1,356 @@
+# A Complete Constant Potential Simulation
+
+::: {.callout-tip}
+## In this section
+
+- Step-by-step construction of an electrode-electrolyte input script
+- Physical meaning of each section
+- Expected output and how to interpret it
+- Post-processing for common observables
+:::
+
+## What We Are Building
+
+A planar electrode supercapacitor with:
+- Two gold electrodes (top and bottom)
+- SPC/E water with 1M NaCl electrolyte
+- Constant potential mode (1 V difference)
+- NVT ensemble at 300 K
+
+## Step 1: Initialization
+
+```lammps
+units metal
+atom_style charge
+boundary p p f
+```
+
+**Physical meaning**:
+
+| Command | Physical Meaning |
+|---------|------------------|
+| `units metal` | Å, eV, ps — standard for materials |
+| `atom_style charge` | Each atom has charge — needed for electrostatics |
+| `boundary p p f` | Slab geometry: periodic in x,y; non-periodic in z |
+
+The slab geometry means we have two electrode surfaces exposed to vacuum (or a vacuum region above the electrolyte).
+
+## Step 2: Create the Box and Atoms
+
+```lammps
+region box block 0 20 0 20 0 60
+create_box 3 box
+
+region bot block 0 20 0 20 0 5
+region top block 0 20 0 20 55 60
+region elyte block 0 20 0 20 5 55
+
+create_atoms 1 region bot    # bottom electrode (type 1)
+create_atoms 2 region top    # top electrode (type 2)
+create_atoms 3 region elyte  # electrolyte (type 3)
+
+group bot region bot
+group top region top
+group elyte region elyte
+group electrode union bot top
+group mobile subtract all electrode
+```
+
+**Physical meaning**:
+
+| Region | Size | Purpose |
+|--------|------|---------|
+| `box` | 20×20×60 Å | Full simulation cell |
+| `bot` | 20×20×5 Å | Bottom electrode (gold atoms) |
+| `top` | 20×20×5 Å | Top electrode (gold atoms) |
+| `elyte` | 20×20×50 Å | Water + ions between electrodes |
+
+The 50 Å gap between electrodes is large enough to avoid electrode-electrode interactions through periodic images in x,y.
+
+**Atom type convention**: Using different types for bottom and top electrodes allows independent control of their potentials.
+
+## Step 3: Force Field
+
+```lammps
+pair_style lj/cut/coul/long 10.0
+
+# Electrode-electrode (soft repulsion, no chemical bonding)
+pair_coeff 1 1 0.01 3.0    # Au-Au LJ (soft)
+pair_coeff 2 2 0.01 3.0    # Au-Au LJ (top)
+pair_coeff 1 2 0.005 3.0   # cross-interaction (smaller)
+
+# Electrolyte LJ (SPC/E water O)
+pair_coeff 3 3 0.155 3.166
+
+# Cross terms: electrode-electrolyte
+pair_coeff 1 3 0.005 3.1    # bot-water
+pair_coeff 2 3 0.005 3.1    # top-water
+
+# Note: we need all unique pair combinations defined
+# If water has H atoms (type 4), also define:
+# pair_coeff 1 4, 2 4, 3 4, etc.
+
+kspace_style pppm/electrode 1e-5
+kspace_modify slab 3
+```
+
+**Physical meaning**:
+
+| Parameter | Physical Effect |
+|-----------|-----------------|
+| `epsilon = 0.01 eV` | Electrode-electrode: very soft (prevents overlap, no bonding) |
+| `epsilon = 0.155 eV` | Water O: standard O-O LJ |
+| `sigma = 3.0-3.2 Å` | Appropriate atomic sizes |
+| `cutoff = 10 Å` | Standard for water; energy drift < 0.1% |
+
+::: {.callout-warning}
+## Missing Pair Coefficients
+
+All unique atom type pairs must be defined. If type 4 (water H) exists, you need `pair_coeff * 4 ...` entries or LAMMPS will error. Use `*` for wildcard: `pair_coeff * 4 0.0 0.0` (no LJ for H).
+:::
+
+## Step 4: Apply the ELECTRODE Fix
+
+```lammps
+fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on
+```
+
+**Physical meaning**:
+
+| Argument | Value | Meaning |
+|----------|-------|---------|
+| `group` | `bot` | Apply to bottom electrode |
+| `potential` | `-1.0 V` | Bottom electrode held at -1 V |
+| `eta` | `1.805 Å⁻¹` | Gaussian smearing width |
+| `couple top` | `1.0 V` | Top electrode held at +1 V |
+| `symm on` | — | Total electrode charge = 0 |
+
+**What happens during simulation**:
+1. At each timestep, the kspace solver computes the electrostatic environment
+2. ELECTRODE computes what charges on bottom and top electrodes would produce the target potentials
+3. Those charges are assigned to electrode atoms (distributed according to Gaussian)
+4. Forces are computed with these induced charges
+5. Charges are updated at the next step based on new electrolyte configuration
+
+## Step 5: Integrators
+
+```lammps
+fix frozen all nve
+fix mytemp elyte langevin 300.0 300.0 100.0 12345
+```
+
+**Physical meaning**:
+
+| Fix | What It Does | Why |
+|-----|--------------|-----|
+| `fix frozen all nve` | No dynamics on any atoms | Electrodes are static (default assumption) |
+| `fix mytemp elyte langevin` | Langevin thermostat on electrolyte | Controls temperature; adds noise for ergodicity |
+
+**Alternative for mobile electrodes**:
+
+```lammps
+fix elec_nvt electrode nvt temp 300.0 300.0 100.0
+fix elyte_nvt elyte nvt temp 300.0 300.0 100.0
+```
+
+## Step 6: Energy Minimization
+
+```lammps
+minimize 1e-6 1e-9 1000 10000
+```
+
+**Why**: Before dynamics, the system has atomic overlaps and bad contacts. Running minimization with `minimize` command:
+- Applies conjugate gradient / steepest descent
+- Reduces forces to acceptable level
+- Prevents "blow up" in first dynamics steps
+
+**Parameters**: `1e-6` (force tolerance), `1e-9` (energy tolerance), `1000` (max iterations), `10000` (max force evaluations)
+
+## Step 7: Output Configuration
+
+```lammps
+thermo 100
+thermo_style custom step temp pe ke vol density f_fxconp[1]
+
+dump 1 all custom 100 traj.lammpstrj id type x y z q
+dump 2 all dcd 100 traj.dcd
+```
+
+**What to expect in output**:
+
+| Quantity | Expected | Physical Meaning |
+|----------|----------|-------------------|
+| `Temp` | 300 ± 15 K | Thermostat working |
+| `PotEng` | Stable (~-50000 eV for this size) | Force field reasonable |
+| `KinEng` | Fluctuates with T | Kinetic energy |
+| `Vol` | Constant (NVT) | Box unchanged |
+| `Density` | ~1.0 g/cm³ (water region) | Correct water density |
+| `f_fxconp[1]` | ~0 (small fluctuations) | Energy conserved by fix |
+
+## Step 8: Run
+
+```lammps
+run 10000
+```
+
+At 2 fs timestep, this is 20 ps of simulation. For meaningful statistics:
+
+| Property | Simulation Time Needed |
+|----------|----------------------|
+| Equilibration | 100–500 ps |
+| Double-layer formation | 100–500 ps |
+| Diffusion (MSD) | 1–10 ns |
+| Capacitance (steady) | 1–10 ns |
+
+## Expected Output: What to Look For
+
+### Energy Conservation
+
+In a well-behaved simulation:
+- `TotEng` should drift < 0.1% over the run
+- `f_fxconp[1]` (fix energy) should fluctuate around constant
+
+If `TotEng` increases monotonically: something is wrong (timestep, cutoff, overlap).
+
+### Electrode Charges
+
+```lammps
+variable Q_bot equal f_fxconp[5]
+variable Q_top equal f_fxconp[6]
+fix prop all print 100 "Q_bot = $(v_Q_bot)" file charge_vs_time.txt
+```
+
+The charges should:
+- Start at some value based on initial guess
+- Equilibrate within 10–100 ps
+- Fluctuate around equilibrium value (thermal noise)
+
+### Ion Density Profile
+
+Post-processing (Python + MDAnalysis):
+
+```python
+import mdtraj as md
+
+traj = md.load('traj.dcd', top='data.lammps')
+
+# Compute ion density along z
+z = traj.xyz[:, :, 2]  # z-coordinates
+# Bin by z and compute density
+```
+
+Expected: oscillatory density near electrode surfaces (double layer), then bulk.
+
+### Potential Profile
+
+```python
+# Bin atoms by z
+# Compute average charge per bin
+# Integrate Poisson's equation to get potential
+```
+
+Expected: sharp drop near electrodes, linear in bulk electrolyte (for 1:1 salt at low concentration).
+
+## Complete Input Script
+
+```lammps
+# ============================================
+# Constant Potential Supercapacitor
+# SPC/E water + 1M NaCl between Au electrodes
+# ============================================
+
+units metal
+atom_style charge
+boundary p p f
+
+# --- Box and geometry ---
+variable Lx equal 20
+variable Ly equal 20
+variable Lz equal 60
+
+region box block 0 $Lx 0 $Ly 0 $Lz
+create_box 4 box    # 1=bot, 2=top, 3=O, 4=H (SPC/E has explicit H)
+
+region bot block 0 $Lx 0 $Ly 0 5
+region top block 0 $Lx 0 $Ly 55 $Lz
+region elyte block 0 $Lx 0 $Ly 5 55
+
+create_atoms 1 region bot
+create_atoms 2 region top
+
+# Water molecules (pre-generated positions preferred)
+# create_atoms 3 region elyte would add O atoms
+# For SPC/E: need explicit H positions
+
+# Define groups
+group bot region bot
+group top region top
+group elyte region elyte
+group electrode union bot top
+
+# --- Force field ---
+pair_style lj/cut/coul/long 10.0
+
+# Electrode LJ
+pair_coeff 1 1 0.01 3.0
+pair_coeff 2 2 0.01 3.0
+pair_coeff 1 2 0.005 3.0
+
+# Water O LJ (SPC/E)
+pair_coeff 3 3 0.155 3.166
+pair_coeff 4 4 0.0 0.0     # H: no LJ
+
+# Electrode-water cross terms
+pair_coeff 1 3 0.005 3.1
+pair_coeff 2 3 0.005 3.1
+pair_coeff 1 4 0.0 0.0
+pair_coeff 2 4 0.0 0.0
+
+# Water O-H and H-H
+pair_coeff 3 4 0.0 0.0
+pair_coeff 4 3 0.0 0.0
+
+kspace_style pppm/electrode 1e-5
+kspace_modify slab 3
+
+# --- ELECTRODE fix ---
+fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on
+
+# --- Integrators ---
+fix frozen all nve
+fix mytemp elyte langevin 300.0 300.0 100.0 12345
+
+# --- Output ---
+thermo 100
+thermo_style custom step temp pe ke vol density f_fxconp[1]
+
+variable Q_bot equal f_fxconp[5]
+variable Q_top equal f_fxconp[6]
+fix prints all print 100 "Q_bot = $(v_Q_bot) Q_top = $(v_Q_top)" screen no
+
+dump 1 all custom 100 traj.lammpstrj id type x y z q
+dump 2 all dcd 100 traj.dcd
+
+# --- Run ---
+minimize 1e-6 1e-9 1000 10000
+run 10000
+```
+
+## Post-Processing: Computing Capacitance
+
+The differential capacitance:
+
+$$C = \frac{dQ}{dV}$$
+
+For a symmetric capacitor:
+1. Run at V = 0 V (or small V)
+2. Run at V = 1 V
+3. Compute Q at each
+4. C = ΔQ / ΔV
+
+In practice, use multiple voltages and fit the Q-V curve.
+
+## Next Steps
+
+- @sec-troubleshooting — Diagnose problems
+- @sec-references — Further reading for deeper understanding

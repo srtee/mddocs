@@ -1,0 +1,61 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Constant Potential MD in LAMMPS"
+  description: "A practical guide to running constant potential molecular dynamics simulations using the LAMMPS ELECTRODE package"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: 01-fundamentals.qmd
+        text: "1. Fundamentals"
+      - href: 02-force-fields.qmd
+        text: "2. Force Fields"
+      - href: 03-physical-conditions.qmd
+        text: "3. Physical Conditions"
+      - href: 04-electrostatics.qmd
+        text: "4. Electrostatics"
+      - href: 05-electrodes-cpm.qmd
+        text: "5. Electrodes & CPM"
+      - href: 06-electrode-package.qmd
+        text: "6. ELECTRODE Package"
+      - href: 07-example-simulation.qmd
+        text: "7. Example"
+      - href: 08-troubleshooting.qmd
+        text: "8. Troubleshooting"
+      - href: references.qmd
+        text: "References"
+    right:
+      - icon: github
+        href: https://github.com/lammps/lammps
+        aria-label: LAMMPS GitHub
+  sidebar:
+    style: "docked"
+    collapse-level: 1
+    search: true
+  page-footer:
+    copyright: "2024"
+    github-url: "https://github.com/lammps/lammps"
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-title: "On this page"
+    toc-depth: 3
+    link-external-newwindow: true
+    code-copy: true
+    anchorSections: true
+
+metadata-files:
+  - _quarto.yml
+
+crossref:
+  fig-title: "Figure"
+  tbl-title: "Table"
+  ex-title: "Example"
+
+bibliography: references.bib
