@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>outline – Constant Potential MD in LAMMPS</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-ff0631ae66c640f7beec88805fcb678e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Constant Potential MD in LAMMPS</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./01-fundamentals.html"> 
+<span class="menu-text">1. Fundamentals</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-force-fields.html"> 
+<span class="menu-text">2. Force Fields</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./03-physical-conditions.html"> 
+<span class="menu-text">3. Physical Conditions</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./04-electrostatics.html"> 
+<span class="menu-text">4. Electrostatics</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./05-electrodes-cpm.html"> 
+<span class="menu-text">5. Electrodes &amp; CPM</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./06-electrode-package.html"> 
+<span class="menu-text">6. ELECTRODE Package</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./07-example-simulation.html"> 
+<span class="menu-text">7. Example</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./08-troubleshooting.html"> 
+<span class="menu-text">8. Troubleshooting</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./references.html"> 
+<span class="menu-text">References</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/lammps/lammps"> <i class="bi bi-github" role="img" aria-label="LAMMPS GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#constant-potential-molecular-dynamics-in-lammps-learning-taxonomy" id="toc-constant-potential-molecular-dynamics-in-lammps-learning-taxonomy" class="nav-link active" data-scroll-target="#constant-potential-molecular-dynamics-in-lammps-learning-taxonomy">Constant Potential Molecular Dynamics in LAMMPS — Learning Taxonomy</a>
+  <ul class="collapse">
+  <li><a href="#orientation-what-you-need-to-know" id="toc-orientation-what-you-need-to-know" class="nav-link" data-scroll-target="#orientation-what-you-need-to-know">0. Orientation: What You Need to Know</a>
+  <ul class="collapse">
+  <li><a href="#prior-knowledge" id="toc-prior-knowledge" class="nav-link" data-scroll-target="#prior-knowledge">0.1 Prior Knowledge</a></li>
+  <li><a href="#your-starting-point" id="toc-your-starting-point" class="nav-link" data-scroll-target="#your-starting-point">0.2 Your Starting Point</a></li>
+  <li><a href="#how-to-use-this-guide" id="toc-how-to-use-this-guide" class="nav-link" data-scroll-target="#how-to-use-this-guide">0.3 How to Use This Guide</a></li>
+  </ul></li>
+  <li><a href="#molecular-dynamics-what-the-simulation-actually-does" id="toc-molecular-dynamics-what-the-simulation-actually-does" class="nav-link" data-scroll-target="#molecular-dynamics-what-the-simulation-actually-does">1. Molecular Dynamics: What the Simulation Actually Does</a>
+  <ul class="collapse">
+  <li><a href="#the-core-loop" id="toc-the-core-loop" class="nav-link" data-scroll-target="#the-core-loop">1.1 The Core Loop</a></li>
+  <li><a href="#key-lammps-concepts-syntax-meaning" id="toc-key-lammps-concepts-syntax-meaning" class="nav-link" data-scroll-target="#key-lammps-concepts-syntax-meaning">1.2 Key LAMMPS Concepts (Syntax → Meaning)</a></li>
+  <li><a href="#reading-lammps-output" id="toc-reading-lammps-output" class="nav-link" data-scroll-target="#reading-lammps-output">1.3 Reading LAMMPS Output</a></li>
+  </ul></li>
+  <li><a href="#force-fields-what-interactions-exist-and-how-to-configure-them" id="toc-force-fields-what-interactions-exist-and-how-to-configure-them" class="nav-link" data-scroll-target="#force-fields-what-interactions-exist-and-how-to-configure-them">2. Force Fields — What Interactions Exist and How to Configure Them</a>
+  <ul class="collapse">
+  <li><a href="#the-role-of-a-force-field" id="toc-the-role-of-a-force-field" class="nav-link" data-scroll-target="#the-role-of-a-force-field">2.1 The Role of a Force Field</a></li>
+  <li><a href="#non-bonded-interactions" id="toc-non-bonded-interactions" class="nav-link" data-scroll-target="#non-bonded-interactions">2.2 Non-Bonded Interactions</a></li>
+  <li><a href="#bonded-interactions-when-they-matter" id="toc-bonded-interactions-when-they-matter" class="nav-link" data-scroll-target="#bonded-interactions-when-they-matter">2.3 Bonded Interactions (When They Matter)</a></li>
+  <li><a href="#cross-terms-and-combining-rules" id="toc-cross-terms-and-combining-rules" class="nav-link" data-scroll-target="#cross-terms-and-combining-rules">2.4 Cross-Terms and Combining Rules</a></li>
+  <li><a href="#force-field-parameters-where-they-come-from" id="toc-force-field-parameters-where-they-come-from" class="nav-link" data-scroll-target="#force-field-parameters-where-they-come-from">2.5 Force Field Parameters — Where They Come From</a></li>
+  <li><a href="#force-field-output-connection" id="toc-force-field-output-connection" class="nav-link" data-scroll-target="#force-field-output-connection">2.6 Force Field → Output Connection</a></li>
+  </ul></li>
+  <li><a href="#physical-conditions-how-the-simulation-enforces-temperature-pressure-and-time" id="toc-physical-conditions-how-the-simulation-enforces-temperature-pressure-and-time" class="nav-link" data-scroll-target="#physical-conditions-how-the-simulation-enforces-temperature-pressure-and-time">3. Physical Conditions — How the Simulation Enforces Temperature, Pressure, and Time</a>
+  <ul class="collapse">
+  <li><a href="#what-is-being-held-constant" id="toc-what-is-being-held-constant" class="nav-link" data-scroll-target="#what-is-being-held-constant">3.1 What Is Being Held Constant?</a></li>
+  <li><a href="#time-integration-and-timestep" id="toc-time-integration-and-timestep" class="nav-link" data-scroll-target="#time-integration-and-timestep">3.2 Time Integration and Timestep</a></li>
+  <li><a href="#thermostats-controlling-temperature" id="toc-thermostats-controlling-temperature" class="nav-link" data-scroll-target="#thermostats-controlling-temperature">3.3 Thermostats — Controlling Temperature</a></li>
+  <li><a href="#barostats-controlling-pressure" id="toc-barostats-controlling-pressure" class="nav-link" data-scroll-target="#barostats-controlling-pressure">3.4 Barostats — Controlling Pressure</a></li>
+  <li><a href="#integrators-in-lammps-summary" id="toc-integrators-in-lammps-summary" class="nav-link" data-scroll-target="#integrators-in-lammps-summary">3.5 Integrators in LAMMPS (Summary)</a></li>
+  <li><a href="#observables-what-you-actually-measure" id="toc-observables-what-you-actually-measure" class="nav-link" data-scroll-target="#observables-what-you-actually-measure">3.6 Observables — What You Actually Measure</a></li>
+  </ul></li>
+  <li><a href="#electrostatics-in-molecular-simulations-how-lammps-handles-long-range-interactions" id="toc-electrostatics-in-molecular-simulations-how-lammps-handles-long-range-interactions" class="nav-link" data-scroll-target="#electrostatics-in-molecular-simulations-how-lammps-handles-long-range-interactions">4. Electrostatics in Molecular Simulations — How LAMMPS Handles Long-Range Interactions</a>
+  <ul class="collapse">
+  <li><a href="#why-electrostatics-is-the-hard-part" id="toc-why-electrostatics-is-the-hard-part" class="nav-link" data-scroll-target="#why-electrostatics-is-the-hard-part">4.1 Why Electrostatics Is the Hard Part</a></li>
+  <li><a href="#ewald-summation-the-conceptual-basis" id="toc-ewald-summation-the-conceptual-basis" class="nav-link" data-scroll-target="#ewald-summation-the-conceptual-basis">4.2 Ewald Summation — The Conceptual Basis</a></li>
+  <li><a href="#pppm-particle-particle-particle-mesh" id="toc-pppm-particle-particle-particle-mesh" class="nav-link" data-scroll-target="#pppm-particle-particle-particle-mesh">4.3 PPPM (Particle-Particle Particle-Mesh)</a></li>
+  <li><a href="#cutoff-based-methods-when-pppm-is-unnecessary" id="toc-cutoff-based-methods-when-pppm-is-unnecessary" class="nav-link" data-scroll-target="#cutoff-based-methods-when-pppm-is-unnecessary">4.4 Cutoff-Based Methods (When PPPM Is Unnecessary)</a></li>
+  <li><a href="#boundary-conditions-and-electrostatics" id="toc-boundary-conditions-and-electrostatics" class="nav-link" data-scroll-target="#boundary-conditions-and-electrostatics">4.5 Boundary Conditions and Electrostatics</a></li>
+  <li><a href="#pair-style-kspace-consistency" id="toc-pair-style-kspace-consistency" class="nav-link" data-scroll-target="#pair-style-kspace-consistency">4.6 Pair Style — Kspace Consistency</a></li>
+  </ul></li>
+  <li><a href="#conductors-electrodes-and-the-constant-potential-method" id="toc-conductors-electrodes-and-the-constant-potential-method" class="nav-link" data-scroll-target="#conductors-electrodes-and-the-constant-potential-method">5. Conductors, Electrodes, and the Constant Potential Method</a>
+  <ul class="collapse">
+  <li><a href="#conductors-vs.-insulators-in-md" id="toc-conductors-vs.-insulators-in-md" class="nav-link" data-scroll-target="#conductors-vs.-insulators-in-md">5.1 Conductors vs.&nbsp;Insulators in MD</a></li>
+  <li><a href="#fixed-charge-vs.-polarizable-models" id="toc-fixed-charge-vs.-polarizable-models" class="nav-link" data-scroll-target="#fixed-charge-vs.-polarizable-models">5.2 Fixed Charge vs.&nbsp;Polarizable Models</a></li>
+  <li><a href="#the-electrode-electrolyte-interface" id="toc-the-electrode-electrolyte-interface" class="nav-link" data-scroll-target="#the-electrode-electrolyte-interface">5.3 The Electrode-Electrolyte Interface</a></li>
+  <li><a href="#the-constant-potential-method-theory" id="toc-the-constant-potential-method-theory" class="nav-link" data-scroll-target="#the-constant-potential-method-theory">5.4 The Constant Potential Method — Theory</a></li>
+  <li><a href="#constant-potential-vs.-constant-charge" id="toc-constant-potential-vs.-constant-charge" class="nav-link" data-scroll-target="#constant-potential-vs.-constant-charge">5.5 Constant Potential vs.&nbsp;Constant Charge</a></li>
+  </ul></li>
+  <li><a href="#the-electrode-package-lammps-implementation" id="toc-the-electrode-package-lammps-implementation" class="nav-link" data-scroll-target="#the-electrode-package-lammps-implementation">6. The ELECTRODE Package — LAMMPS Implementation</a>
+  <ul class="collapse">
+  <li><a href="#package-overview" id="toc-package-overview" class="nav-link" data-scroll-target="#package-overview">6.1 Package Overview</a></li>
+  <li><a href="#installing-the-electrode-package" id="toc-installing-the-electrode-package" class="nav-link" data-scroll-target="#installing-the-electrode-package">6.2 Installing the ELECTRODE Package</a></li>
+  <li><a href="#the-three-fix-styles" id="toc-the-three-fix-styles" class="nav-link" data-scroll-target="#the-three-fix-styles">6.3 The Three Fix Styles</a></li>
+  <li><a href="#algorithm-choices-algo" id="toc-algorithm-choices-algo" class="nav-link" data-scroll-target="#algorithm-choices-algo">6.4 Algorithm Choices (<code>algo</code>)</a></li>
+  <li><a href="#k-space-compatibility" id="toc-k-space-compatibility" class="nav-link" data-scroll-target="#k-space-compatibility">6.5 K-space Compatibility</a></li>
+  <li><a href="#slab-geometry-modifications" id="toc-slab-geometry-modifications" class="nav-link" data-scroll-target="#slab-geometry-modifications">6.6 Slab Geometry Modifications</a></li>
+  <li><a href="#matrix-saveload" id="toc-matrix-saveload" class="nav-link" data-scroll-target="#matrix-saveload">6.7 Matrix Save/Load</a></li>
+  <li><a href="#output-from-electrode-fixes" id="toc-output-from-electrode-fixes" class="nav-link" data-scroll-target="#output-from-electrode-fixes">6.8 Output from ELECTRODE Fixes</a></li>
+  </ul></li>
+  <li><a href="#building-a-constant-potential-simulation-complete-example" id="toc-building-a-constant-potential-simulation-complete-example" class="nav-link" data-scroll-target="#building-a-constant-potential-simulation-complete-example">7. Building a Constant Potential Simulation — Complete Example</a>
+  <ul class="collapse">
+  <li><a href="#design-decisions-before-writing-input" id="toc-design-decisions-before-writing-input" class="nav-link" data-scroll-target="#design-decisions-before-writing-input">7.1 Design Decisions Before Writing Input</a></li>
+  <li><a href="#initialization-commands-meaning" id="toc-initialization-commands-meaning" class="nav-link" data-scroll-target="#initialization-commands-meaning">7.2 Initialization Commands (Meaning)</a></li>
+  <li><a href="#force-field-setup" id="toc-force-field-setup" class="nav-link" data-scroll-target="#force-field-setup">7.3 Force Field Setup</a></li>
+  <li><a href="#applying-the-electrode-fix" id="toc-applying-the-electrode-fix" class="nav-link" data-scroll-target="#applying-the-electrode-fix">7.4 Applying the ELECTRODE Fix</a></li>
+  <li><a href="#thermostating-strategy" id="toc-thermostating-strategy" class="nav-link" data-scroll-target="#thermostating-strategy">7.5 Thermostating Strategy</a></li>
+  <li><a href="#energy-minimization-before-production" id="toc-energy-minimization-before-production" class="nav-link" data-scroll-target="#energy-minimization-before-production">7.6 Energy Minimization Before Production</a></li>
+  <li><a href="#production-run-and-output" id="toc-production-run-and-output" class="nav-link" data-scroll-target="#production-run-and-output">7.7 Production Run and Output</a></li>
+  <li><a href="#expected-output-and-what-it-means" id="toc-expected-output-and-what-it-means" class="nav-link" data-scroll-target="#expected-output-and-what-it-means">7.8 Expected Output (And What It Means)</a></li>
+  </ul></li>
+  <li><a href="#practical-considerations-and-troubleshooting" id="toc-practical-considerations-and-troubleshooting" class="nav-link" data-scroll-target="#practical-considerations-and-troubleshooting">8. Practical Considerations and Troubleshooting</a>
+  <ul class="collapse">
+  <li><a href="#convergence-issues" id="toc-convergence-issues" class="nav-link" data-scroll-target="#convergence-issues">8.1 Convergence Issues</a></li>
+  <li><a href="#electrode-immobilization" id="toc-electrode-immobilization" class="nav-link" data-scroll-target="#electrode-immobilization">8.2 Electrode Immobilization</a></li>
+  <li><a href="#parallel-performance" id="toc-parallel-performance" class="nav-link" data-scroll-target="#parallel-performance">8.3 Parallel Performance</a></li>
+  <li><a href="#units-summary-critical-reference" id="toc-units-summary-critical-reference" class="nav-link" data-scroll-target="#units-summary-critical-reference">8.4 Units Summary (Critical Reference)</a></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">8.5 Reproducibility</a></li>
+  <li><a href="#common-pitfalls-summary" id="toc-common-pitfalls-summary" class="nav-link" data-scroll-target="#common-pitfalls-summary">8.6 Common Pitfalls Summary</a></li>
+  </ul></li>
+  <li><a href="#example-systems" id="toc-example-systems" class="nav-link" data-scroll-target="#example-systems">9. Example Systems</a>
+  <ul class="collapse">
+  <li><a href="#planar-electrode-with-aqueous-nacl" id="toc-planar-electrode-with-aqueous-nacl" class="nav-link" data-scroll-target="#planar-electrode-with-aqueous-nacl">9.1 Planar Electrode with Aqueous NaCl</a></li>
+  <li><a href="#graphene-supercapacitor" id="toc-graphene-supercapacitor" class="nav-link" data-scroll-target="#graphene-supercapacitor">9.2 Graphene Supercapacitor</a></li>
+  <li><a href="#tip-substrate-junction" id="toc-tip-substrate-junction" class="nav-link" data-scroll-target="#tip-substrate-junction">9.3 Tip-Substrate Junction</a></li>
+  <li><a href="#finite-field-charging-simulation" id="toc-finite-field-charging-simulation" class="nav-link" data-scroll-target="#finite-field-charging-simulation">9.4 Finite-Field Charging Simulation</a></li>
+  </ul></li>
+  <li><a href="#further-reading" id="toc-further-reading" class="nav-link" data-scroll-target="#further-reading">10. Further Reading</a>
+  <ul class="collapse">
+  <li><a href="#foundational-papers" id="toc-foundational-papers" class="nav-link" data-scroll-target="#foundational-papers">10.1 Foundational Papers</a></li>
+  <li><a href="#related-methods" id="toc-related-methods" class="nav-link" data-scroll-target="#related-methods">10.2 Related Methods</a></li>
+  <li><a href="#lammps-documentation" id="toc-lammps-documentation" class="nav-link" data-scroll-target="#lammps-documentation">10.3 LAMMPS Documentation</a></li>
+  </ul></li>
+  <li><a href="#design-notes" id="toc-design-notes" class="nav-link" data-scroll-target="#design-notes">Design Notes</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="constant-potential-molecular-dynamics-in-lammps-learning-taxonomy" class="level1">
+<h1>Constant Potential Molecular Dynamics in LAMMPS — Learning Taxonomy</h1>
+<section id="orientation-what-you-need-to-know" class="level2">
+<h2 class="anchored" data-anchor-id="orientation-what-you-need-to-know">0. Orientation: What You Need to Know</h2>
+<section id="prior-knowledge" class="level3">
+<h3 class="anchored" data-anchor-id="prior-knowledge">0.1 Prior Knowledge</h3>
+<ul>
+<li>Introductory mechanics and electromagnetism (Coulomb’s law, electrostatic energy)</li>
+<li>Basic chemistry (ions, water structure, what an electrode is)</li>
+<li>One programming language (any) — for post-processing</li>
+<li>No prior MD experience required</li>
+</ul>
+</section>
+<section id="your-starting-point" class="level3">
+<h3 class="anchored" data-anchor-id="your-starting-point">0.2 Your Starting Point</h3>
+<ul>
+<li>You have LAMMPS installed (or access to an HPC cluster with it)</li>
+<li>You can run an input script and see log output</li>
+<li>You want to understand what the commands <em>mean</em>, not just what they <em>do</em></li>
+</ul>
+</section>
+<section id="how-to-use-this-guide" class="level3">
+<h3 class="anchored" data-anchor-id="how-to-use-this-guide">0.3 How to Use This Guide</h3>
+<ul>
+<li>The goal is to connect LAMMPS input lines → physical meaning → simulation output</li>
+<li>Theory sections explain the physics; Implementation sections show the corresponding LAMMPS syntax</li>
+<li>Every major concept links to an observable you can measure</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="molecular-dynamics-what-the-simulation-actually-does" class="level2">
+<h2 class="anchored" data-anchor-id="molecular-dynamics-what-the-simulation-actually-does">1. Molecular Dynamics: What the Simulation Actually Does</h2>
+<section id="the-core-loop" class="level3">
+<h3 class="anchored" data-anchor-id="the-core-loop">1.1 The Core Loop</h3>
+<ul>
+<li>Newton determines atomic motion; forces come from interatomic potentials</li>
+<li>A timestep Δt advances positions and velocities: <code>x(t+Δt) = x(t) + v(t)Δt</code></li>
+<li>Forces are recalculated at every step — this is what makes MD computationally expensive</li>
+<li>The trajectory is a deterministic sequence; statistics over many steps give thermodynamic properties</li>
+</ul>
+</section>
+<section id="key-lammps-concepts-syntax-meaning" class="level3">
+<h3 class="anchored" data-anchor-id="key-lammps-concepts-syntax-meaning">1.2 Key LAMMPS Concepts (Syntax → Meaning)</h3>
+<ul>
+<li><strong>Units</strong> — define the physical scale (real = Å, kcal/mol, fs; metal = Å, eV, ps). Mismatch causes garbage.</li>
+<li><strong>Atom style</strong> — what properties each particle carries. <code>charge</code> is mandatory for electrostatics.</li>
+<li><strong>Boundary</strong> — <code>p p f</code> means periodic in x,y, fixed (non-periodic) in z. Determines slab geometry for electrode simulations.</li>
+<li><strong>Pair styles</strong> — the functional form of the interatomic potential. Determines what forces exist.</li>
+<li><strong>Fixes</strong> — operations applied every timestep (integration, thermostats, constraints). The verb of LAMMPS.</li>
+<li><strong>Computes</strong> — calculate quantities on the fly (temperature, stress, charge density)</li>
+<li><strong>Groups</strong> — named subsets of atoms for targeted commands. Essential for distinguishing electrode from electrolyte.</li>
+</ul>
+</section>
+<section id="reading-lammps-output" class="level3">
+<h3 class="anchored" data-anchor-id="reading-lammps-output">1.3 Reading LAMMPS Output</h3>
+<ul>
+<li><code>Thermodynamic output</code> — energy (total, kinetic, potential), temperature, pressure, volume</li>
+<li>Energy conservation indicates a well-behaved simulation (NVE without thermostat)</li>
+<li>Potential energy components (pair, bond, kspace) reveal where computation time goes</li>
+<li>Drift in conserved quantity signals integration problems</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="force-fields-what-interactions-exist-and-how-to-configure-them" class="level2">
+<h2 class="anchored" data-anchor-id="force-fields-what-interactions-exist-and-how-to-configure-them">2. Force Fields — What Interactions Exist and How to Configure Them</h2>
+<section id="the-role-of-a-force-field" class="level3">
+<h3 class="anchored" data-anchor-id="the-role-of-a-force-field">2.1 The Role of a Force Field</h3>
+<ul>
+<li>A force field is a set of mathematical functions that describe interatomic forces</li>
+<li>It is an approximation — no force field is “correct”, only appropriate for certain systems</li>
+<li>Choice of force field determines what physics is captured (and what is omitted)</li>
+<li>All force field parameters are fitted to experimental data or quantum calculations</li>
+</ul>
+</section>
+<section id="non-bonded-interactions" class="level3">
+<h3 class="anchored" data-anchor-id="non-bonded-interactions">2.2 Non-Bonded Interactions</h3>
+<section id="van-der-waals-dispersionrepulsion" class="level4">
+<h4 class="anchored" data-anchor-id="van-der-waals-dispersionrepulsion">2.2.1 Van der Waals (Dispersion/Repulsion)</h4>
+<ul>
+<li><strong>Lennard-Jones (LJ)</strong>: <code>pair_style lj/cut</code> — the workhorse of MD
+<ul>
+<li>Formula: <code>V(r) = 4ε[(σ/r)^12 - (σ/r)^6]</code></li>
+<li>ε = depth of the energy well (binding strength); σ = distance at which energy = zero</li>
+<li>The r⁻¹² term is steep repulsion at short range; r⁻⁶ is softer attraction at longer range</li>
+<li>Physical meaning: Pauli repulsion at short distance, induced-dipole attraction at longer range</li>
+<li>Cutoff: LJ is truncated at some <code>rcut</code> — introduces error; <code>rcut</code> typically 10–12 Å for water</li>
+<li><strong>Why cut?</strong> Computation scales as N²; truncation saves time with acceptable error</li>
+</ul></li>
+<li><strong>Other forms</strong>: Buckingham, Morse, 12-6-4 (for metals), Gaussian — each suited to different materials</li>
+</ul>
+</section>
+<section id="electrostatic-coulombic" class="level4">
+<h4 class="anchored" data-anchor-id="electrostatic-coulombic">2.2.2 Electrostatic (Coulombic)</h4>
+<ul>
+<li><strong>Formula</strong>: <code>V(r) = k q₁q₂/r</code> — long-range, never truly zero</li>
+<li><strong>The problem</strong>: Direct summation scales as N²; prohibitive for large systems</li>
+<li><strong>Solutions</strong>: Ewald summation, PPPM (Particle-Particle Particle-Mesh) — see Section 3</li>
+</ul>
+</section>
+<section id="combined-short-range-potentials" class="level4">
+<h4 class="anchored" data-anchor-id="combined-short-range-potentials">2.2.3 Combined Short-Range Potentials</h4>
+<ul>
+<li><code>pair_style lj/cut/coul/long</code> — LJ plus real-space Coulomb; k-space handles the long-range Coulomb</li>
+<li>This is the standard choice for electrolyte simulations: LJ for repulsion/attraction, Coulomb for ionic interactions</li>
+</ul>
+</section>
+</section>
+<section id="bonded-interactions-when-they-matter" class="level3">
+<h3 class="anchored" data-anchor-id="bonded-interactions-when-they-matter">2.3 Bonded Interactions (When They Matter)</h3>
+<ul>
+<li><strong>Bonds</strong>: <code>bond_style harmonic</code> — spring-like; <code>V = k(r - r₀)²</code>
+<ul>
+<li>Water models (TIP3P, TIP4P) have explicit O-H bonds</li>
+<li>Electrolyte ions may have internal bonds (e.g., carbonate)</li>
+</ul></li>
+<li><strong>Angles</strong>: angle between three atoms; important for water orientation</li>
+<li><strong>Dihedrals</strong>: rotations around bonds; relevant for organic electrolytes</li>
+</ul>
+</section>
+<section id="cross-terms-and-combining-rules" class="level3">
+<h3 class="anchored" data-anchor-id="cross-terms-and-combining-rules">2.4 Cross-Terms and Combining Rules</h3>
+<ul>
+<li><strong>Mixing rules</strong>: Lorentz-Berthelot (<code>ε_ij = √(ε_i ε_j)</code>, <code>σ_ij = (σ_i + σ_j)/2</code>)</li>
+<li><strong>pair_coeff</strong> syntax: <code>ID1 ID2 epsilon sigma</code> for each unique pair type</li>
+<li><strong>All pairs must be defined</strong>: LAMMPS will error if any pair type is unspecified</li>
+</ul>
+</section>
+<section id="force-field-parameters-where-they-come-from" class="level3">
+<h3 class="anchored" data-anchor-id="force-field-parameters-where-they-come-from">2.5 Force Field Parameters — Where They Come From</h3>
+<ul>
+<li>Water models: TIP3P, TIP4P, SPC/E — each is a compromise between accuracy and cost</li>
+<li>Ion parameters: from literature (e.g., Joung &amp; Cheatham, 2008)</li>
+<li>Electrode atoms: typically large ε for hard-wall repulsion, no Coulomb (metallic screening)</li>
+<li><strong>Physical meaning of LJ on electrodes</strong>: prevents electrolyte atoms from penetrating the surface; does not model bonding</li>
+</ul>
+</section>
+<section id="force-field-output-connection" class="level3">
+<h3 class="anchored" data-anchor-id="force-field-output-connection">2.6 Force Field → Output Connection</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 68%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Input</th>
+<th>Output Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>pair_coeff * * ε σ</code></td>
+<td>Potential energy scale; particle density; diffusion coefficient</td>
+</tr>
+<tr class="even">
+<td><code>dielectric</code></td>
+<td>Strength of Coulomb interactions (vacuum = 1, water ≈ 80)</td>
+</tr>
+<tr class="odd">
+<td><code>bond_style</code> + <code>bond_coeff</code></td>
+<td>Vibrational spectra; bulk modulus; compressibility</td>
+</tr>
+<tr class="even">
+<td>Cutoff distance</td>
+<td>Energy drift; simulation runtime (larger cut = slower but more accurate)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="physical-conditions-how-the-simulation-enforces-temperature-pressure-and-time" class="level2">
+<h2 class="anchored" data-anchor-id="physical-conditions-how-the-simulation-enforces-temperature-pressure-and-time">3. Physical Conditions — How the Simulation Enforces Temperature, Pressure, and Time</h2>
+<section id="what-is-being-held-constant" class="level3">
+<h3 class="anchored" data-anchor-id="what-is-being-held-constant">3.1 What Is Being Held Constant?</h3>
+<ul>
+<li>Real experiments control T, P (or V), and composition</li>
+<li>In MD, we control what we simulate: NVE (microcanonical), NVT (canonical), NPT (isothermal-isobaric)</li>
+<li>The choice is not just convention — it determines which statistical ensemble produces your output</li>
+</ul>
+</section>
+<section id="time-integration-and-timestep" class="level3">
+<h3 class="anchored" data-anchor-id="time-integration-and-timestep">3.2 Time Integration and Timestep</h3>
+<section id="newtons-equations-and-the-timestep" class="level4">
+<h4 class="anchored" data-anchor-id="newtons-equations-and-the-timestep">3.2.1 Newton’s Equations and the Timestep</h4>
+<ul>
+<li>Position update: <code>x(t+Δt) = 2x(t) - x(t-Δt) + (F/m)Δt²</code> (Verlet integration)</li>
+<li><strong>Velocity Verlet</strong>: <code>v(t) = v(t-Δt) + 0.5(F(t) + F(t+Δt))Δt</code> — more stable</li>
+<li><code>Δt</code> must be small enough to resolve the fastest motion (typically C-H bond vibration)</li>
+<li><strong>Typical values</strong>: <code>Δt = 1 fs</code> for explicit water; <code>Δt = 0.5 fs</code> if bonds are flexible; <code>Δt = 2 fs</code> with bond constraints</li>
+</ul>
+</section>
+<section id="why-timestep-matters-for-output" class="level4">
+<h4 class="anchored" data-anchor-id="why-timestep-matters-for-output">3.2.2 Why Timestep Matters for Output</h4>
+<ul>
+<li>Too large Δt → energy drift, simulation “blows up” (atoms overlap catastrophically)</li>
+<li>Too small Δt → wasted computation; results unchanged</li>
+<li><strong>Constraint</strong>: <code>fix shake</code> or <code>fix rattle</code> removes fast degrees of freedom, allowing larger Δt</li>
+</ul>
+</section>
+<section id="verlet-input-connection" class="level4">
+<h4 class="anchored" data-anchor-id="verlet-input-connection">3.2.3 Verlet → Input Connection</h4>
+<pre><code>fix 1 all nve          # basic NVE integration
+fix 1 all nvt          # NVE + thermostat (see below)</code></pre>
+<ul>
+<li><code>nve</code> = no thermostat; energy should be conserved (check <code>E_total</code> drift in log)</li>
+<li><code>nvt</code> = NVE modified by thermostat; total energy is NOT conserved</li>
+</ul>
+</section>
+</section>
+<section id="thermostats-controlling-temperature" class="level3">
+<h3 class="anchored" data-anchor-id="thermostats-controlling-temperature">3.3 Thermostats — Controlling Temperature</h3>
+<section id="temperature-in-md" class="level4">
+<h4 class="anchored" data-anchor-id="temperature-in-md">3.3.1 Temperature in MD</h4>
+<ul>
+<li>Temperature is a statistical property: <code>T = (2/3Nk) × (1/2 mv²)_avg</code></li>
+<li>Instantaneous T fluctuates; we average over time to compare to experiment</li>
+<li>Thermostats manipulate velocities to sample the canonical ensemble</li>
+</ul>
+</section>
+<section id="thermostat-algorithms-meaning-lammps" class="level4">
+<h4 class="anchored" data-anchor-id="thermostat-algorithms-meaning-lammps">3.3.2 Thermostat Algorithms (Meaning → LAMMPS)</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 21%">
+<col style="width: 26%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>LAMMPS Fix</th>
+<th>How It Works</th>
+<th>Output Implication</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Velocity-rescale</td>
+<td><code>fix temp/rescale</code></td>
+<td>Scale velocities to match target T</td>
+<td>Simple but not rigorous; good for equilibration</td>
+</tr>
+<tr class="even">
+<td>Berendsen</td>
+<td><code>fix berendsen</code></td>
+<td>Weak coupling to heat bath</td>
+<td>Produces incorrect fluctuations</td>
+</tr>
+<tr class="odd">
+<td>Nosé-Hoover</td>
+<td><code>fix nvt</code> or <code>fix npt</code></td>
+<td>Extended Lagrangian; ergodic sampling</td>
+<td>Standard for production; <code>temp/press</code> output reflects ensemble</td>
+</tr>
+<tr class="even">
+<td>Langevin</td>
+<td><code>fix langevin</code></td>
+<td>Stochastic damping + random forces</td>
+<td>Good for non-equilibrium; adds noise to dynamics</td>
+</tr>
+<tr class="odd">
+<td>Canonical (Nosé-Hoover chain)</td>
+<td><code>fix nvt</code> with <code>tchain</code></td>
+<td>Multiple thermostats for better ergodicity</td>
+<td>More expensive but better for some systems</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="what-temperature-controls-physically" class="level4">
+<h4 class="anchored" data-anchor-id="what-temperature-controls-physically">3.3.3 What Temperature Controls Physically</h4>
+<ul>
+<li>Kinetic energy → particle velocities → diffusion coefficient</li>
+<li>Too high T → bond breaking, chemical reactions (LAMMPS not suited for this)</li>
+<li>Too low T → slow dynamics, metastable states</li>
+</ul>
+</section>
+</section>
+<section id="barostats-controlling-pressure" class="level3">
+<h3 class="anchored" data-anchor-id="barostats-controlling-pressure">3.4 Barostats — Controlling Pressure</h3>
+<section id="pressure-in-md" class="level4">
+<h4 class="anchored" data-anchor-id="pressure-in-md">3.4.1 Pressure in MD</h4>
+<ul>
+<li>Pressure from virial theorem: <code>P = (NkT/V) + (1/3V)⟨Σ r·F⟩</code></li>
+<li>Mechanical pressure from forces + kinetic contribution</li>
+<li>NPT adjusts box size to achieve target P; NPH holds P fixed without T control</li>
+</ul>
+</section>
+<section id="barostat-algorithms-meaning-lammps" class="level4">
+<h4 class="anchored" data-anchor-id="barostat-algorithms-meaning-lammps">3.4.2 Barostat Algorithms (Meaning → LAMMPS)</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 28%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>LAMMPS Fix</th>
+<th>Output Implication</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Nose-Hoover</td>
+<td><code>fix npt</code></td>
+<td>P fluctuates; volume adjusts to target; good for density equilibration</td>
+</tr>
+<tr class="even">
+<td>Berendsen</td>
+<td><code>fix barostat</code></td>
+<td>Weak coupling; incorrect fluctuations</td>
+</tr>
+<tr class="odd">
+<td>MTK</td>
+<td><code>fix npt</code> with <code>iso</code> or <code>aniso</code></td>
+<td>Martyna-Tobias-Klein — more reliable for anisotropic stress</td>
+</tr>
+<tr class="even">
+<td>Bussi</td>
+<td><code>fix npt</code> with <code>temp</code> Bussi</td>
+<td>Stochastic barostat; better for non-equilibrium</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="barostat-physical-output" class="level4">
+<h4 class="anchored" data-anchor-id="barostat-physical-output">3.4.3 Barostat → Physical Output</h4>
+<ul>
+<li><strong>Volume</strong> → density (g/cm³) — compare to experiment</li>
+<li><strong>Stress tensor</strong> → mechanical properties; anisotropic systems (like electrode interfaces) need careful choice</li>
+<li>Isotropic (<code>iso</code>) vs.&nbsp;anisotropic (<code>aniso</code>) — slab geometry uses <code>aniso</code> or <code>semiiso</code></li>
+</ul>
+</section>
+</section>
+<section id="integrators-in-lammps-summary" class="level3">
+<h3 class="anchored" data-anchor-id="integrators-in-lammps-summary">3.5 Integrators in LAMMPS (Summary)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Fix</th>
+<th>Ensemble</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>fix nve</code></td>
+<td>NVE</td>
+<td>Microcanonical; equilibration check; frozen atoms</td>
+</tr>
+<tr class="even">
+<td><code>fix nvt</code></td>
+<td>NVT</td>
+<td>Canonical ensemble; most production runs</td>
+</tr>
+<tr class="odd">
+<td><code>fix npt</code></td>
+<td>NPT</td>
+<td>Isothermal-isobaric; density-sensitive properties</td>
+</tr>
+<tr class="even">
+<td><code>fix nph</code></td>
+<td>NPH</td>
+<td>Isobaric without thermostat; rarely used alone</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="observables-what-you-actually-measure" class="level3">
+<h3 class="anchored" data-anchor-id="observables-what-you-actually-measure">3.6 Observables — What You Actually Measure</h3>
+<section id="thermodynamic-output" class="level4">
+<h4 class="anchored" data-anchor-id="thermodynamic-output">3.6.1 Thermodynamic Output</h4>
+<ul>
+<li><code>thermo</code> N — print every N steps</li>
+<li><code>thermo_style custom</code> — select variables: <code>temp</code>, <code>press</code>, <code>pe</code>, <code>ke</code>, <code>vol</code>, <code>density</code></li>
+</ul>
+</section>
+<section id="computed-quantities" class="level4">
+<h4 class="anchored" data-anchor-id="computed-quantities">3.6.2 Computed Quantities</h4>
+<ul>
+<li><code>compute temp all temp</code> — kinetic temperature (available for groups)</li>
+<li><code>compute stress/atom</code> — per-atom stress tensor (local pressure)</li>
+<li><code>compute charge</code> — per-atom charge (if needed for analysis)</li>
+</ul>
+</section>
+<section id="fix-specific-output" class="level4">
+<h4 class="anchored" data-anchor-id="fix-specific-output">3.6.3 Fix-Specific Output</h4>
+<ul>
+<li><code>fix electrode/conp</code> outputs: electrode potentials (global vector), energy (scalar), capacitance matrix rows (array)</li>
+<li>Use <code>fix ID group_name electrode/conp ...</code> then <code>variable Vx equal f_ID[2]</code> to access electrode potential</li>
+</ul>
+</section>
+<section id="trajectory-files" class="level4">
+<h4 class="anchored" data-anchor-id="trajectory-files">3.6.4 Trajectory Files</h4>
+<ul>
+<li><code>dump 1 all custom 100 traj.xyz id type x y z q</code> — write trajectory</li>
+<li><code>dump 2 all dcd 100 traj.dcd</code> — binary format; smaller files</li>
+<li>Post-processing: Python (MDAnalysis, pytim), VMD, Ovito</li>
+</ul>
+<hr>
+</section>
+</section>
+</section>
+<section id="electrostatics-in-molecular-simulations-how-lammps-handles-long-range-interactions" class="level2">
+<h2 class="anchored" data-anchor-id="electrostatics-in-molecular-simulations-how-lammps-handles-long-range-interactions">4. Electrostatics in Molecular Simulations — How LAMMPS Handles Long-Range Interactions</h2>
+<section id="why-electrostatics-is-the-hard-part" class="level3">
+<h3 class="anchored" data-anchor-id="why-electrostatics-is-the-hard-part">4.1 Why Electrostatics Is the Hard Part</h3>
+<ul>
+<li>Coulomb: <code>V ∝ 1/r</code> — long-range even at moderate distances</li>
+<li>Direct summation: N(N-1)/2 pairs → computationally prohibitive for N &gt; 1000</li>
+<li>Periodic boundaries make the math non-trivial (Ewald, slab corrections)</li>
+</ul>
+</section>
+<section id="ewald-summation-the-conceptual-basis" class="level3">
+<h3 class="anchored" data-anchor-id="ewald-summation-the-conceptual-basis">4.2 Ewald Summation — The Conceptual Basis</h3>
+<section id="the-split" class="level4">
+<h4 class="anchored" data-anchor-id="the-split">4.2.1 The Split</h4>
+<ul>
+<li>Real space: short-range Coulomb interactions summed directly (cutoff-based)</li>
+<li>Reciprocal space: long-range interactions handled via Fourier transform</li>
+<li>Self term: corrects for double-counting of interactions in periodic systems</li>
+</ul>
+</section>
+<section id="ewald-parameter-α" class="level4">
+<h4 class="anchored" data-anchor-id="ewald-parameter-α">4.2.2 Ewald Parameter (α)</h4>
+<ul>
+<li>Controls the split between real and reciprocal space</li>
+<li>Large α → narrow real-space Gaussian → faster real-space convergence → slower k-space</li>
+<li>Small α → opposite</li>
+<li>LAMMPS default is usually reasonable; for charged systems with small box, tuning may help</li>
+</ul>
+</section>
+</section>
+<section id="pppm-particle-particle-particle-mesh" class="level3">
+<h3 class="anchored" data-anchor-id="pppm-particle-particle-particle-mesh">4.3 PPPM (Particle-Particle Particle-Mesh)</h3>
+<section id="why-pppm-is-used-instead-of-naive-ewald" class="level4">
+<h4 class="anchored" data-anchor-id="why-pppm-is-used-instead-of-naive-ewald">4.3.1 Why PPPM Is Used Instead of Naive Ewald</h4>
+<ul>
+<li>Ewald: O(N³/²) scaling — still bad for very large N</li>
+<li>PPPM: maps charge to mesh, uses FFT → O(N log N)</li>
+<li>Standard for systems with &gt;10,000 atoms</li>
+</ul>
+</section>
+<section id="pppm-lammps-syntax" class="level4">
+<h4 class="anchored" data-anchor-id="pppm-lammps-syntax">4.3.2 PPPM → LAMMPS Syntax</h4>
+<pre><code>kspace_style pppm 1e-5</code></pre>
+<ul>
+<li><code>1e-5</code> = desired RMS force accuracy (relative to force magnitude)</li>
+<li>Tighter tolerance = more accurate but slower</li>
+<li>For electrode systems: <code>kspace_style pppm/electrode 1e-5</code></li>
+</ul>
+</section>
+</section>
+<section id="cutoff-based-methods-when-pppm-is-unnecessary" class="level3">
+<h3 class="anchored" data-anchor-id="cutoff-based-methods-when-pppm-is-unnecessary">4.4 Cutoff-Based Methods (When PPPM Is Unnecessary)</h3>
+<ul>
+<li>Small systems (N &lt; 1000) or very short simulations: direct Coulomb with cutoff may suffice</li>
+<li><code>pair_style coul/cut 10.0</code> — cutoff at 10 Å; no k-space calculation</li>
+<li><strong>Warning</strong>: ignoring long-range electrostatics introduces serious error; do not use for production</li>
+</ul>
+</section>
+<section id="boundary-conditions-and-electrostatics" class="level3">
+<h3 class="anchored" data-anchor-id="boundary-conditions-and-electrostatics">4.5 Boundary Conditions and Electrostatics</h3>
+<section id="slab-geometry-non-periodic-z" class="level4">
+<h4 class="anchored" data-anchor-id="slab-geometry-non-periodic-z">4.5.1 Slab Geometry (Non-Periodic Z)</h4>
+<ul>
+<li><code>boundary p p f</code> — z is non-periodic</li>
+<li>Electrostatics requires 2D Ewald correction: <code>kspace_modify slab 3</code></li>
+<li>Without this, forces in z-direction are wrong (artificial dipole-dipole interactions)</li>
+</ul>
+</section>
+<section id="periodic-z-with-finite-field" class="level4">
+<h4 class="anchored" data-anchor-id="periodic-z-with-finite-field">4.5.2 Periodic Z with Finite Field</h4>
+<ul>
+<li><code>boundary p p p</code> with <code>ffield yes</code> in ELECTRODE fix</li>
+<li>Internal E-field applied; simulates infinite stack of identical cells</li>
+<li>No slab correction needed; better for some geometries</li>
+</ul>
+</section>
+</section>
+<section id="pair-style-kspace-consistency" class="level3">
+<h3 class="anchored" data-anchor-id="pair-style-kspace-consistency">4.6 Pair Style — Kspace Consistency</h3>
+<ul>
+<li><code>pair_style lj/cut/coul/long</code> MUST pair with <code>kspace_style pppm</code> (or ewald)</li>
+<li><code>pair_style lj/cut/coul/cut</code> pairs with NO kspace (direct Coulomb only)</li>
+<li>Mismatch causes LAMMPS to error or produce wrong forces</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="conductors-electrodes-and-the-constant-potential-method" class="level2">
+<h2 class="anchored" data-anchor-id="conductors-electrodes-and-the-constant-potential-method">5. Conductors, Electrodes, and the Constant Potential Method</h2>
+<section id="conductors-vs.-insulators-in-md" class="level3">
+<h3 class="anchored" data-anchor-id="conductors-vs.-insulators-in-md">5.1 Conductors vs.&nbsp;Insulators in MD</h3>
+<ul>
+<li><strong>Insulator</strong>: charges are fixed; electrostatic potential varies freely</li>
+<li><strong>Conductor</strong>: charges redistribute to equalize potential within the material</li>
+<li><strong>Electrode (metal)</strong>: behaves as conductor; charges respond to applied voltage</li>
+</ul>
+</section>
+<section id="fixed-charge-vs.-polarizable-models" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-charge-vs.-polarizable-models">5.2 Fixed Charge vs.&nbsp;Polarizable Models</h3>
+<section id="fixed-charge-standard-force-fields" class="level4">
+<h4 class="anchored" data-anchor-id="fixed-charge-standard-force-fields">5.2.1 Fixed Charge (Standard Force Fields)</h4>
+<ul>
+<li>AMBER, CHARMM, OPLS — atomic charges set at start, never change</li>
+<li>Appropriate for insulators and vacuum</li>
+<li><strong>Problem for electrodes</strong>: charge cannot respond to applied potential</li>
+</ul>
+</section>
+<section id="polarizable-models" class="level4">
+<h4 class="anchored" data-anchor-id="polarizable-models">5.2.2 Polarizable Models</h4>
+<ul>
+<li><strong>Drude oscillators</strong>: extra particle attached by harmonic spring; models electron cloud response</li>
+<li><strong>Core-shell</strong>: massless shell encloses ion; responds to local field</li>
+<li><strong>QEq (charge equilibration)</strong>: redistribute charges within a single molecule</li>
+<li><strong>CPM (Constant Potential Method)</strong>: controls boundary condition on electrostatic potential</li>
+</ul>
+</section>
+</section>
+<section id="the-electrode-electrolyte-interface" class="level3">
+<h3 class="anchored" data-anchor-id="the-electrode-electrolyte-interface">5.3 The Electrode-Electrolyte Interface</h3>
+<section id="structure" class="level4">
+<h4 class="anchored" data-anchor-id="structure">5.3.1 Structure</h4>
+<ul>
+<li>Ions accumulate near charged surfaces → electric double layer</li>
+<li>Water molecules orient near electrode (hydrogen up/down)</li>
+<li>Capacitance depends on ion size, hydration, electrode structure</li>
+</ul>
+</section>
+<section id="applied-potential" class="level4">
+<h4 class="anchored" data-anchor-id="applied-potential">5.3.2 Applied Potential</h4>
+<ul>
+<li>Real experiments: potentiostat holds electrode at fixed voltage</li>
+<li>Fixed-charge MD: cannot enforce voltage; can only set atom charges (wrong)</li>
+<li>CPM: enforces voltage directly → correct electrochemical interface</li>
+</ul>
+</section>
+</section>
+<section id="the-constant-potential-method-theory" class="level3">
+<h3 class="anchored" data-anchor-id="the-constant-potential-method-theory">5.4 The Constant Potential Method — Theory</h3>
+<section id="the-problem" class="level4">
+<h4 class="anchored" data-anchor-id="the-problem">5.4.1 The Problem</h4>
+<ul>
+<li>We want: electrostatic potential on electrode surface = V (fixed)</li>
+<li>We have: electrode charges, electrolyte charges, geometry</li>
+<li>Energy: <code>E = (1/2) Σ q_i φ_i</code> — depends on all charges</li>
+<li>Constraint: electrode potentials must equal specified values</li>
+</ul>
+</section>
+<section id="energy-minimization-under-constraint" class="level4">
+<h4 class="anchored" data-anchor-id="energy-minimization-under-constraint">5.4.2 Energy Minimization Under Constraint</h4>
+<ul>
+<li>Minimize <code>E(q)</code> subject to <code>Aq = V</code> (potential constraints)</li>
+<li>Solution: induced surface charges that depend on geometry and electrolyte</li>
+<li>These are NOT predetermined — they emerge from the minimization</li>
+</ul>
+</section>
+<section id="gaussian-charge-smearing" class="level4">
+<h4 class="anchored" data-anchor-id="gaussian-charge-smearing">5.4.3 Gaussian Charge Smearing</h4>
+<ul>
+<li>Point charges at surface → singular matrix (diverges as r → 0)</li>
+<li>Smear each charge as a Gaussian distribution (width η)</li>
+<li><code>η</code> controls smearing: larger η = narrower (more point-like); smaller η = wider</li>
+<li>Physical meaning: metals have finite electron density at surface; smearing mimics this</li>
+</ul>
+</section>
+<section id="the-capacitance-matrix" class="level4">
+<h4 class="anchored" data-anchor-id="the-capacitance-matrix">5.4.4 The Capacitance Matrix</h4>
+<ul>
+<li><p>N×N matrix relates electrode potentials to charges:</p>
+<pre><code>Q = Q₀ᵥ + C · V</code></pre></li>
+<li><p><code>Q₀ᵥ</code> = charge at zero applied potential (influenced by electrolyte structure)</p></li>
+<li><p><code>C</code> = capacitance matrix (depends on electrode geometry and dielectric)</p></li>
+<li><p>Physical meaning: Cij = how much charge on electrode i changes when electrode j’s potential changes</p></li>
+</ul>
+</section>
+</section>
+<section id="constant-potential-vs.-constant-charge" class="level3">
+<h3 class="anchored" data-anchor-id="constant-potential-vs.-constant-charge">5.5 Constant Potential vs.&nbsp;Constant Charge</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 46%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>Constant Potential (electrode/conp)</th>
+<th>Constant Charge (electrode/conq)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>What is fixed</td>
+<td>Electrode voltage</td>
+<td>Total electrode charge</td>
+</tr>
+<tr class="even">
+<td>What varies</td>
+<td>Electrode atom charges</td>
+<td>Electrode potentials</td>
+</tr>
+<tr class="odd">
+<td>Use case</td>
+<td>Experiment-like (potentiostat)</td>
+<td>Known charge injection</td>
+</tr>
+<tr class="even">
+<td>Output</td>
+<td>Fluctuating charges</td>
+<td>Fluctuating potentials</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>CPM is essential for electrochemistry where potential is the controlled variable</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="the-electrode-package-lammps-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="the-electrode-package-lammps-implementation">6. The ELECTRODE Package — LAMMPS Implementation</h2>
+<section id="package-overview" class="level3">
+<h3 class="anchored" data-anchor-id="package-overview">6.1 Package Overview</h3>
+<ul>
+<li>Authors: Ahrens-Iwers, Tee, Meissner (LAMMPS 4May2022+)</li>
+<li>Implements constant potential, constant charge, and thermopotentiostat methods</li>
+<li>Requires: KSPACE package, LAPACK/BLAS</li>
+</ul>
+</section>
+<section id="installing-the-electrode-package" class="level3">
+<h3 class="anchored" data-anchor-id="installing-the-electrode-package">6.2 Installing the ELECTRODE Package</h3>
+<ul>
+<li>CMake: <code>-D PKG_ELECTRODE=yes -D PKG_KSPACE=yes</code></li>
+<li>If LAPACK linking fails: <code>-D USE_INTERNAL_LINALG=yes</code></li>
+<li>No make-based build (CMake only)</li>
+</ul>
+</section>
+<section id="the-three-fix-styles" class="level3">
+<h3 class="anchored" data-anchor-id="the-three-fix-styles">6.3 The Three Fix Styles</h3>
+<section id="fix-electrodeconp-constant-potential" class="level4">
+<h4 class="anchored" data-anchor-id="fix-electrodeconp-constant-potential">6.3.1 <code>fix electrode/conp</code> — Constant Potential</h4>
+<pre><code>fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on</code></pre>
+<ul>
+<li><strong>Purpose</strong>: hold electrode groups at specified potentials; charges respond</li>
+<li><strong>Arguments</strong>: <code>potential eta</code> (potential in volts; eta in inverse length units)</li>
+<li><strong>Key options</strong>:
+<ul>
+<li><code>couple groupName V</code> — add additional electrode group at potential V</li>
+<li><code>symm on/off</code> — enforce total electrode charge neutrality</li>
+<li><code>algo mat_inv|mat_cg|cg</code> — algorithm choice (see below)</li>
+<li><code>ffield on/off</code> — finite-field mode for periodic z</li>
+<li><code>etypes</code> — optimize neighbor lists when electrode/electrolyte types don’t overlap</li>
+</ul></li>
+</ul>
+</section>
+<section id="fix-electrodeconq-constant-charge" class="level4">
+<h4 class="anchored" data-anchor-id="fix-electrodeconq-constant-charge">6.3.2 <code>fix electrode/conq</code> — Constant Charge</h4>
+<pre><code>fix fxconq bot electrode/conq -0.5 1.805 couple top 0.5 symm on</code></pre>
+<ul>
+<li><strong>Purpose</strong>: set total charge on electrode groups; potentials respond</li>
+<li><strong>Physical meaning</strong>: model charge injection/extraction (battery discharge)</li>
+<li><strong>Output</strong>: potentials on electrodes (can be monitored to understand response)</li>
+</ul>
+</section>
+<section id="fix-electrodethermo-thermopotentiostat" class="level4">
+<h4 class="anchored" data-anchor-id="fix-electrodethermo-thermopotentiostat">6.3.3 <code>fix electrode/thermo</code> — Thermopotentiostat</h4>
+<pre><code>fix fxthermo bot electrode/thermo -1.0 1.805 300 12345 50.0</code></pre>
+<ul>
+<li><strong>Purpose</strong>: adds thermal fluctuations to electrode potential (and charge)</li>
+<li><strong>Arguments</strong>: <code>potential eta temp seed tau_v</code></li>
+<li><strong>Physical meaning</strong>: models Johnson-Nyquist noise in electrochemical systems</li>
+<li><strong>Use case</strong>: non-equilibrium dynamics, fluctuation-dissipation studies</li>
+</ul>
+</section>
+</section>
+<section id="algorithm-choices-algo" class="level3">
+<h3 class="anchored" data-anchor-id="algorithm-choices-algo">6.4 Algorithm Choices (<code>algo</code>)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 30%">
+<col style="width: 15%">
+<col style="width: 13%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Algorithm</th>
+<th>Precomputation</th>
+<th>Memory</th>
+<th>Speed</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>mat_inv</code></td>
+<td>Capacitance matrix</td>
+<td>High (N²)</td>
+<td>Fast</td>
+<td>&lt; 10,000 electrode atoms; static electrodes</td>
+</tr>
+<tr class="even">
+<td><code>mat_cg</code></td>
+<td>Elastance matrix</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Medium systems; limited electrode motion</td>
+</tr>
+<tr class="odd">
+<td><code>cg</code></td>
+<td>None</td>
+<td>Low</td>
+<td>Slow</td>
+<td>Dynamic electrodes; large systems</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>mat_inv</code>: invert matrix once; fast on-the-fly charge calculation</li>
+<li><code>mat_cg</code>: solve linear system with conjugate gradient; less memory than <code>mat_inv</code></li>
+<li><code>cg</code>: no precomputation; solve full problem each step; needed for moving electrodes</li>
+</ul>
+</section>
+<section id="k-space-compatibility" class="level3">
+<h3 class="anchored" data-anchor-id="k-space-compatibility">6.5 K-space Compatibility</h3>
+<ul>
+<li>Use electrode-specific kspace styles:
+<ul>
+<li><code>kspace_style ewald/electrode</code></li>
+<li><code>kspace_style pppm/electrode</code></li>
+<li><code>kspace_style pppm/electrode/intel</code> (optimized)</li>
+</ul></li>
+<li>These provide electrode-electrode interaction matrices to the fix</li>
+</ul>
+</section>
+<section id="slab-geometry-modifications" class="level3">
+<h3 class="anchored" data-anchor-id="slab-geometry-modifications">6.6 Slab Geometry Modifications</h3>
+<pre><code>kspace_modify slab 3        # 2D Ewald correction (default for non-periodic z)
+kspace_modify wire          # for wire boundary conditions
+kspace_modify one-step      # for faster but less accurate elastance matrix</code></pre>
+</section>
+<section id="matrix-saveload" class="level3">
+<h3 class="anchored" data-anchor-id="matrix-saveload">6.7 Matrix Save/Load</h3>
+<ul>
+<li><code>write_inv</code> / <code>read_inv</code> — save elastance matrix for restart</li>
+<li>Avoids recomputation for large systems</li>
+<li>No restart file support yet (as of current LAMMPS); matrix save is the workaround</li>
+</ul>
+</section>
+<section id="output-from-electrode-fixes" class="level3">
+<h3 class="anchored" data-anchor-id="output-from-electrode-fixes">6.8 Output from ELECTRODE Fixes</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 32%">
+<col style="width: 32%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Output</th>
+<th>Access</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Energy (scalar)</td>
+<td><code>f_ID</code></td>
+<td><code>-Σ q_i V_i</code> — work done by electrodes on system</td>
+</tr>
+<tr class="even">
+<td>Electrode potentials (vector)</td>
+<td><code>f_ID[2], f_ID[3]...</code></td>
+<td>Potential on each electrode group</td>
+</tr>
+<tr class="odd">
+<td>Capacitance matrix rows (array)</td>
+<td><code>f_ID[4+]</code></td>
+<td>C_ij rows; useful for analysis</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="building-a-constant-potential-simulation-complete-example" class="level2">
+<h2 class="anchored" data-anchor-id="building-a-constant-potential-simulation-complete-example">7. Building a Constant Potential Simulation — Complete Example</h2>
+<section id="design-decisions-before-writing-input" class="level3">
+<h3 class="anchored" data-anchor-id="design-decisions-before-writing-input">7.1 Design Decisions Before Writing Input</h3>
+<section id="electrode-geometry" class="level4">
+<h4 class="anchored" data-anchor-id="electrode-geometry">7.1.1 Electrode Geometry</h4>
+<ul>
+<li>Planar surfaces: simplest; good for double-layer studies</li>
+<li>Nanostructured: graphene, nanopores, tips — CPM shines here (charge responds to complex shape)</li>
+<li>Cell size: must be large enough that periodic images don’t interact through vacuum</li>
+</ul>
+</section>
+<section id="electrolyte-choice" class="level4">
+<h4 class="anchored" data-anchor-id="electrolyte-choice">7.1.2 Electrolyte Choice</h4>
+<ul>
+<li>Water: SPC/E or TIP4P (not TIP3P — poor dielectric)</li>
+<li>Salt: NaCl, KCl — matched ion parameters to water model</li>
+<li>Ionic liquids: heavy; slower dynamics but interesting electrostatics</li>
+</ul>
+</section>
+<section id="boundary-conditions" class="level4">
+<h4 class="anchored" data-anchor-id="boundary-conditions">7.1.3 Boundary Conditions</h4>
+<ul>
+<li>Slab (<code>p p f</code>): standard for open surfaces; needs <code>kspace_modify slab</code></li>
+<li>Periodic with <code>ffield</code>: smaller z-possible; requires <code>symm on</code></li>
+</ul>
+</section>
+</section>
+<section id="initialization-commands-meaning" class="level3">
+<h3 class="anchored" data-anchor-id="initialization-commands-meaning">7.2 Initialization Commands (Meaning)</h3>
+<pre class="lammps"><code>units metal                # eV, Å, ps — match your force field
+atom_style charge         # charge needed; no bonds for simple electrolytes
+boundary p p f            # non-periodic z for slab geometry
+
+region box block 0 20 0 20 0 60
+create_box 2 box          # 2 atom types (bottom, top electrode)
+
+region bot block 0 20 0 20 0 5
+region top block 0 20 0 20 55 60
+create_atoms 1 region bot
+create_atoms 2 region top</code></pre>
+<ul>
+<li>Electrode atoms get distinct types (1, 2) to distinguish groups</li>
+<li><code>group bot region bot</code> — defines the group for the electrode fix</li>
+</ul>
+</section>
+<section id="force-field-setup" class="level3">
+<h3 class="anchored" data-anchor-id="force-field-setup">7.3 Force Field Setup</h3>
+<pre class="lammps"><code>pair_style lj/cut/coul/long 10.0    # LJ + real-space Coulomb; cutoff 10 Å
+pair_coeff 1 1 0.01 3.0              # electrode-electrode LJ (soft repulsion)
+pair_coeff 2 2 0.01 3.0              # top electrode
+pair_coeff 1 2 0.005 3.0            # cross-interaction (smaller)
+pair_coeff 3 3 0.15 3.2              # water LJ (from water model)
+pair_coeff 1 3 0.005 3.0            # electrode-water LJ
+pair_coeff 2 3 0.005 3.0
+
+kspace_style pppm/electrode 1e-5    # long-range solver; electrode-aware</code></pre>
+<ul>
+<li>Electrode LJ ε is small (0.01 eV) — creates soft repulsion, not bonding</li>
+<li>Water parameters depend on the water model used (SPC/E, TIP4P, etc.)</li>
+<li>kspace tolerance <code>1e-5</code> is standard; <code>1e-6</code> for production</li>
+</ul>
+</section>
+<section id="applying-the-electrode-fix" class="level3">
+<h3 class="anchored" data-anchor-id="applying-the-electrode-fix">7.4 Applying the ELECTRODE Fix</h3>
+<pre class="lammps"><code>fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on</code></pre>
+<ul>
+<li><strong>Bottom electrode</strong>: -1.0 V</li>
+<li><strong>Top electrode</strong>: +1.0 V (via <code>couple</code>)</li>
+<li><strong>symm on</strong>: total electrode charge = 0 (neutral system)</li>
+<li><strong>eta = 1.805 Å⁻¹</strong>: standard value (check literature for your system)</li>
+</ul>
+</section>
+<section id="thermostating-strategy" class="level3">
+<h3 class="anchored" data-anchor-id="thermostating-strategy">7.5 Thermostating Strategy</h3>
+<pre class="lammps"><code>fix frozen all nve                  # frozen electrodes (default for static electrodes)
+fix mytemp elyte langevin 300 300 100 12345  # Langevin on electrolyte only</code></pre>
+<ul>
+<li>Electrodes are frozen (no dynamics) — common for studying equilibrium double layer</li>
+<li>If electrodes should move: use <code>fix nve</code> on them and thermostat appropriately</li>
+<li>Langevin adds stochastic noise; good for temperature control in non-equilibrium</li>
+</ul>
+</section>
+<section id="energy-minimization-before-production" class="level3">
+<h3 class="anchored" data-anchor-id="energy-minimization-before-production">7.6 Energy Minimization Before Production</h3>
+<pre class="lammps"><code>minimize 1e-6 1e-9 1000 10000    # before running dynamics</code></pre>
+<ul>
+<li>Remove overlaps; establish reasonable starting configuration</li>
+<li>Without minimization: first steps may have huge forces → simulation destabilizes</li>
+</ul>
+</section>
+<section id="production-run-and-output" class="level3">
+<h3 class="anchored" data-anchor-id="production-run-and-output">7.7 Production Run and Output</h3>
+<pre class="lammps"><code>thermo 100
+thermo_style custom step temp pe ke vol density
+
+dump 1 all custom 100 traj.lammpstrj id type x y z q
+dump 2 all dcd 100 traj.dcd
+
+run 10000</code></pre>
+<ul>
+<li><code>thermo</code> prints every 100 steps; check for energy conservation</li>
+<li>Trajectory file for post-processing: density profiles, RDF, MSD</li>
+</ul>
+</section>
+<section id="expected-output-and-what-it-means" class="level3">
+<h3 class="anchored" data-anchor-id="expected-output-and-what-it-means">7.8 Expected Output (And What It Means)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Quantity</th>
+<th>Expected Behavior</th>
+<th>What It Tells You</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Temp</code></td>
+<td>Fluctuates around 300 K</td>
+<td>Thermostat working</td>
+</tr>
+<tr class="even">
+<td><code>PotEng</code></td>
+<td>Stable (small drift)</td>
+<td>Force field reasonable</td>
+</tr>
+<tr class="odd">
+<td><code>Density</code></td>
+<td>~1 g/cm³ for water</td>
+<td>Water model correct</td>
+</tr>
+<tr class="even">
+<td><code>f_fxconp[1]</code></td>
+<td>~0 (energy conserved)</td>
+<td>Electrode fix correct</td>
+</tr>
+<tr class="odd">
+<td>Electrode charge</td>
+<td>Fluctuates around ±Q</td>
+<td>Double layer formation</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="practical-considerations-and-troubleshooting" class="level2">
+<h2 class="anchored" data-anchor-id="practical-considerations-and-troubleshooting">8. Practical Considerations and Troubleshooting</h2>
+<section id="convergence-issues" class="level3">
+<h3 class="anchored" data-anchor-id="convergence-issues">8.1 Convergence Issues</h3>
+<section id="symptoms" class="level4">
+<h4 class="anchored" data-anchor-id="symptoms">8.1.1 Symptoms</h4>
+<ul>
+<li>Charge oscillates wildly between steps</li>
+<li><code>nan</code> or <code>inf</code> in thermodynamic output</li>
+<li>Energy increases without bound</li>
+</ul>
+</section>
+<section id="causes-and-fixes" class="level4">
+<h4 class="anchored" data-anchor-id="causes-and-fixes">8.1.2 Causes and Fixes</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 58%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Overlapping atoms</td>
+<td>Run minimization; check <code>pair_coeff</code></td>
+</tr>
+<tr class="even">
+<td>eta too small</td>
+<td>Increase eta (wider Gaussian = better-conditioned matrix)</td>
+</tr>
+<tr class="odd">
+<td>eta too large</td>
+<td>Decrease eta (narrower = more accurate, but harder to converge)</td>
+</tr>
+<tr class="even">
+<td>Tolerance too tight</td>
+<td><code>kspace_style pppm 1e-4</code> (less accurate but easier)</td>
+</tr>
+<tr class="odd">
+<td>Poor geometry</td>
+<td>Check region definitions; ensure no vacuum gaps in electrode</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="electrode-immobilization" class="level3">
+<h3 class="anchored" data-anchor-id="electrode-immobilization">8.2 Electrode Immobilization</h3>
+<ul>
+<li><code>mat_inv</code> and <code>mat_cg</code> precompute based on electrode positions</li>
+<li>If electrodes move: either use <code>algo cg</code> (slow but允许 movement) or recompute matrix</li>
+<li>For charging dynamics: <code>ffield on</code> with <code>algo cg</code> is the standard approach</li>
+</ul>
+</section>
+<section id="parallel-performance" class="level3">
+<h3 class="anchored" data-anchor-id="parallel-performance">8.3 Parallel Performance</h3>
+<ul>
+<li>Electrode atoms should be evenly distributed: <code>processors * * 2</code> (2D slab decomposition)</li>
+<li>Large electrode matrix: can exceed 0.5 GiB per MPI rank</li>
+<li>For &gt;50,000 electrode atoms: use <code>mat_cg</code> or <code>cg</code></li>
+</ul>
+</section>
+<section id="units-summary-critical-reference" class="level3">
+<h3 class="anchored" data-anchor-id="units-summary-critical-reference">8.4 Units Summary (Critical Reference)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Quantity</th>
+<th>real units</th>
+<th>metal units</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Distance</td>
+<td>Å</td>
+<td>Å</td>
+</tr>
+<tr class="even">
+<td>Energy</td>
+<td>kcal/mol</td>
+<td>eV</td>
+</tr>
+<tr class="odd">
+<td>Time</td>
+<td>fs</td>
+<td>fs</td>
+</tr>
+<tr class="even">
+<td>Potential</td>
+<td>kcal/mol·e</td>
+<td>V (always!)</td>
+</tr>
+<tr class="odd">
+<td>eta</td>
+<td>Å⁻¹</td>
+<td>Å⁻¹</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Potentials are ALWAYS in volts</strong> regardless of <code>units</code> setting</li>
+<li>Verify eta is appropriate for your unit system (inverse length)</li>
+</ul>
+</section>
+<section id="reproducibility" class="level3">
+<h3 class="anchored" data-anchor-id="reproducibility">8.5 Reproducibility</h3>
+<ul>
+<li>Always set thermostat seeds explicitly: <code>12345</code> in <code>fix langevin</code></li>
+<li>Set <code>random/philox</code> seed if using GPU (LAMMPS 2024+)</li>
+<li>Matrix save/load ensures same capacitance matrix on restart</li>
+</ul>
+</section>
+<section id="common-pitfalls-summary" class="level3">
+<h3 class="anchored" data-anchor-id="common-pitfalls-summary">8.6 Common Pitfalls Summary</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 37%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Pitfall</th>
+<th>Consequence</th>
+<th>Prevention</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Wrong units in pair_coeff</td>
+<td>Wrong energies; crash</td>
+<td>Check units matching <code>units</code> setting</td>
+</tr>
+<tr class="even">
+<td>Mismatched pair + kspace</td>
+<td>Error or wrong forces</td>
+<td><code>coul/long</code> → <code>pppm</code>; <code>coul/cut</code> → no kspace</td>
+</tr>
+<tr class="odd">
+<td>Forgot <code>kspace_modify slab</code></td>
+<td>Artificially high z-pressures</td>
+<td>Add for non-periodic z</td>
+</tr>
+<tr class="even">
+<td>Electrode atoms in wrong group</td>
+<td>Fix applies to wrong atoms</td>
+<td>Verify with <code>group bot</code> command</td>
+</tr>
+<tr class="odd">
+<td>Cutoff too small</td>
+<td>Energy drift; bad electrostatics</td>
+<td>Use ≥10 Å for water</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="example-systems" class="level2">
+<h2 class="anchored" data-anchor-id="example-systems">9. Example Systems</h2>
+<section id="planar-electrode-with-aqueous-nacl" class="level3">
+<h3 class="anchored" data-anchor-id="planar-electrode-with-aqueous-nacl">9.1 Planar Electrode with Aqueous NaCl</h3>
+<ul>
+<li>Two planar gold electrodes, 1M NaCl water</li>
+<li>Study: double-layer capacitance, ion density profiles, potential distribution</li>
+<li>Expected output: capacitance ~10–20 μF/cm² for gold</li>
+</ul>
+</section>
+<section id="graphene-supercapacitor" class="level3">
+<h3 class="anchored" data-anchor-id="graphene-supercapacitor">9.2 Graphene Supercapacitor</h3>
+<ul>
+<li>Two graphene layers (porous electrode)</li>
+<li>Ionic liquid electrolyte</li>
+<li>Study: charging dynamics, ion insertion, energy density</li>
+<li>CPM essential: charge localizes at sharp curvature</li>
+</ul>
+</section>
+<section id="tip-substrate-junction" class="level3">
+<h3 class="anchored" data-anchor-id="tip-substrate-junction">9.3 Tip-Substrate Junction</h3>
+<ul>
+<li>STM tip near metal surface</li>
+<li>Study: tunneling current, field emission</li>
+<li>Complex geometry: CPM captures tip charge distribution correctly</li>
+</ul>
+</section>
+<section id="finite-field-charging-simulation" class="level3">
+<h3 class="anchored" data-anchor-id="finite-field-charging-simulation">9.4 Finite-Field Charging Simulation</h3>
+<ul>
+<li><code>boundary p p p</code> with <code>ffield on</code></li>
+<li>Smaller z-dimension possible (no vacuum needed)</li>
+<li>Model: battery discharge curve (potential vs.&nbsp;charge)</li>
+<li>Use <code>electrode/conq</code> to set charge and measure potential response</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="further-reading" class="level2">
+<h2 class="anchored" data-anchor-id="further-reading">10. Further Reading</h2>
+<section id="foundational-papers" class="level3">
+<h3 class="anchored" data-anchor-id="foundational-papers">10.1 Foundational Papers</h3>
+<ul>
+<li>Siepmann &amp; Sprik, J. Chem. Phys. 102, 511 (1995) — original CPM</li>
+<li>Reed et al., J. Chem. Phys. 126, 084704 (2007) — modern reformulation</li>
+<li>Ahrens-Iwers &amp; Meissner, J. Chem. Phys. 155, 104104 (2021) — ELECTRODE package</li>
+<li>Ahrens-Iwers et al., J. Chem. Phys. 157, 084801 (2022) — package validation</li>
+</ul>
+</section>
+<section id="related-methods" class="level3">
+<h3 class="anchored" data-anchor-id="related-methods">10.2 Related Methods</h3>
+<ul>
+<li>Gingrich, MSc thesis (2010) — Gaussian smearing for CPM</li>
+<li>Deissenbeck et al., Phys. Rev.&nbsp;Lett. 126, 136803 (2021) — thermopotentiostat</li>
+<li>Dufils et al., Phys. Rev.&nbsp;Lett. 123, 195501 (2019) — finite-field CPM</li>
+<li>Scalfi et al., J. Chem. Phys. 153, 174704 (2020) — Thomas-Fermi model</li>
+</ul>
+</section>
+<section id="lammps-documentation" class="level3">
+<h3 class="anchored" data-anchor-id="lammps-documentation">10.3 LAMMPS Documentation</h3>
+<ul>
+<li><a href="https://docs.lammps.org/Packages_details.html#electrode-package">ELECTRODE package details</a></li>
+<li><a href="https://docs.lammps.org/fix_electrode.html">fix electrode/conp</a></li>
+<li><a href="https://docs.lammps.org/kspace_style.html">kspace_style</a> — electrode variants</li>
+<li><a href="https://github.com/lammps/lammps/tree/develop/examples/PACKAGES/electrode">Examples/PACKAGES/electrode</a></li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="design-notes" class="level2">
+<h2 class="anchored" data-anchor-id="design-notes">Design Notes</h2>
+<p>This outline targets a student who has completed introductory physics and chemistry, has access to a working LAMMPS installation, and wants to understand the physics behind the commands.</p>
+<p>The progression is: 1. <strong>What MD does</strong> → trajectory, forces, ensemble 2. <strong>What interacts</strong> → force fields (LJ, Coulomb, bonded) 3. <strong>What is controlled</strong> → thermostats, barostats, timestep 4. <strong>How electrostatics is solved</strong> → Ewald, PPPM, slab corrections 5. <strong>Why electrodes are different</strong> → conductor vs.&nbsp;insulator 6. <strong>What CPM does</strong> → energy minimization under potential constraint 7. <strong>How to run it</strong> → ELECTRODE package syntax 8. <strong>How to build a simulation</strong> → full example with output interpretation</p>
+<p>Every section connects input syntax to physical meaning and output observables.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/srtee\.github\.io\/mddocs\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

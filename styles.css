@@ -1,0 +1,106 @@
+/* Custom styles for Constant Potential MD in LAMMPS guide */
+
+/* Code blocks */
+pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+code {
+  color: #e83e8c;
+  background-color: #f8f9fa;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+}
+
+/* Tables */
+table {
+  font-size: 0.9rem;
+}
+
+table th {
+  background-color: #f1f3f5;
+}
+
+/* Callout boxes */
+.callout {
+  border-left-width: 4px;
+}
+
+.callout-tip {
+  border-left-color: #28a745;
+}
+
+.callout-warning {
+  border-left-color: #ffc107;
+}
+
+.callout-note {
+  border-left-color: #17a2b8;
+}
+
+/* Sidebar */
+.sidebar-navigation {
+  font-size: 0.9rem;
+}
+
+/* Navigation */
+.navbar {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Footer */
+.footer {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+/* Figures */
+.figure {
+  margin: 1.5rem 0;
+}
+
+.figure img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+  font-size: 0.85rem;
+  background-color: transparent;
+  padding: 0;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Anchor links */
+.header-section-number {
+  color: #6c757d;
+}
+
+/* Tabs */
+.tab-content {
+  border: 1px solid #dee2e6;
+  border-top: none;
+  padding: 1rem;
+}
+
+/* Quarto Run Button */
+.quarto-run-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.quarto-run-button:hover {
+  background-color: #218838;
+}

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Constant Potential Molecular Dynamics in LAMMPS – Constant Potential MD in LAMMPS</title>
+<title>force-fields – Constant Potential MD in LAMMPS</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -22,41 +22,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -105,10 +70,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -131,7 +122,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -139,7 +130,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">1. Fundamentals</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./02-force-fields.html"> 
+    <a class="nav-link active" href="./02-force-fields.html" aria-current="page"> 
 <span class="menu-text">2. Force Fields</span></a>
   </li>  
   <li class="nav-item">
@@ -188,7 +179,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Constant Potential Molecular Dynamics in LAMMPS</li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Force Fields</li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -214,12 +205,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-is-this-guide" id="toc-what-is-this-guide" class="nav-link active" data-scroll-target="#what-is-this-guide">What Is This Guide?</a></li>
-  <li><a href="#what-you-will-learn" id="toc-what-you-will-learn" class="nav-link" data-scroll-target="#what-you-will-learn">What You Will Learn</a></li>
-  <li><a href="#how-to-use-this-guide" id="toc-how-to-use-this-guide" class="nav-link" data-scroll-target="#how-to-use-this-guide">How to Use This Guide</a></li>
-  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
-  <li><a href="#computing-environment" id="toc-computing-environment" class="nav-link" data-scroll-target="#computing-environment">Computing Environment</a></li>
-  <li><a href="#contributing" id="toc-contributing" class="nav-link" data-scroll-target="#contributing">Contributing</a></li>
+  <li><a href="#what-is-a-force-field" id="toc-what-is-a-force-field" class="nav-link active" data-scroll-target="#what-is-a-force-field">What Is a Force Field?</a></li>
+  <li><a href="#non-bonded-interactions" id="toc-non-bonded-interactions" class="nav-link" data-scroll-target="#non-bonded-interactions">Non-Bonded Interactions</a>
+  <ul class="collapse">
+  <li><a href="#van-der-waals-dispersionrepulsion" id="toc-van-der-waals-dispersionrepulsion" class="nav-link" data-scroll-target="#van-der-waals-dispersionrepulsion">Van der Waals (Dispersion/Repulsion)</a></li>
+  <li><a href="#coulombic-electrostatics" id="toc-coulombic-electrostatics" class="nav-link" data-scroll-target="#coulombic-electrostatics">Coulombic Electrostatics</a></li>
+  <li><a href="#combined-short-range-potentials" id="toc-combined-short-range-potentials" class="nav-link" data-scroll-target="#combined-short-range-potentials">Combined Short-Range Potentials</a></li>
+  <li><a href="#bonded-interactions" id="toc-bonded-interactions" class="nav-link" data-scroll-target="#bonded-interactions">Bonded Interactions</a></li>
+  </ul></li>
+  <li><a href="#cross-terms-and-mixing-rules" id="toc-cross-terms-and-mixing-rules" class="nav-link" data-scroll-target="#cross-terms-and-mixing-rules">Cross-Terms and Mixing Rules</a>
+  <ul class="collapse">
+  <li><a href="#lorentz-berthelot-mixing" id="toc-lorentz-berthelot-mixing" class="nav-link" data-scroll-target="#lorentz-berthelot-mixing">Lorentz-Berthelot Mixing</a></li>
+  <li><a href="#explicit-cross-parameters" id="toc-explicit-cross-parameters" class="nav-link" data-scroll-target="#explicit-cross-parameters">Explicit Cross-Parameters</a></li>
+  </ul></li>
+  <li><a href="#force-field-parameters-where-they-come-from" id="toc-force-field-parameters-where-they-come-from" class="nav-link" data-scroll-target="#force-field-parameters-where-they-come-from">Force Field Parameters — Where They Come From</a>
+  <ul class="collapse">
+  <li><a href="#water-models" id="toc-water-models" class="nav-link" data-scroll-target="#water-models">Water Models</a></li>
+  <li><a href="#ion-parameters" id="toc-ion-parameters" class="nav-link" data-scroll-target="#ion-parameters">Ion Parameters</a></li>
+  <li><a href="#electrode-parameters" id="toc-electrode-parameters" class="nav-link" data-scroll-target="#electrode-parameters">Electrode Parameters</a></li>
+  </ul></li>
+  <li><a href="#force-field-output-connection" id="toc-force-field-output-connection" class="nav-link" data-scroll-target="#force-field-output-connection">Force Field → Output Connection</a>
+  <ul class="collapse">
+  <li><a href="#energy-components-breakdown" id="toc-energy-components-breakdown" class="nav-link" data-scroll-target="#energy-components-breakdown">Energy Components Breakdown</a></li>
+  </ul></li>
+  <li><a href="#common-force-field-configurations" id="toc-common-force-field-configurations" class="nav-link" data-scroll-target="#common-force-field-configurations">Common Force Field Configurations</a>
+  <ul class="collapse">
+  <li><a href="#simple-electrolyte-nacl-in-spce-water" id="toc-simple-electrolyte-nacl-in-spce-water" class="nav-link" data-scroll-target="#simple-electrolyte-nacl-in-spce-water">Simple Electrolyte (NaCl in SPC/E water)</a></li>
+  <li><a href="#electrode-electrolyte-interface" id="toc-electrode-electrolyte-interface" class="nav-link" data-scroll-target="#electrode-electrolyte-interface">Electrode-Electrolyte Interface</a></li>
+  </ul></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
   </ul>
 </nav>
     </div>
@@ -228,8 +242,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Constant Potential Molecular Dynamics in LAMMPS</h1>
-<p class="subtitle lead">A practical guide to the ELECTRODE package</p>
+<h1 class="title">Force Fields</h1>
 </div>
 
 
@@ -246,120 +259,419 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="what-is-this-guide" class="level2">
-<h2 class="anchored" data-anchor-id="what-is-this-guide">What Is This Guide?</h2>
-<p>This guide walks you through running <strong>constant potential molecular dynamics (MD)</strong> simulations using the <a href="https://lammps.org">LAMMPS</a> ELECTRODE package. It is written for researchers and students who have a working LAMMPS installation and want to understand the physics behind the commands — not just the syntax.</p>
-</section>
-<section id="what-you-will-learn" class="level2">
-<h2 class="anchored" data-anchor-id="what-you-will-learn">What You Will Learn</h2>
-<p>By the end of this guide you will be able to:</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>In this section
+</div>
+</div>
+<div class="callout-body-container callout-body">
 <ul>
-<li><strong>Interpret</strong> LAMMPS input commands in terms of physical meaning</li>
-<li><strong>Connect</strong> force field choices to simulation observables (energy, density, capacitance)</li>
-<li><strong>Design</strong> electrode-electrolyte simulations with appropriate boundary conditions and physical parameters</li>
-<li><strong>Run</strong> constant potential simulations and diagnose common problems</li>
-<li><strong>Analyze</strong> output including trajectories, thermodynamic data, and electrode properties</li>
+<li>Non-bonded interactions (LJ, Coulomb): formula, meaning, parameters</li>
+<li>Bonded interactions (bonds, angles, dihedrals): when they’re needed</li>
+<li>Cross-terms and mixing rules</li>
+<li>How force field choices affect simulation output</li>
 </ul>
-</section>
-<section id="how-to-use-this-guide" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-use-this-guide">How to Use This Guide</h2>
-<p>The guide is organized as a sequence of topics, each building on the previous:</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">flowchart LR
-    A[1. Fundamentals] --&gt; B[2. Force Fields]
-    A --&gt; C[4. Electrostatics]
-    B --&gt; C
-    C --&gt; D[5. Electrodes &amp; CPM]
-    D --&gt; E[6. ELECTRODE Package]
-    E --&gt; F[7. Example]
-    F --&gt; G[8. Troubleshooting]
-</pre>
-</div>
-<p></p></figure><p></p>
 </div>
 </div>
-</div>
+<section id="what-is-a-force-field" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-a-force-field">What Is a Force Field?</h2>
+<p>A <strong>force field</strong> is a set of mathematical functions and parameters that describe interatomic forces. It is an approximation — no force field is “correct”, only more or less appropriate for a given system.</p>
+<p>The components of a force field:</p>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 21%">
-<col style="width: 16%">
-<col style="width: 61%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Section</th>
-<th>Topic</th>
-<th>What You Will Understand</th>
+<th>Component</th>
+<th>What It Describes</th>
+<th>Typical Functional Form</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>1</td>
-<td>Fundamentals</td>
-<td>What MD actually computes; key LAMMPS concepts</td>
+<td>Non-bonded</td>
+<td>Van der Waals, electrostatics</td>
+<td>LJ, Coulomb</td>
 </tr>
 <tr class="even">
-<td>2</td>
-<td>Force Fields</td>
-<td>What interactions exist; how to configure them</td>
+<td>Bonded</td>
+<td>Chemical bonds</td>
+<td>Harmonic, Morse</td>
 </tr>
 <tr class="odd">
-<td>3</td>
-<td>Physical Conditions</td>
-<td>How temperature, pressure, and time are controlled</td>
+<td>Angle</td>
+<td>Three-body bending</td>
+<td>Harmonic, cosine</td>
 </tr>
 <tr class="even">
-<td>4</td>
-<td>Electrostatics</td>
-<td>How long-range Coulomb is handled (Ewald, PPPM)</td>
-</tr>
-<tr class="odd">
-<td>5</td>
-<td>Electrodes &amp; CPM</td>
-<td>Why electrodes need special treatment; what CPM does</td>
-</tr>
-<tr class="even">
-<td>6</td>
-<td>ELECTRODE Package</td>
-<td>LAMMPS syntax for constant potential, charge, thermo</td>
-</tr>
-<tr class="odd">
-<td>7</td>
-<td>Example</td>
-<td>A complete input script with output interpretation</td>
-</tr>
-<tr class="even">
-<td>8</td>
-<td>Troubleshooting</td>
-<td>Common problems and how to fix them</td>
+<td>Dihedral</td>
+<td>Four-body torsion</td>
+<td>Trigonometric series</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="prerequisites" class="level2">
-<h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
-<p>This guide assumes you have:</p>
+<section id="non-bonded-interactions" class="level2">
+<h2 class="anchored" data-anchor-id="non-bonded-interactions">Non-Bonded Interactions</h2>
+<section id="van-der-waals-dispersionrepulsion" class="level3">
+<h3 class="anchored" data-anchor-id="van-der-waals-dispersionrepulsion">Van der Waals (Dispersion/Repulsion)</h3>
+<p>The Lennard-Jones (LJ) potential is the most common:</p>
+<p><span class="math display">\[V(r) = 4\epsilon \left[ \left(\frac{\sigma}{r}\right)^{12} - \left(\frac{\sigma}{r}\right)^6 \right]\]</span></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 30%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Physical Meaning</th>
+<th>Typical Values (real units)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\epsilon\)</span></td>
+<td>Depth of energy well (binding strength)</td>
+<td>0.1–0.2 kcal/mol for atoms</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\sigma\)</span></td>
+<td>Distance where energy = zero</td>
+<td>3.0–4.0 Å for light atoms</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Term-by-term breakdown</strong>:</p>
 <ul>
-<li>Completed introductory physics (mechanics, electromagnetism basics)</li>
-<li>Completed one semester of general chemistry (ions, Coulomb’s law)</li>
-<li>Basic programming experience (any language)</li>
-<li><strong>Access to a LAMMPS installation</strong> (binary or source; CMake-built with ELECTRODE and KSPACE packages)</li>
+<li><strong>r⁻¹² term</strong>: Steep repulsion at short range (Pauli exclusion)</li>
+<li><strong>r⁻⁶ term</strong>: Softer attraction at longer range (London dispersion)</li>
 </ul>
-<p>No prior MD experience is required.</p>
+<p><strong>Visual representation</strong>:</p>
+<div id="cell-fig-lj-potential" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-display">
+<div id="fig-lj-potential" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-lj-potential-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="02-force-fields_files/figure-html/fig-lj-potential-output-1.png" width="565" height="373" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lj-potential-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Lennard-Jones potential: repulsion at short range, attraction at longer range
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The minimum of the LJ potential is at <span class="math inline">\(r_{min} = 2^{1/6}\sigma \approx 1.12\sigma\)</span>.</p>
+<section id="lj-in-lammps" class="level4">
+<h4 class="anchored" data-anchor-id="lj-in-lammps">LJ in LAMMPS</h4>
+<pre class="lammps"><code>pair_style lj/cut 10.0    # LJ with cutoff at 10 Å
+pair_coeff 1 1 0.15 3.5   # type 1-type 1: epsilon=0.15, sigma=3.5
+pair_coeff 1 2 0.10 3.3   # type 1-type 2: mixed values</code></pre>
+<p><strong>Cutoff considerations</strong>: - LJ is truncated at <code>rcut</code> — introduces error - Typical <code>rcut</code> = 10–12 Å for water - Energy drift indicates cutoff too small - Never exceed half the minimum box dimension</p>
 </section>
-<section id="computing-environment" class="level2">
-<h2 class="anchored" data-anchor-id="computing-environment">Computing Environment</h2>
-<p>All examples in this guide assume a standard LAMMPS installation. Commands shown in <code>code blocks</code> like:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lmp</span> <span class="at">-in</span> in.electrode <span class="at">-pk</span> gpu 1 <span class="at">-l</span> yes</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>should be run in a terminal where LAMMPS is available.</p>
 </section>
-<section id="contributing" class="level2">
-<h2 class="anchored" data-anchor-id="contributing">Contributing</h2>
-<p>This guide is open source. If you find an error or want to add content, open an issue or PR on the <a href="https://github.com/srtee/mddocs">GitHub repository</a>.</p>
+<section id="coulombic-electrostatics" class="level3">
+<h3 class="anchored" data-anchor-id="coulombic-electrostatics">Coulombic Electrostatics</h3>
+<p><span class="math display">\[V(r) = k \frac{q_1 q_2}{r}\]</span></p>
+<p>Long-range and never truly zero. This is why special methods (Ewald, PPPM) are needed — see <strong>?@sec-electrostatics</strong>.</p>
+<p><strong>In LAMMPS</strong>:</p>
+<pre class="lammps"><code>pair_style lj/cut/coul/long 10.0   # LJ + real-space Coulomb; k-space handles long-range
+pair_coeff * * 0.15 3.5            # LJ parameters for all pairs
+pair_coeff 1 1 0.0 0.0             # no LJ for some pairs
+kspace_style pppm 1e-5             # long-range solver</code></pre>
+</section>
+<section id="combined-short-range-potentials" class="level3">
+<h3 class="anchored" data-anchor-id="combined-short-range-potentials">Combined Short-Range Potentials</h3>
+<pre class="lammps"><code>pair_style lj/cut/coul/long 10.0    # Most common for electrolyte simulations
+pair_style born/coul/long 10.0       # For ionic crystals with repulsion term
+pair_style 12-6-4/long               # For metal oxides (adds 1/r⁴ term)</code></pre>
+<p>The pair style MUST be compatible with the kspace style:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 36%">
+<col style="width: 42%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Pair Style</th>
+<th>Kspace Style</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>lj/cut/coul/long</code></td>
+<td><code>pppm</code> or <code>ewald</code></td>
+<td>Standard for electrolytes</td>
+</tr>
+<tr class="even">
+<td><code>lj/cut/coul/cut</code></td>
+<td>none</td>
+<td>Direct Coulomb only; error if cutoff too small</td>
+</tr>
+<tr class="odd">
+<td><code>coul/long</code> only</td>
+<td><code>pppm</code></td>
+<td>No LJ; pure Coulomb</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bonded-interactions" class="level3">
+<h3 class="anchored" data-anchor-id="bonded-interactions">Bonded Interactions</h3>
+<section id="bonds" class="level4">
+<h4 class="anchored" data-anchor-id="bonds">Bonds</h4>
+<p>Harmonic bond (most common):</p>
+<p><span class="math display">\[V(r) = k (r - r_0)^2\]</span></p>
+<pre class="lammps"><code>bond_style harmonic
+bond_coeff 1 300 1.0    # k=300 kcal/mol/Å², r0=1.0 Å</code></pre>
+</section>
+<section id="angles" class="level4">
+<h4 class="anchored" data-anchor-id="angles">Angles</h4>
+<p>Harmonic angle:</p>
+<p><span class="math display">\[V(\theta) = k (\theta - \theta_0)^2\]</span></p>
+<pre class="lammps"><code>angle_style harmonic
+angle_coeff 1 40 109.5    # k=40 kcal/mol/rad², theta0=109.5°</code></pre>
+</section>
+<section id="dihedrals" class="level4">
+<h4 class="anchored" data-anchor-id="dihedrals">Dihedrals</h4>
+<p>Proper dihedral (trigonometric series):</p>
+<p><span class="math display">\[V(\phi) = \sum_{n=0}^{N} k_n \cos(n\phi - \phi_n)\]</span></p>
+<pre class="lammps"><code>dihedral_style opls              # OPLS-style dihedrals
+dihedral_coeff 1 0.5 0.0 3 0.0  # k, n, phi0 parameters</code></pre>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>When Bonded Interactions Matter
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Water models</strong> (TIP3P, TIP4P): explicit O-H bonds and H-O-H angle</li>
+<li><strong>Organic molecules</strong>: bonds, angles, dihedrals all needed</li>
+<li><strong>Simple electrolytes (NaCl in water)</strong>: no bonds; only non-bonded interactions</li>
+<li><strong>Ionic crystals</strong>: bonds may be implicit (pair_style only)</li>
+</ul>
+<p>When in doubt: check your water model’s structure. If it has <code>bond_style</code> and <code>angle_style</code>, you need those coefficients.</p>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="cross-terms-and-mixing-rules" class="level2">
+<h2 class="anchored" data-anchor-id="cross-terms-and-mixing-rules">Cross-Terms and Mixing Rules</h2>
+<p>When two different atom types interact, we need parameters for the cross-pair.</p>
+<section id="lorentz-berthelot-mixing" class="level3">
+<h3 class="anchored" data-anchor-id="lorentz-berthelot-mixing">Lorentz-Berthelot Mixing</h3>
+<pre class="lammps"><code>pair_coeff 1 1 epsilon1 sigma1    # type 1 - type 1
+pair_coeff 2 2 epsilon2 sigma2    # type 2 - type 2
+# type 1 - type 2 is computed as:
+epsilon_12 = sqrt(epsilon1 * epsilon2)
+sigma_12 = (sigma1 + sigma2) / 2</code></pre>
+</section>
+<section id="explicit-cross-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="explicit-cross-parameters">Explicit Cross-Parameters</h3>
+<pre class="lammps"><code>pair_coeff 1 2 epsilon12 sigma12    # override mixing rule</code></pre>
+<p>For electrolyte-electrode interactions: explicit cross-parameters are often better than mixing rules.</p>
+</section>
+</section>
+<section id="force-field-parameters-where-they-come-from" class="level2">
+<h2 class="anchored" data-anchor-id="force-field-parameters-where-they-come-from">Force Field Parameters — Where They Come From</h2>
+<section id="water-models" class="level3">
+<h3 class="anchored" data-anchor-id="water-models">Water Models</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Model</th>
+<th>Atoms</th>
+<th>Bonds</th>
+<th>Angles</th>
+<th>ε (kcal/mol)</th>
+<th>σ (Å)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SPC/E</td>
+<td>3</td>
+<td>1</td>
+<td>1</td>
+<td>0.155</td>
+<td>3.166</td>
+<td>Rigid; commonly used</td>
+</tr>
+<tr class="even">
+<td>TIP3P</td>
+<td>3</td>
+<td>1</td>
+<td>1</td>
+<td>0.155</td>
+<td>3.150</td>
+<td>O-H = 0.957 Å</td>
+</tr>
+<tr class="odd">
+<td>TIP4P</td>
+<td>4</td>
+<td>2</td>
+<td>1</td>
+<td>0.155</td>
+<td>3.154</td>
+<td>4-site; better density</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ion-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="ion-parameters">Ion Parameters</h3>
+<p>From Joung &amp; Cheatham (2008): parameters matched to specific water models.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Ion</th>
+<th>ε (kcal/mol)</th>
+<th>σ (Å)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Na⁺</td>
+<td>0.0874</td>
+<td>3.40</td>
+<td>Matched to SPC/E</td>
+</tr>
+<tr class="even">
+<td>Cl⁻</td>
+<td>0.100</td>
+<td>4.45</td>
+<td>Matched to SPC/E</td>
+</tr>
+<tr class="odd">
+<td>K⁺</td>
+<td>0.100</td>
+<td>4.47</td>
+<td>Larger than Na⁺</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="electrode-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="electrode-parameters">Electrode Parameters</h3>
+<p>Electrode LJ parameters are typically:</p>
+<ul>
+<li><strong>Large ε</strong>: creates hard-wall repulsion to prevent electrolyte penetration</li>
+<li><strong>No Coulomb</strong>: metal screens electrostatic interactions internally</li>
+<li><strong>Typical values</strong>: ε = 0.01–0.1 eV, σ = 2.5–3.5 Å (metal units)</li>
+</ul>
+</section>
+</section>
+<section id="force-field-output-connection" class="level2">
+<h2 class="anchored" data-anchor-id="force-field-output-connection">Force Field → Output Connection</h2>
+<p>Understanding how force field choices affect observable properties:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 34%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Input Change</th>
+<th>Physical Effect</th>
+<th>Observable Change</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Increase ε (LJ)</td>
+<td>Stronger binding</td>
+<td>Lower diffusivity; higher density</td>
+</tr>
+<tr class="even">
+<td>Increase σ</td>
+<td>Larger effective size</td>
+<td>Lower density; slower diffusion</td>
+</tr>
+<tr class="odd">
+<td>Increase cutoff</td>
+<td>More accurate (to a point)</td>
+<td>Lower energy drift; more computation</td>
+</tr>
+<tr class="even">
+<td>Add bond constraints</td>
+<td>Remove fast vibrations</td>
+<td>Can use larger timestep; affects vibrational spectra</td>
+</tr>
+<tr class="odd">
+<td>Change water model</td>
+<td>Different H-bonding</td>
+<td>Different density (~1 g/cm³ vs ~0.98); different dielectric</td>
+</tr>
+</tbody>
+</table>
+<section id="energy-components-breakdown" class="level3">
+<h3 class="anchored" data-anchor-id="energy-components-breakdown">Energy Components Breakdown</h3>
+<pre><code>Potential Energy = Pair + Bond + Angle + Dihedral + Kspace
+                = (LJ + Coulomb_real) + bonded terms + Coulomb_recip</code></pre>
+<ul>
+<li><code>PairEng</code> dominates for simple electrolytes</li>
+<li><code>KspaceEng</code> is significant for charged systems (long-range electrostatics)</li>
+<li>Large <code>BondEng</code> or <code>AngleEng</code> indicates instability (atoms too close)</li>
+</ul>
+</section>
+</section>
+<section id="common-force-field-configurations" class="level2">
+<h2 class="anchored" data-anchor-id="common-force-field-configurations">Common Force Field Configurations</h2>
+<section id="simple-electrolyte-nacl-in-spce-water" class="level3">
+<h3 class="anchored" data-anchor-id="simple-electrolyte-nacl-in-spce-water">Simple Electrolyte (NaCl in SPC/E water)</h3>
+<pre class="lammps"><code>units real
+atom_style charge
+pair_style lj/cut/coul/long 10.0
+pair_coeff Na Na 0.0874 3.40
+pair_coeff Cl Cl 0.100 4.45
+pair_coeff Na Cl 0.0935 3.925    # Lorentz-Berthelot mixed
+pair_coeff OW OW 0.155 3.166    # water O (SPC/E)
+pair_coeff HW HW 0.0 0.0        # water H (no LJ)
+pair_coeff Na OW 0.114 3.28
+pair_coeff Cl OW 0.124 3.81
+kspace_style pppm 1e-5</code></pre>
+</section>
+<section id="electrode-electrolyte-interface" class="level3">
+<h3 class="anchored" data-anchor-id="electrode-electrolyte-interface">Electrode-Electrolyte Interface</h3>
+<pre class="lammps"><code>units metal
+atom_style charge
+pair_style lj/cut/coul/long 10.0
+
+# Electrode LJ (soft repulsion, not bonding)
+pair_coeff 1 1 0.01 3.0          # Au-Au (typical metal electrode)
+
+# Electrolyte LJ (water + ions)
+pair_coeff 2 2 0.01 3.0          # counter-electrode same type
+pair_coeff 3 3 0.155 3.166       # SPC/E water O
+pair_coeff 3 4 0.0 0.0           # water H
+
+# Cross terms (electrode-electrolyte)
+pair_coeff 1 3 0.005 3.1
+pair_coeff 2 3 0.005 3.1
+
+kspace_style pppm/electrode 1e-5</code></pre>
+</section>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<ul>
+<li><strong>?@sec-electrostatics</strong> — How LAMMPS handles the long-range Coulomb problem</li>
+<li><strong>?@sec-physical-conditions</strong> — Thermostats, barostats, and the physical meaning of ensemble selection</li>
+</ul>
 
 
 </section>

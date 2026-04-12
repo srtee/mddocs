@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Constant Potential Molecular Dynamics in LAMMPS – Constant Potential MD in LAMMPS</title>
+<title>electrodes-cpm – Constant Potential MD in LAMMPS</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -22,41 +22,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -105,10 +70,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-<script src="site_libs/quarto-diagram/mermaid.min.js"></script>
-<script src="site_libs/quarto-diagram/mermaid-init.js"></script>
-<link href="site_libs/quarto-diagram/mermaid.css" rel="stylesheet">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -131,7 +122,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -151,7 +142,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">4. Electrostatics</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./05-electrodes-cpm.html"> 
+    <a class="nav-link active" href="./05-electrodes-cpm.html" aria-current="page"> 
 <span class="menu-text">5. Electrodes &amp; CPM</span></a>
   </li>  
   <li class="nav-item">
@@ -188,7 +179,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item">Constant Potential Molecular Dynamics in LAMMPS</li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -214,154 +205,427 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#what-is-this-guide" id="toc-what-is-this-guide" class="nav-link active" data-scroll-target="#what-is-this-guide">What Is This Guide?</a></li>
-  <li><a href="#what-you-will-learn" id="toc-what-you-will-learn" class="nav-link" data-scroll-target="#what-you-will-learn">What You Will Learn</a></li>
-  <li><a href="#how-to-use-this-guide" id="toc-how-to-use-this-guide" class="nav-link" data-scroll-target="#how-to-use-this-guide">How to Use This Guide</a></li>
-  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
-  <li><a href="#computing-environment" id="toc-computing-environment" class="nav-link" data-scroll-target="#computing-environment">Computing Environment</a></li>
-  <li><a href="#contributing" id="toc-contributing" class="nav-link" data-scroll-target="#contributing">Contributing</a></li>
+  <li><a href="#sec-electrodes-cpm" id="toc-sec-electrodes-cpm" class="nav-link active" data-scroll-target="#sec-electrodes-cpm">Electrodes and the Constant Potential Method</a>
+  <ul class="collapse">
+  <li><a href="#conductors-vs.-insulators-in-molecular-dynamics" id="toc-conductors-vs.-insulators-in-molecular-dynamics" class="nav-link" data-scroll-target="#conductors-vs.-insulators-in-molecular-dynamics">Conductors vs.&nbsp;Insulators in Molecular Dynamics</a>
+  <ul class="collapse">
+  <li><a href="#insulator-fixed-charges" id="toc-insulator-fixed-charges" class="nav-link" data-scroll-target="#insulator-fixed-charges">Insulator: Fixed Charges</a></li>
+  <li><a href="#conductor-induced-charges" id="toc-conductor-induced-charges" class="nav-link" data-scroll-target="#conductor-induced-charges">Conductor: Induced Charges</a></li>
+  </ul></li>
+  <li><a href="#the-electrode-electrolyte-interface" id="toc-the-electrode-electrolyte-interface" class="nav-link" data-scroll-target="#the-electrode-electrolyte-interface">The Electrode-Electrolyte Interface</a>
+  <ul class="collapse">
+  <li><a href="#structure-of-the-interface" id="toc-structure-of-the-interface" class="nav-link" data-scroll-target="#structure-of-the-interface">Structure of the Interface</a></li>
+  <li><a href="#what-control-do-we-have" id="toc-what-control-do-we-have" class="nav-link" data-scroll-target="#what-control-do-we-have">What Control Do We Have?</a></li>
+  <li><a href="#why-fixed-charge-fails-for-electrodes" id="toc-why-fixed-charge-fails-for-electrodes" class="nav-link" data-scroll-target="#why-fixed-charge-fails-for-electrodes">Why Fixed Charge Fails for Electrodes</a></li>
+  </ul></li>
+  <li><a href="#the-constant-potential-method-theory" id="toc-the-constant-potential-method-theory" class="nav-link" data-scroll-target="#the-constant-potential-method-theory">The Constant Potential Method: Theory</a>
+  <ul class="collapse">
+  <li><a href="#the-problem-formulation" id="toc-the-problem-formulation" class="nav-link" data-scroll-target="#the-problem-formulation">The Problem Formulation</a></li>
+  <li><a href="#energy-minimization-under-constraint" id="toc-energy-minimization-under-constraint" class="nav-link" data-scroll-target="#energy-minimization-under-constraint">Energy Minimization Under Constraint</a></li>
+  <li><a href="#gaussian-charge-smearing" id="toc-gaussian-charge-smearing" class="nav-link" data-scroll-target="#gaussian-charge-smearing">Gaussian Charge Smearing</a></li>
+  <li><a href="#the-capacitance-matrix" id="toc-the-capacitance-matrix" class="nav-link" data-scroll-target="#the-capacitance-matrix">The Capacitance Matrix</a></li>
+  <li><a href="#constant-potential-vs.-constant-charge" id="toc-constant-potential-vs.-constant-charge" class="nav-link" data-scroll-target="#constant-potential-vs.-constant-charge">Constant Potential vs.&nbsp;Constant Charge</a></li>
+  </ul></li>
+  <li><a href="#the-physical-chemistry-of-electrode-interfaces" id="toc-the-physical-chemistry-of-electrode-interfaces" class="nav-link" data-scroll-target="#the-physical-chemistry-of-electrode-interfaces">The Physical Chemistry of Electrode Interfaces</a>
+  <ul class="collapse">
+  <li><a href="#double-layer-structure" id="toc-double-layer-structure" class="nav-link" data-scroll-target="#double-layer-structure">Double Layer Structure</a></li>
+  <li><a href="#solvent-structure-near-electrodes" id="toc-solvent-structure-near-electrodes" class="nav-link" data-scroll-target="#solvent-structure-near-electrodes">Solvent Structure Near Electrodes</a></li>
+  <li><a href="#how-capacitance-depends-on-physical-parameters" id="toc-how-capacitance-depends-on-physical-parameters" class="nav-link" data-scroll-target="#how-capacitance-depends-on-physical-parameters">How Capacitance Depends on Physical Parameters</a></li>
+  </ul></li>
+  <li><a href="#practical-implications" id="toc-practical-implications" class="nav-link" data-scroll-target="#practical-implications">Practical Implications</a>
+  <ul class="collapse">
+  <li><a href="#why-cpm-is-necessary-for-electrochemistry" id="toc-why-cpm-is-necessary-for-electrochemistry" class="nav-link" data-scroll-target="#why-cpm-is-necessary-for-electrochemistry">Why CPM Is Necessary for Electrochemistry</a></li>
+  <li><a href="#comparison-to-other-polarizable-methods" id="toc-comparison-to-other-polarizable-methods" class="nav-link" data-scroll-target="#comparison-to-other-polarizable-methods">Comparison to Other Polarizable Methods</a></li>
+  <li><a href="#cpm-and-density-functional-theory" id="toc-cpm-and-density-functional-theory" class="nav-link" data-scroll-target="#cpm-and-density-functional-theory">CPM and Density Functional Theory</a></li>
+  </ul></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Constant Potential Molecular Dynamics in LAMMPS</h1>
-<p class="subtitle lead">A practical guide to the ELECTRODE package</p>
+
+
+
+<section id="sec-electrodes-cpm" class="level1">
+<h1>Electrodes and the Constant Potential Method</h1>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-
-
-
-<div class="quarto-title-meta">
-
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-<section id="what-is-this-guide" class="level2">
-<h2 class="anchored" data-anchor-id="what-is-this-guide">What Is This Guide?</h2>
-<p>This guide walks you through running <strong>constant potential molecular dynamics (MD)</strong> simulations using the <a href="https://lammps.org">LAMMPS</a> ELECTRODE package. It is written for researchers and students who have a working LAMMPS installation and want to understand the physics behind the commands — not just the syntax.</p>
-</section>
-<section id="what-you-will-learn" class="level2">
-<h2 class="anchored" data-anchor-id="what-you-will-learn">What You Will Learn</h2>
-<p>By the end of this guide you will be able to:</p>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>In this section
+</div>
+</div>
+<div class="callout-body-container callout-body">
 <ul>
-<li><strong>Interpret</strong> LAMMPS input commands in terms of physical meaning</li>
-<li><strong>Connect</strong> force field choices to simulation observables (energy, density, capacitance)</li>
-<li><strong>Design</strong> electrode-electrolyte simulations with appropriate boundary conditions and physical parameters</li>
-<li><strong>Run</strong> constant potential simulations and diagnose common problems</li>
-<li><strong>Analyze</strong> output including trajectories, thermodynamic data, and electrode properties</li>
+<li>Why conductors need different treatment than insulators in MD</li>
+<li>What the constant potential method does (and why it matters for electrochemistry)</li>
+<li>How induced charges emerge from energy minimization</li>
+<li>The capacitance matrix and what it tells you</li>
 </ul>
+</div>
+</div>
+<section id="conductors-vs.-insulators-in-molecular-dynamics" class="level2">
+<h2 class="anchored" data-anchor-id="conductors-vs.-insulators-in-molecular-dynamics">Conductors vs.&nbsp;Insulators in Molecular Dynamics</h2>
+<section id="insulator-fixed-charges" class="level3">
+<h3 class="anchored" data-anchor-id="insulator-fixed-charges">Insulator: Fixed Charges</h3>
+<p>In a typical molecular simulation (water, proteins, simple electrolytes):</p>
+<ul>
+<li>Atomic charges are fixed at their initial values</li>
+<li>The electrostatic potential within the material varies freely depending on charge distribution</li>
+<li>No charge redistribution occurs during the simulation</li>
+</ul>
+<p>This is appropriate for insulators, where charges cannot move through the material.</p>
 </section>
-<section id="how-to-use-this-guide" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-use-this-guide">How to Use This Guide</h2>
-<p>The guide is organized as a sequence of topics, each building on the previous:</p>
-<div class="cell" data-layout-align="default">
-<div class="cell-output-display">
-<div>
-<p></p><figure class="figure"><p></p>
-<div>
-<pre class="mermaid mermaid-js">flowchart LR
-    A[1. Fundamentals] --&gt; B[2. Force Fields]
-    A --&gt; C[4. Electrostatics]
-    B --&gt; C
-    C --&gt; D[5. Electrodes &amp; CPM]
-    D --&gt; E[6. ELECTRODE Package]
-    E --&gt; F[7. Example]
-    F --&gt; G[8. Troubleshooting]
-</pre>
-</div>
-<p></p></figure><p></p>
-</div>
-</div>
-</div>
+<section id="conductor-induced-charges" class="level3">
+<h3 class="anchored" data-anchor-id="conductor-induced-charges">Conductor: Induced Charges</h3>
+<p>In a metal (electrode):</p>
+<ul>
+<li>Charges (electrons) can move freely within the material</li>
+<li>The material adjusts its charge distribution to equalize the electrostatic potential</li>
+<li>This happens on timescales much faster than atomic motion (effectively instantaneous)</li>
+</ul>
+<p>If we treat a metal electrode with fixed charges, we’re getting the physics wrong — the electrode cannot maintain arbitrary charge distributions.</p>
+</section>
+</section>
+<section id="the-electrode-electrolyte-interface" class="level2">
+<h2 class="anchored" data-anchor-id="the-electrode-electrolyte-interface">The Electrode-Electrolyte Interface</h2>
+<section id="structure-of-the-interface" class="level3">
+<h3 class="anchored" data-anchor-id="structure-of-the-interface">Structure of the Interface</h3>
+<p>When an electrode is placed in electrolyte:</p>
+<ol type="1">
+<li><strong>Electric double layer</strong>: ions accumulate near the charged surface</li>
+<li><strong>Solvation shells</strong>: water molecules orient near the surface</li>
+<li><strong>Applied potential</strong>: changing the electrode voltage changes ion adsorption</li>
+</ol>
+</section>
+<section id="what-control-do-we-have" class="level3">
+<h3 class="anchored" data-anchor-id="what-control-do-we-have">What Control Do We Have?</h3>
+<p>In real electrochemistry, the <strong>potential</strong> (voltage) of the electrode is the controlled variable, measured and maintained by a potentiostat.</p>
+<p>In a typical MD simulation with fixed atom charges, we can only control the <strong>total charge</strong> on the electrode — not the potential. This is wrong for electrochemistry.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 21%">
-<col style="width: 16%">
-<col style="width: 61%">
+<col style="width: 27%">
+<col style="width: 25%">
+<col style="width: 22%">
+<col style="width: 25%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Section</th>
-<th>Topic</th>
-<th>What You Will Understand</th>
+<th>Controlled Variable</th>
+<th>Physical Reality</th>
+<th>Fixed-Charge MD</th>
+<th>Constant Potential</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>1</td>
-<td>Fundamentals</td>
-<td>What MD actually computes; key LAMMPS concepts</td>
+<td>Electrode potential</td>
+<td>What the potentiostat controls</td>
+<td>❌ Cannot enforce</td>
+<td>✅ Direct control</td>
 </tr>
 <tr class="even">
-<td>2</td>
-<td>Force Fields</td>
-<td>What interactions exist; how to configure them</td>
-</tr>
-<tr class="odd">
-<td>3</td>
-<td>Physical Conditions</td>
-<td>How temperature, pressure, and time are controlled</td>
-</tr>
-<tr class="even">
-<td>4</td>
-<td>Electrostatics</td>
-<td>How long-range Coulomb is handled (Ewald, PPPM)</td>
-</tr>
-<tr class="odd">
-<td>5</td>
-<td>Electrodes &amp; CPM</td>
-<td>Why electrodes need special treatment; what CPM does</td>
-</tr>
-<tr class="even">
-<td>6</td>
-<td>ELECTRODE Package</td>
-<td>LAMMPS syntax for constant potential, charge, thermo</td>
-</tr>
-<tr class="odd">
-<td>7</td>
-<td>Example</td>
-<td>A complete input script with output interpretation</td>
-</tr>
-<tr class="even">
-<td>8</td>
-<td>Troubleshooting</td>
-<td>Common problems and how to fix them</td>
+<td>Electrode charge</td>
+<td>Flows from potential</td>
+<td>✅ Can set</td>
+<td>❌ Fluctuates</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="prerequisites" class="level2">
-<h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
-<p>This guide assumes you have:</p>
+<section id="why-fixed-charge-fails-for-electrodes" class="level3">
+<h3 class="anchored" data-anchor-id="why-fixed-charge-fails-for-electrodes">Why Fixed Charge Fails for Electrodes</h3>
+<p>Consider a simulation of charging a supercapacitor:</p>
+<ol type="1">
+<li>We start with neutral electrodes</li>
+<li>We want to apply 1 V between electrodes</li>
+<li>With fixed charges: we must choose some total charge on each electrode — but what charge gives 1 V?</li>
+<li>The relationship between charge and potential depends on the electrolyte structure (which we don’t know a priori)</li>
+</ol>
+<p>With constant potential, the charges <strong>emerge</strong> from the physics — we specify the voltage and the simulation determines the induced charge.</p>
+</section>
+</section>
+<section id="the-constant-potential-method-theory" class="level2">
+<h2 class="anchored" data-anchor-id="the-constant-potential-method-theory">The Constant Potential Method: Theory</h2>
+<section id="the-problem-formulation" class="level3">
+<h3 class="anchored" data-anchor-id="the-problem-formulation">The Problem Formulation</h3>
+<p>We have a system with: - Electrode atoms with unknown charges <span class="math inline">\(q_i\)</span> - Electrolyte atoms with known charges <span class="math inline">\(Q_j\)</span> - A constraint: each electrode surface must be at potential <span class="math inline">\(V\)</span></p>
+<p>The electrostatic energy:</p>
+<p><span class="math display">\[E(\mathbf{q}, \mathbf{Q}) = \frac{1}{2} \sum_{i,j} q_i \, A_{ij} \, q_j + \sum_{i,j} q_i \, A_{ij} \, Q_j + \frac{1}{2} \sum_{i,j} Q_i \, A_{ij} \, Q_j\]</span></p>
+<p>Where <span class="math inline">\(A_{ij}\)</span> is the inverse capacitance matrix (from the kspace solver).</p>
+<p>We want to minimize <span class="math inline">\(E\)</span> subject to the constraint that each electrode group is at potential <span class="math inline">\(V_k\)</span>.</p>
+</section>
+<section id="energy-minimization-under-constraint" class="level3">
+<h3 class="anchored" data-anchor-id="energy-minimization-under-constraint">Energy Minimization Under Constraint</h3>
+<p>Mathematically: - Minimize <span class="math inline">\(E(\mathbf{q})\)</span> - Subject to <span class="math inline">\(\mathbf{V} = \mathbf{A}\mathbf{q}\)</span> (the potential constraints)</p>
+<p>The solution gives <strong>induced charges</strong> that depend on: - Electrode geometry - Electrolyte structure - Applied potential</p>
+<p>These are NOT predetermined — they emerge from the minimization.</p>
+</section>
+<section id="gaussian-charge-smearing" class="level3">
+<h3 class="anchored" data-anchor-id="gaussian-charge-smearing">Gaussian Charge Smearing</h3>
+<section id="why-smearing" class="level4">
+<h4 class="anchored" data-anchor-id="why-smearing">Why Smearing?</h4>
+<p>Point charges at the electrode surface create a singularity — as an electrolyte ion approaches the surface, the interaction energy diverges (Coulomb catastrophe). This makes the matrix ill-conditioned and difficult to invert.</p>
+</section>
+<section id="the-solution" class="level4">
+<h4 class="anchored" data-anchor-id="the-solution">The Solution</h4>
+<p>Smear each electrode charge over a Gaussian distribution:</p>
+<p><span class="math display">\[\rho_i(\mathbf{r}) = q_i \left(\frac{\eta_i}{\pi}\right)^{3/2} \exp(-\eta_i |\mathbf{r} - \mathbf{R}_i|^2)\]</span></p>
+<p>The smearing width η (eta) controls:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>η (large)</th>
+<th>η (small)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Narrow distribution (more like point charge)</td>
+<td>Wide distribution (smoother, better conditioned)</td>
+</tr>
+<tr class="even">
+<td>More accurate electrostatics near surface</td>
+<td>Better matrix convergence; smoother potential</td>
+</tr>
+<tr class="odd">
+<td>Harder to converge (singular matrix)</td>
+<td>Easier to solve</td>
+</tr>
+</tbody>
+</table>
+<p>Typical η ≈ 1.0–2.0 Å⁻² (real units) or 0.2–0.5 (metal units).</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Physical Interpretation of Smearing
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Smearing mimics the fact that real metals have a finite electron density at the surface — the charges are not point-like. The Gaussian width parameter should be chosen to match the electron gas density of the electrode material.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="the-capacitance-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="the-capacitance-matrix">The Capacitance Matrix</h3>
+<p>The N×N capacitance matrix <span class="math inline">\(\mathbf{C}\)</span> relates electrode potentials to electrode charges:</p>
+<p><span class="math display">\[\mathbf{Q} = \mathbf{Q}_{0V} + \mathbf{C} \cdot \mathbf{V}\]</span></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 47%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symbol</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{Q}\)</span></td>
+<td>Total charge on each electrode group</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{Q}_{0V}\)</span></td>
+<td>Charge configuration at zero applied potential (influenced by electrolyte)</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{C}\)</span></td>
+<td>Capacitance matrix; depends only on geometry and dielectric</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{V}\)</span></td>
+<td>Applied potentials on each electrode group</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Physical meaning of C_ij</strong>: How much charge on electrode <em>i</em> changes when electrode <em>j</em>’s potential changes, with all other potentials held constant.</p>
+<p><strong>What you can compute from C</strong>: - Total capacitance: <span class="math inline">\(C_{total} = \sum_{i,j} C_{ij}\)</span> - Differential capacitance: <span class="math inline">\(dQ/dV\)</span> at given V - Potential distribution in complex geometries</p>
+</section>
+<section id="constant-potential-vs.-constant-charge" class="level3">
+<h3 class="anchored" data-anchor-id="constant-potential-vs.-constant-charge">Constant Potential vs.&nbsp;Constant Charge</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 47%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>Constant Potential (<code>electrode/conp</code>)</th>
+<th>Constant Charge (<code>electrode/conq</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>What is fixed</td>
+<td>Voltage on each electrode group</td>
+<td>Total charge on each electrode group</td>
+</tr>
+<tr class="even">
+<td>What fluctuates</td>
+<td>Electrode atom charges</td>
+<td>Electrode potentials</td>
+</tr>
+<tr class="odd">
+<td>Physical analog</td>
+<td>Potentiostat</td>
+<td>Galvanostat</td>
+</tr>
+<tr class="even">
+<td>Use case</td>
+<td>Electrochemical experiments</td>
+<td>Battery discharge (known charge flux)</td>
+</tr>
+<tr class="odd">
+<td>Output</td>
+<td>Induced charges</td>
+<td>Measured potentials</td>
+</tr>
+</tbody>
+</table>
+<section id="when-to-use-each" class="level4">
+<h4 class="anchored" data-anchor-id="when-to-use-each">When to Use Each</h4>
+<p><strong>Constant potential</strong> (<code>electrode/conp</code>): - Comparing to electrochemical experiments - Studying double-layer structure at controlled voltage - Capacitance measurements</p>
+<p><strong>Constant charge</strong> (<code>electrode/conq</code>): - Modeling battery cycling (known current → known charge change) - When you know the amount of charge injected/extracted - Studying potential response to charging</p>
+</section>
+</section>
+</section>
+<section id="the-physical-chemistry-of-electrode-interfaces" class="level2">
+<h2 class="anchored" data-anchor-id="the-physical-chemistry-of-electrode-interfaces">The Physical Chemistry of Electrode Interfaces</h2>
+<section id="double-layer-structure" class="level3">
+<h3 class="anchored" data-anchor-id="double-layer-structure">Double Layer Structure</h3>
+<p>The electric double layer has characteristic regions:</p>
+<ol type="1">
+<li><strong>Inner layer (Helmholtz)</strong>: specifically adsorbed ions, water molecules</li>
+<li><strong>Outer layer</strong>: solvated ions attracted by coulomb</li>
+<li><strong>Diffuse layer</strong>: decaying ion concentration into bulk</li>
+</ol>
+<p>CPM captures all of these — ion density profiles near electrodes reflect the balance of electrostatic attraction and ionic excluded-volume effects.</p>
+</section>
+<section id="solvent-structure-near-electrodes" class="level3">
+<h3 class="anchored" data-anchor-id="solvent-structure-near-electrodes">Solvent Structure Near Electrodes</h3>
+<p>Water molecules near electrodes: - Orient with H atoms toward negative electrode, O toward positive - Form layers (oscillating density) near the surface - This structure affects capacitance (Frumkin correction)</p>
+<p>The force field (water model) determines how realistic this structure is.</p>
+</section>
+<section id="how-capacitance-depends-on-physical-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="how-capacitance-depends-on-physical-parameters">How Capacitance Depends on Physical Parameters</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 66%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Effect on Capacitance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ion size</td>
+<td>Larger ions → lower capacitance (excluded volume)</td>
+</tr>
+<tr class="even">
+<td>Ion charge</td>
+<td>Higher charge → stronger adsorption → different capacitance</td>
+</tr>
+<tr class="odd">
+<td>Electrode structure</td>
+<td>Sharp features (tips, edges) → field enhancement → higher local capacitance</td>
+</tr>
+<tr class="even">
+<td>Water model</td>
+<td>Dielectric constant determines screening → affects capacitance</td>
+</tr>
+<tr class="odd">
+<td>Temperature</td>
+<td>Higher T → lower capacitance (thermal disruption of structure)</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="practical-implications" class="level2">
+<h2 class="anchored" data-anchor-id="practical-implications">Practical Implications</h2>
+<section id="why-cpm-is-necessary-for-electrochemistry" class="level3">
+<h3 class="anchored" data-anchor-id="why-cpm-is-necessary-for-electrochemistry">Why CPM Is Necessary for Electrochemistry</h3>
+<ol type="1">
+<li><strong>Voltage control</strong>: only CPM lets you specify the actual voltage (not just charge)</li>
+<li><strong>Induced charges</strong>: the correct charge distribution emerges from the physics</li>
+<li><strong>Complex geometries</strong>: for nanostructured electrodes, charge distribution is highly non-uniform — fixed charge models cannot capture this</li>
+<li><strong>Screening</strong>: electrolyte screening of electrode charges is properly accounted for</li>
+</ol>
+</section>
+<section id="comparison-to-other-polarizable-methods" class="level3">
+<h3 class="anchored" data-anchor-id="comparison-to-other-polarizable-methods">Comparison to Other Polarizable Methods</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 35%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>What It Does</th>
+<th>How CPM Differs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Drude oscillators</td>
+<td>Adds extra particles for electronic polarizability</td>
+<td>CPM controls boundary potential, not internal polarizability</td>
+</tr>
+<tr class="even">
+<td>Core-shell</td>
+<td>Adds massless shell for ionic polarizability</td>
+<td>CPM is for electrode boundaries</td>
+</tr>
+<tr class="odd">
+<td>QEq (charge equilibration)</td>
+<td>Redistributes charges within a single molecule</td>
+<td>CPM handles electrode-electrolyte boundary</td>
+</tr>
+<tr class="even">
+<td>Fixed charge</td>
+<td>No polarizability</td>
+<td>Wrong for metals</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="cpm-and-density-functional-theory" class="level3">
+<h3 class="anchored" data-anchor-id="cpm-and-density-functional-theory">CPM and Density Functional Theory</h3>
+<p>CPM is a classical method. It does not compute electronic structure. For: - Accurate metal electronic response → use jellium models or DFT-based MD -QM/MM coupling → couple CPM to quantum region</p>
+<p>The approximation in CPM: electrode charges respond instantly to electrostatic environment. This is reasonable for metals (electronic response is fast).</p>
+</section>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
 <ul>
-<li>Completed introductory physics (mechanics, electromagnetism basics)</li>
-<li>Completed one semester of general chemistry (ions, Coulomb’s law)</li>
-<li>Basic programming experience (any language)</li>
-<li><strong>Access to a LAMMPS installation</strong> (binary or source; CMake-built with ELECTRODE and KSPACE packages)</li>
+<li><strong>?@sec-electrode-package</strong> — The LAMMPS ELECTRODE package syntax and options</li>
+<li><strong>?@sec-example</strong> — A complete example of a constant potential simulation</li>
 </ul>
-<p>No prior MD experience is required.</p>
-</section>
-<section id="computing-environment" class="level2">
-<h2 class="anchored" data-anchor-id="computing-environment">Computing Environment</h2>
-<p>All examples in this guide assume a standard LAMMPS installation. Commands shown in <code>code blocks</code> like:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lmp</span> <span class="at">-in</span> in.electrode <span class="at">-pk</span> gpu 1 <span class="at">-l</span> yes</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>should be run in a terminal where LAMMPS is available.</p>
-</section>
-<section id="contributing" class="level2">
-<h2 class="anchored" data-anchor-id="contributing">Contributing</h2>
-<p>This guide is open source. If you find an error or want to add content, open an issue or PR on the <a href="https://github.com/srtee/mddocs">GitHub repository</a>.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

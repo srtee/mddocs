@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>electrode-package – Constant Potential MD in LAMMPS</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-ff0631ae66c640f7beec88805fcb678e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Constant Potential MD in LAMMPS</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./01-fundamentals.html"> 
+<span class="menu-text">1. Fundamentals</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-force-fields.html"> 
+<span class="menu-text">2. Force Fields</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./03-physical-conditions.html"> 
+<span class="menu-text">3. Physical Conditions</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./04-electrostatics.html"> 
+<span class="menu-text">4. Electrostatics</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./05-electrodes-cpm.html"> 
+<span class="menu-text">5. Electrodes &amp; CPM</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./06-electrode-package.html" aria-current="page"> 
+<span class="menu-text">6. ELECTRODE Package</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./07-example-simulation.html"> 
+<span class="menu-text">7. Example</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./08-troubleshooting.html"> 
+<span class="menu-text">8. Troubleshooting</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./references.html"> 
+<span class="menu-text">References</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/lammps/lammps"> <i class="bi bi-github" role="img" aria-label="LAMMPS GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-electrode-package" id="toc-sec-electrode-package" class="nav-link active" data-scroll-target="#sec-electrode-package">The ELECTRODE Package</a>
+  <ul class="collapse">
+  <li><a href="#package-overview" id="toc-package-overview" class="nav-link" data-scroll-target="#package-overview">Package Overview</a></li>
+  <li><a href="#installing-the-electrode-package" id="toc-installing-the-electrode-package" class="nav-link" data-scroll-target="#installing-the-electrode-package">Installing the ELECTRODE Package</a>
+  <ul class="collapse">
+  <li><a href="#with-cmake" id="toc-with-cmake" class="nav-link" data-scroll-target="#with-cmake">With CMake</a></li>
+  <li><a href="#with-make-pre-cmake-lammps" id="toc-with-make-pre-cmake-lammps" class="nav-link" data-scroll-target="#with-make-pre-cmake-lammps">With make (pre-CMake LAMMPS)</a></li>
+  </ul></li>
+  <li><a href="#the-three-fix-styles" id="toc-the-three-fix-styles" class="nav-link" data-scroll-target="#the-three-fix-styles">The Three Fix Styles</a>
+  <ul class="collapse">
+  <li><a href="#fix-electrodeconp-constant-potential" id="toc-fix-electrodeconp-constant-potential" class="nav-link" data-scroll-target="#fix-electrodeconp-constant-potential"><code>fix electrode/conp</code> — Constant Potential</a></li>
+  <li><a href="#fix-electrodeconq-constant-charge" id="toc-fix-electrodeconq-constant-charge" class="nav-link" data-scroll-target="#fix-electrodeconq-constant-charge"><code>fix electrode/conq</code> — Constant Charge</a></li>
+  <li><a href="#fix-electrodethermo-thermopotentiostat" id="toc-fix-electrodethermo-thermopotentiostat" class="nav-link" data-scroll-target="#fix-electrodethermo-thermopotentiostat"><code>fix electrode/thermo</code> — Thermopotentiostat</a></li>
+  </ul></li>
+  <li><a href="#algorithm-choices" id="toc-algorithm-choices" class="nav-link" data-scroll-target="#algorithm-choices">Algorithm Choices</a>
+  <ul class="collapse">
+  <li><a href="#algo-mat_inv-default" id="toc-algo-mat_inv-default" class="nav-link" data-scroll-target="#algo-mat_inv-default"><code>algo mat_inv</code> (Default)</a></li>
+  <li><a href="#algo-mat_cg" id="toc-algo-mat_cg" class="nav-link" data-scroll-target="#algo-mat_cg"><code>algo mat_cg</code></a></li>
+  <li><a href="#algo-cg" id="toc-algo-cg" class="nav-link" data-scroll-target="#algo-cg"><code>algo cg</code></a></li>
+  <li><a href="#choosing-the-right-algorithm" id="toc-choosing-the-right-algorithm" class="nav-link" data-scroll-target="#choosing-the-right-algorithm">Choosing the Right Algorithm</a></li>
+  </ul></li>
+  <li><a href="#k-space-compatibility" id="toc-k-space-compatibility" class="nav-link" data-scroll-target="#k-space-compatibility">K-space Compatibility</a>
+  <ul class="collapse">
+  <li><a href="#the-rule" id="toc-the-rule" class="nav-link" data-scroll-target="#the-rule">The Rule</a></li>
+  <li><a href="#compatible-kspace-styles" id="toc-compatible-kspace-styles" class="nav-link" data-scroll-target="#compatible-kspace-styles">Compatible Kspace Styles</a></li>
+  <li><a href="#kspace-modify-options" id="toc-kspace-modify-options" class="nav-link" data-scroll-target="#kspace-modify-options">Kspace Modify Options</a></li>
+  </ul></li>
+  <li><a href="#key-fix-options-reference" id="toc-key-fix-options-reference" class="nav-link" data-scroll-target="#key-fix-options-reference">Key Fix Options Reference</a>
+  <ul class="collapse">
+  <li><a href="#general-options" id="toc-general-options" class="nav-link" data-scroll-target="#general-options">General Options</a></li>
+  <li><a href="#finite-field-mode-ffield-on" id="toc-finite-field-mode-ffield-on" class="nav-link" data-scroll-target="#finite-field-mode-ffield-on">Finite Field Mode (<code>ffield on</code>)</a></li>
+  <li><a href="#matrix-saveload" id="toc-matrix-saveload" class="nav-link" data-scroll-target="#matrix-saveload">Matrix Save/Load</a></li>
+  <li><a href="#thomas-fermi-model" id="toc-thomas-fermi-model" class="nav-link" data-scroll-target="#thomas-fermi-model">Thomas-Fermi Model</a></li>
+  </ul></li>
+  <li><a href="#output-from-electrode-fixes" id="toc-output-from-electrode-fixes" class="nav-link" data-scroll-target="#output-from-electrode-fixes">Output from ELECTRODE Fixes</a>
+  <ul class="collapse">
+  <li><a href="#scalar-energy" id="toc-scalar-energy" class="nav-link" data-scroll-target="#scalar-energy">Scalar (Energy)</a></li>
+  <li><a href="#vector-electrode-potentials" id="toc-vector-electrode-potentials" class="nav-link" data-scroll-target="#vector-electrode-potentials">Vector (Electrode Potentials)</a></li>
+  <li><a href="#array-capacitance-matrix" id="toc-array-capacitance-matrix" class="nav-link" data-scroll-target="#array-capacitance-matrix">Array (Capacitance Matrix)</a></li>
+  </ul></li>
+  <li><a href="#complete-input-script-template" id="toc-complete-input-script-template" class="nav-link" data-scroll-target="#complete-input-script-template">Complete Input Script Template</a></li>
+  <li><a href="#troubleshooting" id="toc-troubleshooting" class="nav-link" data-scroll-target="#troubleshooting">Troubleshooting</a></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="sec-electrode-package" class="level1">
+<h1>The ELECTRODE Package</h1>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>In this section
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Three fix styles: <code>electrode/conp</code>, <code>electrode/conq</code>, <code>electrode/thermo</code></li>
+<li>Algorithm choices and when to use each</li>
+<li>Kspace compatibility and slab modifications</li>
+<li>Output interpretation</li>
+</ul>
+</div>
+</div>
+<section id="package-overview" class="level2">
+<h2 class="anchored" data-anchor-id="package-overview">Package Overview</h2>
+<p>The ELECTRODE package implements constant potential, constant charge, and thermopotentiostat methods for electrode-electrolyte simulations. It was developed by Ahrens-Iwers, Tee, and Meissner and first released in LAMMPS 4May2022.</p>
+<p><strong>Key capabilities</strong>: - Enforce fixed electrostatic potential on electrode groups - Compute induced charges as function of geometry and electrolyte - Track fluctuating potentials in constant charge mode - Model thermal fluctuations (Johnson-Nyquist noise) in electrochemistry</p>
+<p><strong>Requirements</strong>: - KSPACE package - LAPACK and BLAS (or <code>-D USE_INTERNAL_LINALG=yes</code> with CMake)</p>
+</section>
+<section id="installing-the-electrode-package" class="level2">
+<h2 class="anchored" data-anchor-id="installing-the-electrode-package">Installing the ELECTRODE Package</h2>
+<section id="with-cmake" class="level3">
+<h3 class="anchored" data-anchor-id="with-cmake">With CMake</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-B</span> build <span class="at">-S</span> . <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-D</span> PKG_ELECTRODE=yes <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-D</span> PKG_KSPACE=yes <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-D</span> USE_INTERNAL_LINALG=yes</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> build</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="with-make-pre-cmake-lammps" class="level3">
+<h3 class="anchored" data-anchor-id="with-make-pre-cmake-lammps">With make (pre-CMake LAMMPS)</h3>
+<p>Not supported. ELECTRODE requires CMake.</p>
+</section>
+</section>
+<section id="the-three-fix-styles" class="level2">
+<h2 class="anchored" data-anchor-id="the-three-fix-styles">The Three Fix Styles</h2>
+<section id="fix-electrodeconp-constant-potential" class="level3">
+<h3 class="anchored" data-anchor-id="fix-electrodeconp-constant-potential"><code>fix electrode/conp</code> — Constant Potential</h3>
+<p><strong>Purpose</strong>: Hold the electrostatic potential on each electrode group fixed; charges fluctuate to maintain the constraint.</p>
+<p><strong>Physical meaning</strong>: Models a potentiostat — the voltage is controlled, charge is the response.</p>
+<pre class="lammps"><code>fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 43%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Description</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>group</code></td>
+<td>Electrode group to constrain</td>
+<td>Must be defined with <code>group</code> command</td>
+</tr>
+<tr class="even">
+<td><code>potential</code></td>
+<td>Electrode potential in volts</td>
+<td>Can be variable for dynamic control</td>
+</tr>
+<tr class="odd">
+<td><code>eta</code></td>
+<td>Gaussian smearing width (Å⁻¹)</td>
+<td>Typical: 1.0–2.0 (real) or 0.2–0.5 (metal)</td>
+</tr>
+<tr class="even">
+<td><code>couple groupName V</code></td>
+<td>Additional electrode at potential V</td>
+<td>Can specify multiple couples</td>
+</tr>
+<tr class="odd">
+<td><code>symm on/off</code></td>
+<td>Enforce total charge neutrality</td>
+<td>Usually <code>on</code> for capacitor-like systems</td>
+</tr>
+</tbody>
+</table>
+<section id="dynamic-potential-control" class="level4">
+<h4 class="anchored" data-anchor-id="dynamic-potential-control">Dynamic Potential Control</h4>
+<p>Any <code>equal-style</code> variable can be used for potential:</p>
+<pre class="lammps"><code>variable V equal ramp(-1.0, 1.0)    # sweep from -1 to +1 V over run
+fix fxconp bot electrode/conp v_V 1.805 couple top 1.0</code></pre>
+<pre class="lammps"><code>variable V equal "2.0 * sin(time * 0.01)"    # oscillating potential
+fix fxconp bot electrode/conp v_V 1.805</code></pre>
+</section>
+</section>
+<section id="fix-electrodeconq-constant-charge" class="level3">
+<h3 class="anchored" data-anchor-id="fix-electrodeconq-constant-charge"><code>fix electrode/conq</code> — Constant Charge</h3>
+<p><strong>Purpose</strong>: Set the total charge on each electrode group; potentials fluctuate.</p>
+<p><strong>Physical meaning</strong>: Models a galvanostat — charge injection/extraction is controlled, voltage is the response.</p>
+<pre class="lammps"><code>fix fxconq bot electrode/conq -0.5 1.805 couple top 0.5 symm on</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 43%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Description</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>charge</code></td>
+<td>Total charge on electrode group</td>
+<td>In units consistent with <code>units</code> setting</td>
+</tr>
+<tr class="even">
+<td><code>eta</code></td>
+<td>Gaussian smearing width</td>
+<td>Same as conp</td>
+</tr>
+<tr class="odd">
+<td><code>couple</code></td>
+<td>Additional electrode at charge Q</td>
+<td>Not potential</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong>: The vector component <code>f_fxconq[2]</code>, <code>f_fxconq[3]</code>, etc. gives the actual potential on each electrode — can be monitored to compute voltage response.</p>
+</section>
+<section id="fix-electrodethermo-thermopotentiostat" class="level3">
+<h3 class="anchored" data-anchor-id="fix-electrodethermo-thermopotentiostat"><code>fix electrode/thermo</code> — Thermopotentiostat</h3>
+<p><strong>Purpose</strong>: Add thermal fluctuations (Johnson-Nyquist noise) to both potential and charge.</p>
+<p><strong>Physical meaning</strong>: Models the thermodynamic consistency of charge/potential fluctuations. Essential for fluctuation-dissipation studies and non-equilibrium dynamics.</p>
+<pre class="lammps"><code>fix fxthermo bot electrode/thermo -1.0 1.805 300.0 12345 50.0</code></pre>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 43%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Argument</th>
+<th>Description</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>potential</code></td>
+<td>Mean potential</td>
+<td>Fluctuates around this</td>
+</tr>
+<tr class="even">
+<td><code>eta</code></td>
+<td>Gaussian smearing</td>
+<td>Same as other fixes</td>
+</tr>
+<tr class="odd">
+<td><code>temp</code></td>
+<td>Temperature (K)</td>
+<td>For thermal noise amplitude</td>
+</tr>
+<tr class="even">
+<td><code>seed</code></td>
+<td>Random seed</td>
+<td>Set explicitly for reproducibility</td>
+</tr>
+<tr class="odd">
+<td><code>tau_v</code></td>
+<td>Potential relaxation time</td>
+<td>Controls how fast potential relaxes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Physical basis</strong>: The fluctuation-dissipation theorem relates thermal noise to dissipative properties. For electrochemistry, the thermopotentiostat adds fluctuations to both potential and charge with correct statistics.</p>
+</section>
+</section>
+<section id="algorithm-choices" class="level2">
+<h2 class="anchored" data-anchor-id="algorithm-choices">Algorithm Choices</h2>
+<p>The <code>algo</code> keyword controls how the capacitance/elastance problem is solved:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Algorithm</th>
+<th>Precomputation</th>
+<th>Memory</th>
+<th>Speed</th>
+<th>Electrode Motion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>mat_inv</code></td>
+<td>Capacitance matrix C (N²)</td>
+<td>High</td>
+<td>Fast</td>
+<td>Static only</td>
+</tr>
+<tr class="even">
+<td><code>mat_cg</code></td>
+<td>Elastance matrix S (N²)</td>
+<td>Medium</td>
+<td>Medium</td>
+<td>Static only</td>
+</tr>
+<tr class="odd">
+<td><code>cg</code></td>
+<td>None</td>
+<td>Low</td>
+<td>Slowest</td>
+<td>Allowed</td>
+</tr>
+</tbody>
+</table>
+<p>Where N = number of electrode groups (not atoms).</p>
+<section id="algo-mat_inv-default" class="level3">
+<h3 class="anchored" data-anchor-id="algo-mat_inv-default"><code>algo mat_inv</code> (Default)</h3>
+<ul>
+<li>Precompute and invert the capacitance matrix at startup</li>
+<li>On-the-fly charge calculation: <code>q = C⁻¹ · (V - V0)</code></li>
+<li><strong>Fast</strong> for small-to-medium electrode systems</li>
+<li><strong>Memory-intensive</strong>: stores full N×N matrix</li>
+<li>Electrodes must remain fixed (matrix is geometry-specific)</li>
+</ul>
+<p><strong>Use when</strong>: &lt; 10,000 electrode atoms, static electrodes, need fastest per-step performance</p>
+</section>
+<section id="algo-mat_cg" class="level3">
+<h3 class="anchored" data-anchor-id="algo-mat_cg"><code>algo mat_cg</code></h3>
+<ul>
+<li>Precompute the elastance matrix (inverse of capacitance)</li>
+<li>Use conjugate gradient solver to find charges</li>
+<li><strong>Less memory</strong> than <code>mat_inv</code> (same matrix size, but CG is iterative)</li>
+<li><strong>Slower per step</strong> than <code>mat_inv</code> but comparable overall for medium systems</li>
+</ul>
+<p><strong>Use when</strong>: Medium systems where memory matters; limited electrode motion</p>
+</section>
+<section id="algo-cg" class="level3">
+<h3 class="anchored" data-anchor-id="algo-cg"><code>algo cg</code></h3>
+<ul>
+<li>No precomputation</li>
+<li>Solve full linear system each timestep via conjugate gradient</li>
+<li><strong>Slowest</strong> per step</li>
+<li><strong>Required</strong> for moving electrodes (charging/discharging dynamics)</li>
+</ul>
+<p><strong>Use when</strong>: Electrodes move significantly; very large electrode systems</p>
+</section>
+<section id="choosing-the-right-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="choosing-the-right-algorithm">Choosing the Right Algorithm</h3>
+<pre class="lammps"><code># Small static system → mat_inv (fastest)
+fix fxconp bot electrode/conp -1.0 1.805 algo mat_inv
+
+# Medium static system → mat_cg (balanced)
+fix fxconp bot electrode/conp -1.0 1.805 algo mat_cg
+
+# Dynamic electrodes → cg (only option)
+fix fxconp bot electrode/conp -1.0 1.805 algo cg</code></pre>
+</section>
+</section>
+<section id="k-space-compatibility" class="level2">
+<h2 class="anchored" data-anchor-id="k-space-compatibility">K-space Compatibility</h2>
+<section id="the-rule" class="level3">
+<h3 class="anchored" data-anchor-id="the-rule">The Rule</h3>
+<p>ELECTRODE requires electrode-aware kspace styles that provide: 1. Electrode-electrode interaction matrix 2. Electrode-electrolyte interaction vector</p>
+</section>
+<section id="compatible-kspace-styles" class="level3">
+<h3 class="anchored" data-anchor-id="compatible-kspace-styles">Compatible Kspace Styles</h3>
+<pre class="lammps"><code>kspace_style ewald/electrode 1e-5
+kspace_style pppm/electrode 1e-5
+kspace_style pppm/electrode/intel 1e-5    # Intel-optimized</code></pre>
+<p><strong>DO NOT use</strong> standard <code>ewald</code> or <code>pppm</code> with ELECTRODE — they lack the electrode interaction matrices.</p>
+</section>
+<section id="kspace-modify-options" class="level3">
+<h3 class="anchored" data-anchor-id="kspace-modify-options">Kspace Modify Options</h3>
+<pre class="lammps"><code>kspace_modify slab 3          # 2D Ewald correction (non-periodic z)
+kspace_modify one-step        # faster elastance computation; less accurate
+kspace_modify force 1e-4     # override tolerance</code></pre>
+<p><code>slab 3</code> is standard for non-periodic z geometries. The number 3 refers to the dimension being non-periodic (z).</p>
+</section>
+</section>
+<section id="key-fix-options-reference" class="level2">
+<h2 class="anchored" data-anchor-id="key-fix-options-reference">Key Fix Options Reference</h2>
+<section id="general-options" class="level3">
+<h3 class="anchored" data-anchor-id="general-options">General Options</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Option</th>
+<th>Description</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>algo</code></td>
+<td>Solver algorithm</td>
+<td><code>mat_inv</code>, <code>mat_cg</code>, <code>cg</code></td>
+</tr>
+<tr class="even">
+<td><code>symm</code></td>
+<td>Charge neutrality</td>
+<td><code>on</code>, <code>off</code></td>
+</tr>
+<tr class="odd">
+<td><code>ffield</code></td>
+<td>Finite-field mode</td>
+<td><code>on</code>, <code>off</code></td>
+</tr>
+<tr class="even">
+<td><code>etypes</code></td>
+<td>Type-based neighbor lists</td>
+<td><code>on</code>, <code>off</code></td>
+</tr>
+<tr class="odd">
+<td><code>couple</code></td>
+<td>Additional electrode group</td>
+<td><code>groupName V_or_Q</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="finite-field-mode-ffield-on" class="level3">
+<h3 class="anchored" data-anchor-id="finite-field-mode-ffield-on">Finite Field Mode (<code>ffield on</code>)</h3>
+<pre class="lammps"><code>fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 ffield on symm on</code></pre>
+<ul>
+<li>Uses periodic boundary in z</li>
+<li>Potential difference applied via internal E-field: <code>E = V / dz</code></li>
+<li>No vacuum region needed; smaller z-dimension possible</li>
+<li>Requires <code>symm on</code> (total charge neutrality)</li>
+</ul>
+<p><strong>Use when</strong>: you want smaller cells; better for some geometries; want infinite stack model</p>
+</section>
+<section id="matrix-saveload" class="level3">
+<h3 class="anchored" data-anchor-id="matrix-saveload">Matrix Save/Load</h3>
+<pre class="lammps"><code>fix fxconp bot electrode/conp -1.0 1.805 write_inv 1000    # save every 1000 steps
+fix fxconp bot electrode/conp -1.0 1.805 read_inv restart.elast    # load at startup</code></pre>
+<p>The write_inv saves the elastance matrix. Use read_inv to reload on restart. (Standard LAMMPS restart files don’t yet support ELECTRODE state.)</p>
+</section>
+<section id="thomas-fermi-model" class="level3">
+<h3 class="anchored" data-anchor-id="thomas-fermi-model">Thomas-Fermi Model</h3>
+<p>For real metal response (quantum corrections):</p>
+<pre class="lammps"><code>fix_modify fxconp tf 0.001    # Thomas-Fermi screening length</code></pre>
+<p>Adds metallic screening beyond the simple dielectric model. Use when electrode is a real metal (Au, Pt, etc.) and quantum effects matter.</p>
+</section>
+</section>
+<section id="output-from-electrode-fixes" class="level2">
+<h2 class="anchored" data-anchor-id="output-from-electrode-fixes">Output from ELECTRODE Fixes</h2>
+<section id="scalar-energy" class="level3">
+<h3 class="anchored" data-anchor-id="scalar-energy">Scalar (Energy)</h3>
+<p><code>f_ID</code> — scalar: the energy added to the system by the fix.</p>
+<p>For constant potential: <code>-Σ q_i V_i</code> (work done by electrodes on the system)</p>
+<p>Check this for energy conservation (should be small fluctuations around constant in NVE).</p>
+</section>
+<section id="vector-electrode-potentials" class="level3">
+<h3 class="anchored" data-anchor-id="vector-electrode-potentials">Vector (Electrode Potentials)</h3>
+<p><code>f_ID[2]</code>, <code>f_ID[3]</code>, … — potential on each electrode group.</p>
+<p>For <code>electrode/conq</code>: these are the <strong>fluctuating</strong> potentials (computed response) For <code>electrode/conp</code>: these should match the specified potentials (convergence check)</p>
+<p>Access in variable:</p>
+<pre class="lammps"><code>variable V_bot equal f_fxconp[2]
+variable V_top equal f_fxconp[3]</code></pre>
+</section>
+<section id="array-capacitance-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="array-capacitance-matrix">Array (Capacitance Matrix)</h3>
+<p><code>f_ID[4]</code> through <code>f_ID[4+N]</code> — rows of the capacitance matrix.</p>
+<p>For analysis of C_ij structure.</p>
+</section>
+</section>
+<section id="complete-input-script-template" class="level2">
+<h2 class="anchored" data-anchor-id="complete-input-script-template">Complete Input Script Template</h2>
+<pre class="lammps"><code># ============================================
+# Constant Potential Electrode-Electrolyte
+# ============================================
+
+units metal
+atom_style charge
+boundary p p f
+
+# --- Box and geometry ---
+variable Lx equal 20
+variable Ly equal 20
+variable Lz equal 60
+
+region box block 0 $Lx 0 $Ly 0 $Lz
+create_box 3 box    # 3 atom types: bot, top, electrolyte
+
+region bot block 0 $Lx 0 $Ly 0 5
+region top block 0 $Lx 0 $Ly 55 $Lz
+region elyte block 0 $Lx 0 $Ly 5 55
+
+create_atoms 1 region bot
+create_atoms 2 region top
+create_atoms 3 region elyte
+
+group bot region bot
+group top region top
+group elyte region elyte
+group electrode union bot top
+
+# --- Force field ---
+pair_style lj/cut/coul/long 10.0
+
+# Electrode-electrode (soft repulsion)
+pair_coeff 1 1 0.01 3.0
+pair_coeff 2 2 0.01 3.0
+pair_coeff 1 2 0.005 3.0
+
+# Electrolyte LJ (SPC/E water + ions)
+pair_coeff 3 3 0.155 3.166    # water O
+pair_coeff 3 4 0.0 0.0        # water H (if present)
+pair_coeff 1 3 0.005 3.1      # bot-water
+pair_coeff 2 3 0.005 3.1      # top-water
+
+kspace_style pppm/electrode 1e-5
+kspace_modify slab 3
+
+# --- ELECTRODE fix ---
+fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 symm on
+
+# --- Integrators ---
+fix frozen all nve           # frozen electrodes
+fix mytemp elyte langevin 300.0 300.0 100.0 12345
+
+# --- Output ---
+thermo 100
+thermo_style custom step temp pe ke vol density f_fxconp
+
+dump 1 all custom 100 traj.lammpstrj id type x y z q
+
+# --- Run ---
+minimize 1e-6 1e-9 1000 10000
+run 10000</code></pre>
+</section>
+<section id="troubleshooting" class="level2">
+<h2 class="anchored" data-anchor-id="troubleshooting">Troubleshooting</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 29%">
+<col style="width: 29%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Issue</th>
+<th>Cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Charge oscillates wildly</td>
+<td>eta too small or too large</td>
+<td>Try eta = 1.0 or 2.0 (real units)</td>
+</tr>
+<tr class="even">
+<td>Matrix inversion fails</td>
+<td>Singular matrix</td>
+<td>Increase eta or check geometry</td>
+</tr>
+<tr class="odd">
+<td>NaN in output</td>
+<td>Overlapping atoms</td>
+<td>Minimize before dynamics</td>
+</tr>
+<tr class="even">
+<td>Slow performance</td>
+<td>Large matrix storage</td>
+<td>Use <code>algo mat_cg</code> or <code>algo cg</code></td>
+</tr>
+<tr class="odd">
+<td><code>kspace style not supported</code></td>
+<td>Wrong kspace for ELECTRODE</td>
+<td>Use <code>pppm/electrode</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<ul>
+<li><strong>?@sec-example</strong> — Full example with output interpretation</li>
+<li><strong>?@sec-troubleshooting</strong> — Detailed diagnostics and fixes</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/srtee\.github\.io\/mddocs\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

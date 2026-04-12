@@ -2,13 +2,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.36">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Introduction – Shern’s Molecular Dynamics Docs</title>
+<title>fundamentals – Constant Potential MD in LAMMPS</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -19,6 +22,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -36,16 +74,16 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-cdf6874a894684651c295812213f2c04.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-ff0631ae66c640f7beec88805fcb678e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
-  "location": "sidebar",
+  "location": "navbar",
   "copy-button": false,
   "collapse-after": 3,
-  "panel-placement": "start",
-  "type": "textbox",
+  "panel-placement": "end",
+  "type": "overlay",
   "limit": 50,
   "keyboard-shortcut": [
     "f",
@@ -69,18 +107,85 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
+<link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="nav-sidebar docked quarto-light">
+<body class="nav-sidebar docked nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Constant Potential MD in LAMMPS</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./01-fundamentals.html" aria-current="page"> 
+<span class="menu-text">1. Fundamentals</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-force-fields.html"> 
+<span class="menu-text">2. Force Fields</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./03-physical-conditions.html"> 
+<span class="menu-text">3. Physical Conditions</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./04-electrostatics.html"> 
+<span class="menu-text">4. Electrostatics</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./05-electrodes-cpm.html"> 
+<span class="menu-text">5. Electrodes &amp; CPM</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./06-electrode-package.html"> 
+<span class="menu-text">6. ELECTRODE Package</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./07-example-simulation.html"> 
+<span class="menu-text">7. Example</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./08-troubleshooting.html"> 
+<span class="menu-text">8. Troubleshooting</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./references.html"> 
+<span class="menu-text">References</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/lammps/lammps"> <i class="bi bi-github" role="img" aria-label="LAMMPS GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
   <nav class="quarto-secondary-nav">
     <div class="container-fluid d-flex">
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./introduction.html">Introduction</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -90,167 +195,342 @@ ul.task-list li input[type="checkbox"] {
   </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
-    <div class="pt-lg-2 mt-2 text-left sidebar-header">
-    <div class="sidebar-title mb-0 py-0">
-      <a href="./">Shern’s Molecular Dynamics Docs</a> 
-    </div>
-      </div>
         <div class="mt-2 flex-shrink-0 align-items-center">
         <div class="sidebar-search">
         <div id="quarto-search" class="" title="Search"></div>
         </div>
         </div>
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./introduction.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Introduction</span></a>
-  </div>
-</li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
- <span class="menu-text">Basics</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
- <span class="menu-text">getting-started.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">time-and-length-scales.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">integrators.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">forces.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">thermostats.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">barostats.qmd</span>
-  </li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
- <span class="menu-text">My Research Areas</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
- <span class="menu-text">constant-potential-I.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">constant-potential-II.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">electrolytes.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">quartic-constraints.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">research-software-engineering.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">SoTL.qmd</span>
-  </li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">Using LAMMPS</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
- <span class="menu-text">lammps-basics.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">input-scripts.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">force-fields.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">output-files.qmd</span>
-  </li>
-          <li class="sidebar-item">
- <span class="menu-text">folder-practices.qmd</span>
-  </li>
-      </ul>
-  </li>
-        <li class="sidebar-item sidebar-item-section">
-      <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
- <span class="menu-text">Using VMD</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
-            <i class="bi bi-chevron-right ms-2"></i>
-          </a> 
-      </div>
-      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./vmd/loading-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Getting Started</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
- <span class="menu-text">using-reps.qmd</span>
-  </li>
-      </ul>
-  </li>
-        <li class="sidebar-item">
- <span class="menu-text">acknowledgment.qmd</span>
-  </li>
-    </ul>
-    </div>
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-fundamentals" id="toc-sec-fundamentals" class="nav-link active" data-scroll-target="#sec-fundamentals">Molecular Dynamics Fundamentals</a>
+  <ul class="collapse">
+  <li><a href="#the-core-loop" id="toc-the-core-loop" class="nav-link" data-scroll-target="#the-core-loop">The Core Loop</a></li>
+  <li><a href="#physical-meaning-of-key-lammps-commands" id="toc-physical-meaning-of-key-lammps-commands" class="nav-link" data-scroll-target="#physical-meaning-of-key-lammps-commands">Physical Meaning of Key LAMMPS Commands</a>
+  <ul class="collapse">
+  <li><a href="#units" id="toc-units" class="nav-link" data-scroll-target="#units">Units</a></li>
+  <li><a href="#atom-style" id="toc-atom-style" class="nav-link" data-scroll-target="#atom-style">Atom Style</a></li>
+  <li><a href="#boundary-conditions" id="toc-boundary-conditions" class="nav-link" data-scroll-target="#boundary-conditions">Boundary Conditions</a></li>
+  <li><a href="#groups" id="toc-groups" class="nav-link" data-scroll-target="#groups">Groups</a></li>
+  </ul></li>
+  <li><a href="#forces-and-energy" id="toc-forces-and-energy" class="nav-link" data-scroll-target="#forces-and-energy">Forces and Energy</a>
+  <ul class="collapse">
+  <li><a href="#potential-energy-components" id="toc-potential-energy-components" class="nav-link" data-scroll-target="#potential-energy-components">Potential Energy Components</a></li>
+  <li><a href="#energy-conservation-check" id="toc-energy-conservation-check" class="nav-link" data-scroll-target="#energy-conservation-check">Energy Conservation Check</a></li>
+  </ul></li>
+  <li><a href="#key-concepts-summary" id="toc-key-concepts-summary" class="nav-link" data-scroll-target="#key-concepts-summary">Key Concepts Summary</a></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
 
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Introduction</h1>
+
+
+
+<section id="sec-fundamentals" class="level1">
+<h1>Molecular Dynamics Fundamentals</h1>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>In this section
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>What the simulation loop actually does</li>
+<li>Key LAMMPS concepts mapped to physical meaning</li>
+<li>How to read thermodynamic output</li>
+</ul>
+</div>
+</div>
+<section id="the-core-loop" class="level2">
+<h2 class="anchored" data-anchor-id="the-core-loop">The Core Loop</h2>
+<p>Molecular dynamics (MD) simulates atomic motion by solving Newton’s equations of motion numerically. At each timestep:</p>
+<ol type="1">
+<li><strong>Forces</strong> are computed from atom positions using an interatomic potential (the force field)</li>
+<li><strong>Velocities and positions</strong> are updated via numerical integration</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> timestep <span class="kw">in</span> <span class="bu">range</span>(N_steps):</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    forces <span class="op">=</span> compute_forces(positions, force_field)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    positions, velocities <span class="op">=</span> integrate(positions, velocities, forces, dt)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <strong>trajectory</strong> — the sequence of positions and velocities — is the primary output. From it, we compute thermodynamic properties by averaging over time.</p>
+</section>
+<section id="physical-meaning-of-key-lammps-commands" class="level2">
+<h2 class="anchored" data-anchor-id="physical-meaning-of-key-lammps-commands">Physical Meaning of Key LAMMPS Commands</h2>
+<section id="units" class="level3">
+<h3 class="anchored" data-anchor-id="units">Units</h3>
+<p>LAMMPS supports multiple unit systems. The choice affects every physical quantity.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Unit Set</th>
+<th>Distance</th>
+<th>Energy</th>
+<th>Time</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>real</code></td>
+<td>Å</td>
+<td>kcal/mol</td>
+<td>fs</td>
+<td>Organic molecules, proteins</td>
+</tr>
+<tr class="even">
+<td><code>metal</code></td>
+<td>Å</td>
+<td>eV</td>
+<td>ps</td>
+<td>Materials science, metals</td>
+</tr>
+<tr class="odd">
+<td><code>si</code></td>
+<td>m</td>
+<td>J</td>
+<td>s</td>
+<td>Academic; rarely used</td>
+</tr>
+<tr class="even">
+<td><code>lj</code></td>
+<td>σ</td>
+<td>ε</td>
+<td>τ</td>
+<td>Simplified units; for testing</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Units Mismatch Causes Garbage
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If you set <code>units metal</code> but provide <code>pair_coeff</code> values in kcal/mol, all energies will be wrong by ~43×. Always verify consistency.</p>
+</div>
+</div>
+</section>
+<section id="atom-style" class="level3">
+<h3 class="anchored" data-anchor-id="atom-style">Atom Style</h3>
+<p>The <code>atom_style</code> determines what properties each particle carries.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 36%">
+<col style="width: 33%">
+<col style="width: 30%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Atom Style</th>
+<th>Properties</th>
+<th>Use When</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>full</code></td>
+<td>id, type, molecule, charge, mass, position, velocity, bonds, angles</td>
+<td>Standard molecular systems (water, organics)</td>
+</tr>
+<tr class="even">
+<td><code>charge</code></td>
+<td>id, type, charge, mass, position, velocity</td>
+<td>Electrolytes, electrode systems (no bonds needed)</td>
+</tr>
+<tr class="odd">
+<td><code>atomic</code></td>
+<td>id, type, mass, position, velocity</td>
+<td>Pure metals, noble gases</td>
+</tr>
+<tr class="even">
+<td><code>bonded</code></td>
+<td>id, type, molecule, charge, mass, position, velocity, bonds, angles, dihedrals</td>
+<td>Complex molecules with explicit torsions</td>
+</tr>
+</tbody>
+</table>
+<p>For constant potential simulations with simple electrolytes, <code>atom_style charge</code> is sufficient and faster than <code>full</code>.</p>
+</section>
+<section id="boundary-conditions" class="level3">
+<h3 class="anchored" data-anchor-id="boundary-conditions">Boundary Conditions</h3>
+<pre class="lammps"><code>boundary p p f</code></pre>
+<p><code>p</code> = periodic, <code>f</code> = fixed (non-periodic), <code>s</code> = shrink-wrapped.</p>
+<p>For electrode-electrolyte slab simulations:</p>
+<ul>
+<li><strong>x, y</strong>: periodic — allows long-range electrostatics in these directions</li>
+<li><strong>z</strong>: fixed — creates a slab geometry with two surfaces exposed to vacuum (or vacuum region above electrolyte)</li>
+</ul>
+<p>The non-periodic z-direction requires the <code>kspace_modify slab</code> correction for electrostatics (see <strong>?@sec-electrostatics</strong>).</p>
+</section>
+<section id="groups" class="level3">
+<h3 class="anchored" data-anchor-id="groups">Groups</h3>
+<p>Groups are named subsets of atoms. They are essential for:</p>
+<ul>
+<li>Distinguishing electrode atoms from electrolyte</li>
+<li>Applying different thermostats to different components</li>
+<li>Computing properties for specific regions</li>
+</ul>
+<pre class="lammps"><code>group bot region bottom_electrode
+group top region top_electrode
+group elyte region electrolyte
+group electrode union bot top
+group mobile subtract all electrode</code></pre>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Group Naming Convention
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Use descriptive names: <code>bot</code>, <code>top</code>, <code>elyte</code>, <code>mobile</code>. Avoid names like <code>g1</code> which are meaningless in isolation.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="forces-and-energy" class="level2">
+<h2 class="anchored" data-anchor-id="forces-and-energy">Forces and Energy</h2>
+<section id="potential-energy-components" class="level3">
+<h3 class="anchored" data-anchor-id="potential-energy-components">Potential Energy Components</h3>
+<p>LAMMPS’s thermodynamic output breaks down the potential energy:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 55%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>PotEng</code></td>
+<td>Total potential energy = sum of all contributions</td>
+</tr>
+<tr class="even">
+<td><code>KinEng</code></td>
+<td>Kinetic energy = ½mv² summed over all atoms</td>
+</tr>
+<tr class="odd">
+<td><code>TotEng</code></td>
+<td>Total energy = PotEng + KinEng (conserved in NVE)</td>
+</tr>
+<tr class="even">
+<td><code>PairEng</code></td>
+<td>Non-bonded pairwise interactions (LJ + Coulomb real-space)</td>
+</tr>
+<tr class="odd">
+<td><code>BondEng</code></td>
+<td>Bond stretching energy</td>
+</tr>
+<tr class="even">
+<td><code>AngleEng</code></td>
+<td>Angle bending energy</td>
+</tr>
+<tr class="odd">
+<td><code>KspaceEng</code></td>
+<td>Long-range electrostatics (reciprocal space)</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="energy-conservation-check" class="level3">
+<h3 class="anchored" data-anchor-id="energy-conservation-check">Energy Conservation Check</h3>
+<p>In a well-behaved NVE simulation (no thermostat), <code>TotEng</code> should drift by less than 0.1% over 1 ns. Drift indicates:</p>
+<ul>
+<li>Timestep too large</li>
+<li>Cutoff too small causing large force spikes</li>
+<li>Numerical instability in integration</li>
+</ul>
+</section>
+</section>
+<section id="key-concepts-summary" class="level2">
+<h2 class="anchored" data-anchor-id="key-concepts-summary">Key Concepts Summary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 32%">
+<col style="width: 45%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>LAMMPS Term</th>
+<th>Physical Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Interaction function</td>
+<td><code>pair_style</code></td>
+<td>Functional form of interatomic potential</td>
+</tr>
+<tr class="even">
+<td>Force field parameters</td>
+<td><code>pair_coeff</code>, <code>bond_coeff</code></td>
+<td>Numerical values (ε, σ, k, etc.)</td>
+</tr>
+<tr class="odd">
+<td>Time integration</td>
+<td><code>fix nve</code>, <code>fix nvt</code></td>
+<td>Newton’s laws numerical solution</td>
+</tr>
+<tr class="even">
+<td>Temperature control</td>
+<td><code>fix langevin</code>, <code>fix nvt</code></td>
+<td>Sampling from correct ensemble</td>
+</tr>
+<tr class="odd">
+<td>Long-range electrostatics</td>
+<td><code>kspace_style pppm</code></td>
+<td>Handling Coulomb’s law in periodic systems</td>
+</tr>
+<tr class="even">
+<td>On-the-fly calculation</td>
+<td><code>compute</code></td>
+<td>Quantities computed during simulation</td>
+</tr>
+<tr class="odd">
+<td>Property storage</td>
+<td><code>fix ave/time</code></td>
+<td>Time-averaged output</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<ul>
+<li><strong>?@sec-force-fields</strong> — What interactions are available and how to configure them</li>
+<li><strong>?@sec-physical-conditions</strong> — How thermostats and barostats control the physical conditions</li>
+</ul>
 
 
-
-<div class="quarto-title-meta">
-
-    
-  
-    
-  </div>
-  
-
-
-</header>
-
-
-<p>Welcome to Shern’s website about molecular dynamics! There will be more here soon.</p>
-
-
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -304,13 +584,14 @@ ul.task-list li input[type="checkbox"] {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
@@ -339,6 +620,11 @@ ul.task-list li input[type="checkbox"] {
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
         }
       }
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {

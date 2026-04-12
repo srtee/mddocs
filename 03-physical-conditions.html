@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>physical-conditions – Constant Potential MD in LAMMPS</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-ff0631ae66c640f7beec88805fcb678e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Constant Potential MD in LAMMPS</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./01-fundamentals.html"> 
+<span class="menu-text">1. Fundamentals</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-force-fields.html"> 
+<span class="menu-text">2. Force Fields</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./03-physical-conditions.html" aria-current="page"> 
+<span class="menu-text">3. Physical Conditions</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./04-electrostatics.html"> 
+<span class="menu-text">4. Electrostatics</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./05-electrodes-cpm.html"> 
+<span class="menu-text">5. Electrodes &amp; CPM</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./06-electrode-package.html"> 
+<span class="menu-text">6. ELECTRODE Package</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./07-example-simulation.html"> 
+<span class="menu-text">7. Example</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./08-troubleshooting.html"> 
+<span class="menu-text">8. Troubleshooting</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./references.html"> 
+<span class="menu-text">References</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/lammps/lammps"> <i class="bi bi-github" role="img" aria-label="LAMMPS GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-physical-conditions" id="toc-sec-physical-conditions" class="nav-link active" data-scroll-target="#sec-physical-conditions">Physical Conditions</a>
+  <ul class="collapse">
+  <li><a href="#what-is-being-held-constant" id="toc-what-is-being-held-constant" class="nav-link" data-scroll-target="#what-is-being-held-constant">What Is Being Held Constant?</a></li>
+  <li><a href="#time-integration-and-timestep" id="toc-time-integration-and-timestep" class="nav-link" data-scroll-target="#time-integration-and-timestep">Time Integration and Timestep</a>
+  <ul class="collapse">
+  <li><a href="#the-verlet-algorithm" id="toc-the-verlet-algorithm" class="nav-link" data-scroll-target="#the-verlet-algorithm">The Verlet Algorithm</a></li>
+  <li><a href="#timestep-selection" id="toc-timestep-selection" class="nav-link" data-scroll-target="#timestep-selection">Timestep Selection</a></li>
+  <li><a href="#why-timestep-matters-for-output" id="toc-why-timestep-matters-for-output" class="nav-link" data-scroll-target="#why-timestep-matters-for-output">Why Timestep Matters for Output</a></li>
+  <li><a href="#bond-constraints" id="toc-bond-constraints" class="nav-link" data-scroll-target="#bond-constraints">Bond Constraints</a></li>
+  </ul></li>
+  <li><a href="#thermostats-controlling-temperature" id="toc-thermostats-controlling-temperature" class="nav-link" data-scroll-target="#thermostats-controlling-temperature">Thermostats — Controlling Temperature</a>
+  <ul class="collapse">
+  <li><a href="#temperature-in-md" id="toc-temperature-in-md" class="nav-link" data-scroll-target="#temperature-in-md">Temperature in MD</a></li>
+  <li><a href="#thermostat-algorithms" id="toc-thermostat-algorithms" class="nav-link" data-scroll-target="#thermostat-algorithms">Thermostat Algorithms</a></li>
+  <li><a href="#what-temperature-controls-physically" id="toc-what-temperature-controls-physically" class="nav-link" data-scroll-target="#what-temperature-controls-physically">What Temperature Controls Physically</a></li>
+  </ul></li>
+  <li><a href="#barostats-controlling-pressure" id="toc-barostats-controlling-pressure" class="nav-link" data-scroll-target="#barostats-controlling-pressure">Barostats — Controlling Pressure</a>
+  <ul class="collapse">
+  <li><a href="#pressure-in-md" id="toc-pressure-in-md" class="nav-link" data-scroll-target="#pressure-in-md">Pressure in MD</a></li>
+  <li><a href="#barostat-algorithms" id="toc-barostat-algorithms" class="nav-link" data-scroll-target="#barostat-algorithms">Barostat Algorithms</a></li>
+  <li><a href="#what-pressure-controls-physically" id="toc-what-pressure-controls-physically" class="nav-link" data-scroll-target="#what-pressure-controls-physically">What Pressure Controls Physically</a></li>
+  </ul></li>
+  <li><a href="#integrators-in-lammps" id="toc-integrators-in-lammps" class="nav-link" data-scroll-target="#integrators-in-lammps">Integrators in LAMMPS</a>
+  <ul class="collapse">
+  <li><a href="#combinations-with-electrode" id="toc-combinations-with-electrode" class="nav-link" data-scroll-target="#combinations-with-electrode">Combinations with ELECTRODE</a></li>
+  </ul></li>
+  <li><a href="#observables-what-you-actually-measure" id="toc-observables-what-you-actually-measure" class="nav-link" data-scroll-target="#observables-what-you-actually-measure">Observables — What You Actually Measure</a>
+  <ul class="collapse">
+  <li><a href="#thermodynamic-output" id="toc-thermodynamic-output" class="nav-link" data-scroll-target="#thermodynamic-output">Thermodynamic Output</a></li>
+  <li><a href="#computes-for-analysis" id="toc-computes-for-analysis" class="nav-link" data-scroll-target="#computes-for-analysis">Computes for Analysis</a></li>
+  <li><a href="#fix-specific-output-electrode" id="toc-fix-specific-output-electrode" class="nav-link" data-scroll-target="#fix-specific-output-electrode">Fix-Specific Output (ELECTRODE)</a></li>
+  <li><a href="#trajectory-output" id="toc-trajectory-output" class="nav-link" data-scroll-target="#trajectory-output">Trajectory Output</a></li>
+  </ul></li>
+  <li><a href="#physical-conditions-output-summary" id="toc-physical-conditions-output-summary" class="nav-link" data-scroll-target="#physical-conditions-output-summary">Physical Conditions → Output Summary</a></li>
+  <li><a href="#common-mistakes" id="toc-common-mistakes" class="nav-link" data-scroll-target="#common-mistakes">Common Mistakes</a></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="sec-physical-conditions" class="level1">
+<h1>Physical Conditions</h1>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>In this section
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>What NVE, NVT, NPT mean and when to use each</li>
+<li>How thermostats work (algorithms, LAMMPS syntax, physical meaning)</li>
+<li>How barostats control pressure and volume</li>
+<li>Timestep selection and why it matters</li>
+<li>What observables you can measure</li>
+</ul>
+</div>
+</div>
+<section id="what-is-being-held-constant" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-being-held-constant">What Is Being Held Constant?</h2>
+<p>Real experiments control temperature, pressure, and composition. In MD, we choose which of these to hold fixed — this determines the <strong>statistical ensemble</strong> and thus which thermodynamic properties we can legitimately compute.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 17%">
+<col style="width: 22%">
+<col style="width: 28%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Ensemble</th>
+<th>LAMMPS Fix</th>
+<th>What’s Fixed</th>
+<th>What Fluctuates</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NVE</td>
+<td><code>fix nve</code></td>
+<td>E, V, N</td>
+<td>T, P</td>
+<td>Microcanonical; equilibrium check</td>
+</tr>
+<tr class="even">
+<td>NVT</td>
+<td><code>fix nvt</code> or <code>fix npt</code></td>
+<td>T, V, N</td>
+<td>E, P</td>
+<td>Canonical; most production</td>
+</tr>
+<tr class="odd">
+<td>NPT</td>
+<td><code>fix npt</code></td>
+<td>T, P, N</td>
+<td>E, V</td>
+<td>Isobaric; density-sensitive properties</td>
+</tr>
+<tr class="even">
+<td>NPH</td>
+<td><code>fix nph</code></td>
+<td>P, H, N</td>
+<td>T, V</td>
+<td>Isobaric without thermostat (rare)</td>
+</tr>
+</tbody>
+</table>
+<p>The ensemble choice is not just convention — it determines which statistical mechanics formula you must use to connect simulation results to experimental observables.</p>
+</section>
+<section id="time-integration-and-timestep" class="level2">
+<h2 class="anchored" data-anchor-id="time-integration-and-timestep">Time Integration and Timestep</h2>
+<section id="the-verlet-algorithm" class="level3">
+<h3 class="anchored" data-anchor-id="the-verlet-algorithm">The Verlet Algorithm</h3>
+<p>MD integrates Newton’s equations numerically. The velocity Verlet algorithm:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Velocity Verlet (per atom)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>v(t <span class="op">+</span> dt<span class="op">/</span><span class="dv">2</span>) <span class="op">=</span> v(t) <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> F(t) <span class="op">/</span> m <span class="op">*</span> dt        <span class="co"># half-step velocity</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>x(t <span class="op">+</span> dt) <span class="op">=</span> x(t) <span class="op">+</span> v(t <span class="op">+</span> dt<span class="op">/</span><span class="dv">2</span>) <span class="op">*</span> dt             <span class="co"># full-step position</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>F(t <span class="op">+</span> dt) <span class="op">=</span> forces(x(t <span class="op">+</span> dt))                  <span class="co"># new forces</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>v(t <span class="op">+</span> dt) <span class="op">=</span> v(t <span class="op">+</span> dt<span class="op">/</span><span class="dv">2</span>) <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> F(t <span class="op">+</span> dt) <span class="op">/</span> m <span class="op">*</span> dt  <span class="co"># complete velocity</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="timestep-selection" class="level3">
+<h3 class="anchored" data-anchor-id="timestep-selection">Timestep Selection</h3>
+<p>The timestep Δt must be small enough to resolve the fastest motion in the system:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Motion</th>
+<th>Characteristic Frequency</th>
+<th>Δt Limit</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C-H bond stretch</td>
+<td>~3000 cm⁻¹</td>
+<td>~0.5 fs</td>
+</tr>
+<tr class="even">
+<td>O-H bond stretch</td>
+<td>~3500 cm⁻¹</td>
+<td>~0.5 fs</td>
+</tr>
+<tr class="odd">
+<td>H-O-H bend</td>
+<td>~1600 cm⁻¹</td>
+<td>~1 fs</td>
+</tr>
+<tr class="even">
+<td>LJ repulsion</td>
+<td>Very fast</td>
+<td>requires small Δt</td>
+</tr>
+<tr class="odd">
+<td>Metal phonon</td>
+<td>~5–10 ps period</td>
+<td>~1–2 fs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Typical values</strong>:</p>
+<ul>
+<li><strong>1 fs</strong> for explicit water with flexible bonds</li>
+<li><strong>0.5 fs</strong> for flexible molecules with H-bonds</li>
+<li><strong>2 fs</strong> with bond constraints (<code>fix shake</code> or <code>fix rattle</code>)</li>
+</ul>
+</section>
+<section id="why-timestep-matters-for-output" class="level3">
+<h3 class="anchored" data-anchor-id="why-timestep-matters-for-output">Why Timestep Matters for Output</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Δt Too Large</th>
+<th>Δt Too Small</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Energy drift; simulation “blows up”</td>
+<td>Wasted computation</td>
+</tr>
+<tr class="even">
+<td>Atoms overlap catastrophically</td>
+<td>Results unchanged</td>
+</tr>
+<tr class="odd">
+<td>Timestep too large for physics</td>
+<td>Diminishing returns</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Validation</strong>: Run NVE and check energy conservation. Acceptable drift: &lt; 0.1% of total energy over 1 ns.</p>
+</section>
+<section id="bond-constraints" class="level3">
+<h3 class="anchored" data-anchor-id="bond-constraints">Bond Constraints</h3>
+<p><code>fix shake</code> or <code>fix rattle</code> removes fast degrees of freedom (C-H, O-H bonds) by constraint:</p>
+<pre class="lammps"><code>fix constrain all shake 1e-4 200 0 a 1.0    # constrain bond with tolerance 1e-4</code></pre>
+<p>Allows Δt = 2 fs (2× faster simulation, same accuracy for bonded motion).</p>
+</section>
+</section>
+<section id="thermostats-controlling-temperature" class="level2">
+<h2 class="anchored" data-anchor-id="thermostats-controlling-temperature">Thermostats — Controlling Temperature</h2>
+<section id="temperature-in-md" class="level3">
+<h3 class="anchored" data-anchor-id="temperature-in-md">Temperature in MD</h3>
+<p>Temperature is a statistical property, not a direct control variable:</p>
+<p><span class="math display">\[T = \frac{2}{3Nk_B} \left\langle \frac{1}{2}mv^2 \right\rangle\]</span></p>
+<p>The <strong>instantaneous temperature</strong> fluctuates. Thermostats manipulate atom velocities to sample the canonical ensemble correctly.</p>
+</section>
+<section id="thermostat-algorithms" class="level3">
+<h3 class="anchored" data-anchor-id="thermostat-algorithms">Thermostat Algorithms</h3>
+<section id="velocity-rescaling-fix-temprescale" class="level4">
+<h4 class="anchored" data-anchor-id="velocity-rescaling-fix-temprescale">Velocity Rescaling (<code>fix temp/rescale</code>)</h4>
+<pre class="lammps"><code>fix tempctr all temp/rescale 10 300.0 300.0 0.02 1.0</code></pre>
+<p>Simple scaling: multiply all velocities to match target T. Not rigorous — does not produce correct fluctuations. Useful for quick equilibration.</p>
+</section>
+<section id="berendsen-thermostat-fix-berendsen" class="level4">
+<h4 class="anchored" data-anchor-id="berendsen-thermostat-fix-berendsen">Berendsen Thermostat (<code>fix berendsen</code>)</h4>
+<pre class="lammps"><code>fix ber all berendsen temp 300.0 300.0 100.0</code></pre>
+<p>Weak coupling to heat bath. Produces incorrect fluctuations (variance too low). Not recommended for production.</p>
+</section>
+<section id="nosé-hoover-thermostat-fix-nvt" class="level4">
+<h4 class="anchored" data-anchor-id="nosé-hoover-thermostat-fix-nvt">Nosé-Hoover Thermostat (<code>fix nvt</code>)</h4>
+<pre class="lammps"><code>fix nvt_all all nvt temp 300.0 300.0 100.0</code></pre>
+<p>Extended system method. The system + thermostat share energy. Produces correct canonical distribution. Standard for most production runs.</p>
+<p>Variants: - <code>fix nvt/kk</code> — Kokkos version for GPU - <code>fix nvt/sphere</code> — for angular degrees of freedom</p>
+</section>
+<section id="langevin-thermostat-fix-langevin" class="level4">
+<h4 class="anchored" data-anchor-id="langevin-thermostat-fix-langevin">Langevin Thermostat (<code>fix langevin</code>)</h4>
+<pre class="lammps"><code>fix mylang all langevin 300.0 300.0 100.0 12345</code></pre>
+<p>Stochastic differential equation:</p>
+<p><span class="math display">\[m\frac{dv}{dt} = F - \gamma mv + \sqrt{2\gamma m k_B T} \, \xi(t)\]</span></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Physical Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>F</td>
+<td>Conservative force</td>
+</tr>
+<tr class="even">
+<td>γmv</td>
+<td>Damping (friction)</td>
+</tr>
+<tr class="odd">
+<td>√(2γmk_BT) ξ(t)</td>
+<td>Random noise (thermal fluctuations)</td>
+</tr>
+</tbody>
+</table>
+<p>Good for: - Non-equilibrium dynamics (shear, field) - Systems with heterogeneous dynamics - When you want explicit noise</p>
+<p><strong>Parameter choice</strong>: - <code>100.0</code> = damping time (fd). Too small = over-damped; too large = slow equipartition - <code>12345</code> = random seed (set explicitly for reproducibility)</p>
+</section>
+<section id="thermostat-comparison" class="level4">
+<h4 class="anchored" data-anchor-id="thermostat-comparison">Thermostat Comparison</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 28%">
+<col style="width: 14%">
+<col style="width: 27%">
+<col style="width: 13%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Thermostat</th>
+<th>Fluctuation Correct?</th>
+<th>ergodicity</th>
+<th>Computational Cost</th>
+<th>Best Use</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>temp/rescale</td>
+<td>❌ No</td>
+<td>N/A</td>
+<td>Low</td>
+<td>Quick equilibration</td>
+</tr>
+<tr class="even">
+<td>berendsen</td>
+<td>❌ No</td>
+<td>Poor</td>
+<td>Low</td>
+<td>Not recommended</td>
+</tr>
+<tr class="odd">
+<td>nvt (Nosé-Hoover)</td>
+<td>✅ Yes</td>
+<td>Good</td>
+<td>Medium</td>
+<td>Standard production</td>
+</tr>
+<tr class="even">
+<td>langevin</td>
+<td>✅ Yes</td>
+<td>Good</td>
+<td>Medium</td>
+<td>Non-equilibrium</td>
+</tr>
+<tr class="odd">
+<td>nvt + chain</td>
+<td>✅ Yes</td>
+<td>Best</td>
+<td>High</td>
+<td>Difficult systems</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="what-temperature-controls-physically" class="level3">
+<h3 class="anchored" data-anchor-id="what-temperature-controls-physically">What Temperature Controls Physically</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 34%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Temperature Change</th>
+<th>Physical Effect</th>
+<th>Observable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Increase T</td>
+<td>Higher kinetic energy → faster diffusion</td>
+<td>MSD, diffusion coefficient</td>
+</tr>
+<tr class="even">
+<td>Too high T</td>
+<td>Bond breaking, chemical reactions (LAMMPS not suited)</td>
+<td>Decomposition</td>
+</tr>
+<tr class="odd">
+<td>Too low T</td>
+<td>Slow dynamics, metastable states</td>
+<td>Long equilibration times</td>
+</tr>
+<tr class="even">
+<td>T fluctuations too small</td>
+<td>Wrong ensemble (Berendsen)</td>
+<td>Incorrect heat capacity</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="barostats-controlling-pressure" class="level2">
+<h2 class="anchored" data-anchor-id="barostats-controlling-pressure">Barostats — Controlling Pressure</h2>
+<section id="pressure-in-md" class="level3">
+<h3 class="anchored" data-anchor-id="pressure-in-md">Pressure in MD</h3>
+<p>Pressure from virial theorem:</p>
+<p><span class="math display">\[P = \frac{Nk_BT}{V} + \frac{1}{3V}\left\langle \sum_i \mathbf{r}_i \cdot \mathbf{F}_i \right\rangle\]</span></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Physical Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Nk_B T / V</td>
+<td>Kinetic contribution (ideal gas)</td>
+</tr>
+<tr class="even">
+<td>⟨Σ r·F⟩ / 3V</td>
+<td>Virial (force contribution)</td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>mechanical pressure</strong> is computed from atomic forces and positions. For anisotropic systems (slabs), the pressure tensor has different components.</p>
+</section>
+<section id="barostat-algorithms" class="level3">
+<h3 class="anchored" data-anchor-id="barostat-algorithms">Barostat Algorithms</h3>
+<section id="nose-hoover-barostat-fix-npt" class="level4">
+<h4 class="anchored" data-anchor-id="nose-hoover-barostat-fix-npt">Nose-Hoover Barostat (<code>fix npt</code>)</h4>
+<pre class="lammps"><code>fix npt_all all npt temp 300.0 300.0 100.0 iso 1.0 1.0 500.0</code></pre>
+<p>Controls T (Nosé-Hoover) and P (Nosé-Hoover). The <code>iso</code> keyword applies isotropic pressure control.</p>
+<p><strong>Keywords</strong>: - <code>iso</code> — isotropic (all components same P) - <code>aniso</code> — anisotropic (x, y, z independently) - <code>semiiso</code> — semi-isotropic (xy coupled, z separate)</p>
+<p>For <strong>slab geometries</strong> with non-periodic z:</p>
+<pre class="lammps"><code>fix npt_xz all npt temp 300.0 300.0 100.0 semiiso 1.0 1.0 500.0</code></pre>
+<p>This controls P_x = P_y, but allows P_z to adjust independently (or vice versa depending on setup).</p>
+</section>
+<section id="mtk-barostat" class="level4">
+<h4 class="anchored" data-anchor-id="mtk-barostat">MTK Barostat</h4>
+<p>Martyna-Tobias-Klein barostat (more reliable for non-equilibrium):</p>
+<pre class="lammps"><code>fix npt_mtk all npt temp 300.0 300.0 100.0 aniso 1.0 1.0 500.0</code></pre>
+<p>Use for: - Anisotropic systems - Systems with external fields - When pressure tensor components matter</p>
+</section>
+</section>
+<section id="what-pressure-controls-physically" class="level3">
+<h3 class="anchored" data-anchor-id="what-pressure-controls-physically">What Pressure Controls Physically</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 36%">
+<col style="width: 36%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Pressure Change</th>
+<th>Physical Effect</th>
+<th>Observable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Increase P</td>
+<td>Compress system; atoms closer</td>
+<td>Lower volume; higher density</td>
+</tr>
+<tr class="even">
+<td>NPT equilibration</td>
+<td>System reaches correct density</td>
+<td>Density ~1 g/cm³ for water</td>
+</tr>
+<tr class="odd">
+<td>Anisotropic P</td>
+<td>Different stress in different directions</td>
+<td>Lattice parameters</td>
+</tr>
+<tr class="even">
+<td>Too high P</td>
+<td>Over-compression; unrealistic</td>
+<td>Density too high</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="integrators-in-lammps" class="level2">
+<h2 class="anchored" data-anchor-id="integrators-in-lammps">Integrators in LAMMPS</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Fix</th>
+<th>Ensemble</th>
+<th>Velocity Update</th>
+<th>Position Update</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>fix nve</code></td>
+<td>NVE</td>
+<td>Verlet (no thermostat)</td>
+<td>Verlet</td>
+</tr>
+<tr class="even">
+<td><code>fix nvt</code></td>
+<td>NVT</td>
+<td>Nosé-Hoover</td>
+<td>Verlet</td>
+</tr>
+<tr class="odd">
+<td><code>fix npt</code></td>
+<td>NPT</td>
+<td>Nosé-Hoover (T) + barostat</td>
+<td>Box changes</td>
+</tr>
+<tr class="even">
+<td><code>fix nph</code></td>
+<td>NPH</td>
+<td>Barostat only</td>
+<td>Box changes</td>
+</tr>
+</tbody>
+</table>
+<section id="combinations-with-electrode" class="level3">
+<h3 class="anchored" data-anchor-id="combinations-with-electrode">Combinations with ELECTRODE</h3>
+<p>For constant potential simulations:</p>
+<pre class="lammps"><code>fix frozen all nve                      # frozen electrodes (default)
+fix mylang elyte langevin 300 300 100 12345  # electrolyte thermostat
+
+# OR for frozen electrodes with NVT on electrolyte:
+fix mynvt elyte nvt temp 300.0 300.0 100.0</code></pre>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Don’t Double-Thermostat
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If you apply two thermostats to the same atoms, they will fight each other. Use EITHER <code>fix nvt</code> OR <code>fix langevin</code> on a given group — not both.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="observables-what-you-actually-measure" class="level2">
+<h2 class="anchored" data-anchor-id="observables-what-you-actually-measure">Observables — What You Actually Measure</h2>
+<section id="thermodynamic-output" class="level3">
+<h3 class="anchored" data-anchor-id="thermodynamic-output">Thermodynamic Output</h3>
+<pre class="lammps"><code>thermo 100
+thermo_style custom step temp pe ke vol density</code></pre>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Physical Meaning</th>
+<th>Normal Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Temp</code></td>
+<td>Instantaneous temperature</td>
+<td>Fluctuates ±10 K around target</td>
+</tr>
+<tr class="even">
+<td><code>PotEng</code></td>
+<td>Potential energy</td>
+<td>Stable; small drift acceptable</td>
+</tr>
+<tr class="odd">
+<td><code>KinEng</code></td>
+<td>Kinetic energy</td>
+<td>Fluctuates with T</td>
+</tr>
+<tr class="even">
+<td><code>TotEng</code></td>
+<td>Total energy</td>
+<td>Conserved in NVE; drifts in NVT/NPT</td>
+</tr>
+<tr class="odd">
+<td><code>Vol</code></td>
+<td>System volume</td>
+<td>Constant in NVT; adjusts in NPT</td>
+</tr>
+<tr class="even">
+<td><code>Density</code></td>
+<td>Mass/volume</td>
+<td>Should match experimental density</td>
+</tr>
+<tr class="odd">
+<td><code>Press</code></td>
+<td>Total pressure</td>
+<td>Fluctuates; mean matches external P</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="computes-for-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="computes-for-analysis">Computes for Analysis</h3>
+<pre class="lammps"><code>compute temp_elec elyte temp     # electrolyte temperature (exclude frozen)
+compute stress all stress/atom  # per-atom stress tensor
+compute RDF all rdf 2 * 500     # radial distribution function</code></pre>
+</section>
+<section id="fix-specific-output-electrode" class="level3">
+<h3 class="anchored" data-anchor-id="fix-specific-output-electrode">Fix-Specific Output (ELECTRODE)</h3>
+<p>For <code>fix electrode/conp</code>:</p>
+<pre class="lammps"><code>variable Q_bot equal f_fxconp[5]    # charge on bottom electrode (check index)
+variable Q_top equal f_fxconp[6]    # charge on top electrode
+variable V_bot equal f_fxconp[2]    # potential on bottom (for conq)</code></pre>
+<p>The exact indices depend on the fix configuration. Check LAMMPS documentation or print all fix values.</p>
+</section>
+<section id="trajectory-output" class="level3">
+<h3 class="anchored" data-anchor-id="trajectory-output">Trajectory Output</h3>
+<pre class="lammps"><code>dump 1 all custom 100 traj.lammpstrj id type x y z q
+dump 2 all dcd 100 traj.dcd    # binary; smaller file</code></pre>
+<p>Post-processing tools: - <strong>Python</strong>: MDAnalysis, pytim, mdtraj - <strong>VMD</strong>: visualization and analysis - <strong>Ovito</strong>: visualization and statistical analysis</p>
+</section>
+</section>
+<section id="physical-conditions-output-summary" class="level2">
+<h2 class="anchored" data-anchor-id="physical-conditions-output-summary">Physical Conditions → Output Summary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 23%">
+<col style="width: 27%">
+<col style="width: 24%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Control Parameter</th>
+<th>Physical Meaning</th>
+<th>Observable in LAMMPS</th>
+<th>Expected Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>T = 300 K</td>
+<td>Mean kinetic energy = 3/2 k_B T</td>
+<td><code>Temp</code></td>
+<td>±10 K fluctuations</td>
+</tr>
+<tr class="even">
+<td>P = 1 atm</td>
+<td>External pressure</td>
+<td><code>Press</code></td>
+<td>Mean = 1 atm, fluctuates</td>
+</tr>
+<tr class="odd">
+<td>NVE</td>
+<td>Isolated system</td>
+<td><code>TotEng</code></td>
+<td>&lt; 0.1% drift over 1 ns</td>
+</tr>
+<tr class="even">
+<td>NVT</td>
+<td>Canonical ensemble</td>
+<td><code>Temp</code> fixed</td>
+<td>Correct fluctuations</td>
+</tr>
+<tr class="odd">
+<td>NPT</td>
+<td>Isobaric</td>
+<td><code>Vol</code>, <code>Density</code></td>
+<td>Matches experiment</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="common-mistakes" class="level2">
+<h2 class="anchored" data-anchor-id="common-mistakes">Common Mistakes</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 38%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Mistake</th>
+<th>Consequence</th>
+<th>Correction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Thermostatting frozen atoms</td>
+<td>No dynamics (atoms can’t move)</td>
+<td>Only thermostat mobile atoms</td>
+</tr>
+<tr class="even">
+<td>Using Berendsen for production</td>
+<td>Wrong heat capacity</td>
+<td>Use Nosé-Hoover or Langevin</td>
+</tr>
+<tr class="odd">
+<td>Timestep too large</td>
+<td>Energy drift, crash</td>
+<td>Reduce Δt or constrain bonds</td>
+</tr>
+<tr class="even">
+<td>Forgetting barostat for density</td>
+<td>Wrong equilibrium density</td>
+<td>Use NPT to equilibrate density</td>
+</tr>
+<tr class="odd">
+<td>Anisotropic pressure for isotropic system</td>
+<td>Stressed state, wrong density</td>
+<td>Use <code>iso</code> pressure control</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<ul>
+<li><strong>?@sec-electrostatics</strong> — How long-range electrostatics is handled</li>
+<li><strong>?@sec-electrodes-cpm</strong> — Why electrodes need constant potential (not constant charge)</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/srtee\.github\.io\/mddocs\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

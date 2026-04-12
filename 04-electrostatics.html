@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>electrostatics – Constant Potential MD in LAMMPS</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-ff0631ae66c640f7beec88805fcb678e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar docked nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Constant Potential MD in LAMMPS</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./01-fundamentals.html"> 
+<span class="menu-text">1. Fundamentals</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./02-force-fields.html"> 
+<span class="menu-text">2. Force Fields</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./03-physical-conditions.html"> 
+<span class="menu-text">3. Physical Conditions</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./04-electrostatics.html" aria-current="page"> 
+<span class="menu-text">4. Electrostatics</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./05-electrodes-cpm.html"> 
+<span class="menu-text">5. Electrodes &amp; CPM</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./06-electrode-package.html"> 
+<span class="menu-text">6. ELECTRODE Package</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./07-example-simulation.html"> 
+<span class="menu-text">7. Example</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./08-troubleshooting.html"> 
+<span class="menu-text">8. Troubleshooting</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./references.html"> 
+<span class="menu-text">References</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/lammps/lammps"> <i class="bi bi-github" role="img" aria-label="LAMMPS GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#sec-electrostatics" id="toc-sec-electrostatics" class="nav-link active" data-scroll-target="#sec-electrostatics">Electrostatics</a>
+  <ul class="collapse">
+  <li><a href="#the-coulomb-problem" id="toc-the-coulomb-problem" class="nav-link" data-scroll-target="#the-coulomb-problem">The Coulomb Problem</a></li>
+  <li><a href="#ewald-summation-the-conceptual-basis" id="toc-ewald-summation-the-conceptual-basis" class="nav-link" data-scroll-target="#ewald-summation-the-conceptual-basis">Ewald Summation — The Conceptual Basis</a>
+  <ul class="collapse">
+  <li><a href="#the-split" id="toc-the-split" class="nav-link" data-scroll-target="#the-split">The Split</a></li>
+  <li><a href="#the-physical-idea" id="toc-the-physical-idea" class="nav-link" data-scroll-target="#the-physical-idea">The Physical Idea</a></li>
+  <li><a href="#the-ewald-parameter-α" id="toc-the-ewald-parameter-α" class="nav-link" data-scroll-target="#the-ewald-parameter-α">The Ewald Parameter (α)</a></li>
+  <li><a href="#ewald-in-lammps" id="toc-ewald-in-lammps" class="nav-link" data-scroll-target="#ewald-in-lammps">Ewald in LAMMPS</a></li>
+  </ul></li>
+  <li><a href="#pppm-particle-particle-particle-mesh" id="toc-pppm-particle-particle-particle-mesh" class="nav-link" data-scroll-target="#pppm-particle-particle-particle-mesh">PPPM — Particle-Particle Particle-Mesh</a>
+  <ul class="collapse">
+  <li><a href="#why-pppm" id="toc-why-pppm" class="nav-link" data-scroll-target="#why-pppm">Why PPPM?</a></li>
+  <li><a href="#how-pppm-works" id="toc-how-pppm-works" class="nav-link" data-scroll-target="#how-pppm-works">How PPPM Works</a></li>
+  <li><a href="#pppm-in-lammps" id="toc-pppm-in-lammps" class="nav-link" data-scroll-target="#pppm-in-lammps">PPPM in LAMMPS</a></li>
+  <li><a href="#pppm-accuracy" id="toc-pppm-accuracy" class="nav-link" data-scroll-target="#pppm-accuracy">PPPM Accuracy</a></li>
+  </ul></li>
+  <li><a href="#cutoff-based-methods-when-to-use-them" id="toc-cutoff-based-methods-when-to-use-them" class="nav-link" data-scroll-target="#cutoff-based-methods-when-to-use-them">Cutoff-Based Methods (When to Use Them)</a>
+  <ul class="collapse">
+  <li><a href="#direct-coulomb-with-cutoff" id="toc-direct-coulomb-with-cutoff" class="nav-link" data-scroll-target="#direct-coulomb-with-cutoff">Direct Coulomb with Cutoff</a></li>
+  <li><a href="#when-cutoff-based-is-acceptable" id="toc-when-cutoff-based-is-acceptable" class="nav-link" data-scroll-target="#when-cutoff-based-is-acceptable">When Cutoff-Based Is Acceptable</a></li>
+  <li><a href="#performance-note" id="toc-performance-note" class="nav-link" data-scroll-target="#performance-note">Performance Note</a></li>
+  </ul></li>
+  <li><a href="#boundary-conditions-and-electrostatics" id="toc-boundary-conditions-and-electrostatics" class="nav-link" data-scroll-target="#boundary-conditions-and-electrostatics">Boundary Conditions and Electrostatics</a>
+  <ul class="collapse">
+  <li><a href="#periodic-boundary-conditions-in-3d" id="toc-periodic-boundary-conditions-in-3d" class="nav-link" data-scroll-target="#periodic-boundary-conditions-in-3d">Periodic Boundary Conditions in 3D</a></li>
+  <li><a href="#slab-geometry-non-periodic-z" id="toc-slab-geometry-non-periodic-z" class="nav-link" data-scroll-target="#slab-geometry-non-periodic-z">Slab Geometry (Non-Periodic Z)</a></li>
+  <li><a href="#periodic-z-with-finite-field" id="toc-periodic-z-with-finite-field" class="nav-link" data-scroll-target="#periodic-z-with-finite-field">Periodic Z with Finite Field</a></li>
+  </ul></li>
+  <li><a href="#pair-style-kspace-consistency" id="toc-pair-style-kspace-consistency" class="nav-link" data-scroll-target="#pair-style-kspace-consistency">Pair Style — Kspace Consistency</a>
+  <ul class="collapse">
+  <li><a href="#the-rule" id="toc-the-rule" class="nav-link" data-scroll-target="#the-rule">The Rule</a></li>
+  <li><a href="#why-consistency-matters" id="toc-why-consistency-matters" class="nav-link" data-scroll-target="#why-consistency-matters">Why Consistency Matters</a></li>
+  <li><a href="#electrode-specific-kspace-styles" id="toc-electrode-specific-kspace-styles" class="nav-link" data-scroll-target="#electrode-specific-kspace-styles">Electrode-Specific Kspace Styles</a></li>
+  </ul></li>
+  <li><a href="#kspace-modify-options" id="toc-kspace-modify-options" class="nav-link" data-scroll-target="#kspace-modify-options">Kspace Modify Options</a></li>
+  <li><a href="#output-and-diagnostics" id="toc-output-and-diagnostics" class="nav-link" data-scroll-target="#output-and-diagnostics">Output and Diagnostics</a>
+  <ul class="collapse">
+  <li><a href="#kspace-energy" id="toc-kspace-energy" class="nav-link" data-scroll-target="#kspace-energy">Kspace Energy</a></li>
+  <li><a href="#performance" id="toc-performance" class="nav-link" data-scroll-target="#performance">Performance</a></li>
+  </ul></li>
+  <li><a href="#common-issues" id="toc-common-issues" class="nav-link" data-scroll-target="#common-issues">Common Issues</a></li>
+  <li><a href="#summary-table" id="toc-summary-table" class="nav-link" data-scroll-target="#summary-table">Summary Table</a></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block"></header>
+
+
+
+
+<section id="sec-electrostatics" class="level1">
+<h1>Electrostatics</h1>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>In this section
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Why long-range Coulomb is computationally hard</li>
+<li>How Ewald summation splits the problem</li>
+<li>How PPPM achieves O(N log N) scaling</li>
+<li>Why slab geometry needs special treatment</li>
+<li>Pair-kpace consistency rules</li>
+</ul>
+</div>
+</div>
+<section id="the-coulomb-problem" class="level2">
+<h2 class="anchored" data-anchor-id="the-coulomb-problem">The Coulomb Problem</h2>
+<p>Electrostatic interactions are long-range:</p>
+<p><span class="math display">\[V(r) = k\frac{q_1 q_2}{r}\]</span></p>
+<p>Unlike LJ (which decays as r⁻⁶), Coulomb falls off slowly. In a periodic system, the sum of all pairwise Coulomb interactions does not converge quickly — you cannot simply cut it off at a reasonable distance without introducing large errors.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Direct summation</th>
+<th>Cost</th>
+<th>Problem</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>All pairs (N²/2)</td>
+<td>O(N²)</td>
+<td>Prohibitive for large N</td>
+</tr>
+<tr class="even">
+<td>Cutoff at 10 Å</td>
+<td>O(N)</td>
+<td>~10% error for ionic systems</td>
+</tr>
+</tbody>
+</table>
+<p>The challenge: we need the <strong>long-range part</strong> of Coulomb for accuracy, but we cannot sum it directly because there are too many pairs.</p>
+</section>
+<section id="ewald-summation-the-conceptual-basis" class="level2">
+<h2 class="anchored" data-anchor-id="ewald-summation-the-conceptual-basis">Ewald Summation — The Conceptual Basis</h2>
+<section id="the-split" class="level3">
+<h3 class="anchored" data-anchor-id="the-split">The Split</h3>
+<p>Ewald summation splits the Coulomb sum into three parts:</p>
+<p><span class="math display">\[V_{Coul} = V_{real} + V_{recip} + V_{self}\]</span></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 34%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Description</th>
+<th>How It’s Computed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Real space</strong></td>
+<td>Short-range Coulomb (direct sum)</td>
+<td>Cutoff-based; fast for small r</td>
+</tr>
+<tr class="even">
+<td><strong>Reciprocal space</strong></td>
+<td>Long-range (Fourier transform)</td>
+<td>FFT-based; fast for large N</td>
+</tr>
+<tr class="odd">
+<td><strong>Self term</strong></td>
+<td>Corrects for double-counting</td>
+<td>Analytic formula</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="the-physical-idea" class="level3">
+<h3 class="anchored" data-anchor-id="the-physical-idea">The Physical Idea</h3>
+<ol type="1">
+<li><strong>Smear each charge</strong> into a Gaussian cloud (width determined by α)</li>
+<li><strong>Real space</strong>: interaction of Gaussians with original charges (short-range, convergent)</li>
+<li><strong>Reciprocal space</strong>: interaction of Gaussians with each other in Fourier space (long-range, also convergent)</li>
+<li><strong>Self term</strong>: subtract the interaction of each charge with its own Gaussian</li>
+</ol>
+</section>
+<section id="the-ewald-parameter-α" class="level3">
+<h3 class="anchored" data-anchor-id="the-ewald-parameter-α">The Ewald Parameter (α)</h3>
+<p>α controls the width of the Gaussian smearing:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>α (large)</th>
+<th>α (small)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Narrow Gaussians</td>
+<td>Wide Gaussians</td>
+</tr>
+<tr class="even">
+<td>Real space converges quickly</td>
+<td>Real space converges slowly</td>
+</tr>
+<tr class="odd">
+<td>Reciprocal space expensive</td>
+<td>Reciprocal space cheaper</td>
+</tr>
+<tr class="even">
+<td>Overall: fast for small systems</td>
+<td>Overall: better for large systems</td>
+</tr>
+</tbody>
+</table>
+<p>Typical α ≈ 0.2–0.5 Å⁻¹ (real units). LAMMPS usually chooses a reasonable default, but for very asymmetric boxes (very thin in one direction), tuning helps.</p>
+</section>
+<section id="ewald-in-lammps" class="level3">
+<h3 class="anchored" data-anchor-id="ewald-in-lammps">Ewald in LAMMPS</h3>
+<pre class="lammps"><code>kspace_style ewald 1e-5</code></pre>
+<p><code>1e-5</code> = desired RMS force accuracy (relative to force magnitude). Tighter tolerance = more accurate = slower.</p>
+</section>
+</section>
+<section id="pppm-particle-particle-particle-mesh" class="level2">
+<h2 class="anchored" data-anchor-id="pppm-particle-particle-particle-mesh">PPPM — Particle-Particle Particle-Mesh</h2>
+<section id="why-pppm" class="level3">
+<h3 class="anchored" data-anchor-id="why-pppm">Why PPPM?</h3>
+<p>Ewald scales as O(N³/²). For very large systems, this is still prohibitive.</p>
+<p>PPPM (also called PME — Particle Mesh Ewald) maps charges to a regular mesh and uses FFT for the reciprocal space sum:</p>
+<p><span class="math display">\[O(N \log N) \text{ scaling}\]</span></p>
+</section>
+<section id="how-pppm-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-pppm-works">How PPPM Works</h3>
+<ol type="1">
+<li><strong>Distribute charges to mesh</strong>: each charge assigned to nearby mesh points (Gaussian or cloud-in-cell)</li>
+<li><strong>FFT to reciprocal space</strong>: <code>charge density(r)</code> → <code>charge density(k)</code></li>
+<li><strong>Multiply by Green’s function</strong>: apply the Coulomb kernel in k-space</li>
+<li><strong>FFT back to real space</strong>: forces on mesh</li>
+<li><strong>Interpolate forces to particles</strong>: mesh forces → atomic forces</li>
+</ol>
+<p>The key advantage: FFT is O(N log N), so the reciprocal space part scales much better than Ewald.</p>
+</section>
+<section id="pppm-in-lammps" class="level3">
+<h3 class="anchored" data-anchor-id="pppm-in-lammps">PPPM in LAMMPS</h3>
+<pre class="lammps"><code>kspace_style pppm 1e-5</code></pre>
+</section>
+<section id="pppm-accuracy" class="level3">
+<h3 class="anchored" data-anchor-id="pppm-accuracy">PPPM Accuracy</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Tolerance</th>
+<th>Force Accuracy</th>
+<th>Speed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>1e-4</code></td>
+<td>~0.1%</td>
+<td>Fastest</td>
+</tr>
+<tr class="even">
+<td><code>1e-5</code></td>
+<td>~0.01%</td>
+<td>Standard</td>
+</tr>
+<tr class="odd">
+<td><code>1e-6</code></td>
+<td>~0.001%</td>
+<td>Slowest</td>
+</tr>
+</tbody>
+</table>
+<p>For production: <code>1e-5</code> is usually sufficient. For precise energy calculations: <code>1e-6</code>.</p>
+</section>
+</section>
+<section id="cutoff-based-methods-when-to-use-them" class="level2">
+<h2 class="anchored" data-anchor-id="cutoff-based-methods-when-to-use-them">Cutoff-Based Methods (When to Use Them)</h2>
+<section id="direct-coulomb-with-cutoff" class="level3">
+<h3 class="anchored" data-anchor-id="direct-coulomb-with-cutoff">Direct Coulomb with Cutoff</h3>
+<pre class="lammps"><code>pair_style lj/cut/coul/cut 10.0   # real-space only; no kspace
+kspace_style none                   # explicitly no long-range</code></pre>
+<p><strong>DO NOT use for charged systems or electrolytes.</strong> The long-range part is significant — cutting it off introduces errors of 10–50%.</p>
+</section>
+<section id="when-cutoff-based-is-acceptable" class="level3">
+<h3 class="anchored" data-anchor-id="when-cutoff-based-is-acceptable">When Cutoff-Based Is Acceptable</h3>
+<ul>
+<li>Neutral, sparse systems (gases)</li>
+<li>Very short simulations where speed matters more than accuracy</li>
+<li>Testing/debugging before production</li>
+</ul>
+</section>
+<section id="performance-note" class="level3">
+<h3 class="anchored" data-anchor-id="performance-note">Performance Note</h3>
+<p>For small systems (N &lt; 1000) with short simulation times (ns), cutoff-based may be acceptable. For anything involving ions, water, or electrode interfaces: use PPPM.</p>
+</section>
+</section>
+<section id="boundary-conditions-and-electrostatics" class="level2">
+<h2 class="anchored" data-anchor-id="boundary-conditions-and-electrostatics">Boundary Conditions and Electrostatics</h2>
+<section id="periodic-boundary-conditions-in-3d" class="level3">
+<h3 class="anchored" data-anchor-id="periodic-boundary-conditions-in-3d">Periodic Boundary Conditions in 3D</h3>
+<p>With <code>boundary p p p</code>, the system is a periodic tile. Ewald/PPPM works straightforwardly.</p>
+</section>
+<section id="slab-geometry-non-periodic-z" class="level3">
+<h3 class="anchored" data-anchor-id="slab-geometry-non-periodic-z">Slab Geometry (Non-Periodic Z)</h3>
+<p>For electrode-electrolyte simulations:</p>
+<pre class="lammps"><code>boundary p p f    # non-periodic z</code></pre>
+<p>The z-direction has a vacuum gap. This creates two electrode surfaces exposed to vacuum (or vacuum above the electrolyte).</p>
+<p><strong>Problem with slab geometry</strong>: electrostatics in 2D is different from 3D. The naive Ewald/PPPM sum would include artificial dipole-dipole interactions between periodic images in z.</p>
+<p><strong>Solution</strong>: 2D Ewald / slab correction</p>
+<pre class="lammps"><code>kspace_modify slab 3</code></pre>
+<p>This applies a correction for the slab geometry: - Assumes the system is infinitely periodic in x, y - Assumes finite (non-periodic) in z - Adds a dipole correction term</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Forgot <code>kspace_modify slab</code>?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If you use <code>boundary p p f</code> without <code>kspace_modify slab</code>, you will get: - Artificially high pressure in z-direction - Incorrect forces on atoms near the surface - Wrong double-layer structure</p>
+<p>Always add <code>kspace_modify slab N</code> for non-periodic z.</p>
+</div>
+</div>
+</section>
+<section id="periodic-z-with-finite-field" class="level3">
+<h3 class="anchored" data-anchor-id="periodic-z-with-finite-field">Periodic Z with Finite Field</h3>
+<pre class="lammps"><code>boundary p p p    # fully periodic
+# In fix electrode/conp:
+fix fxconp bot electrode/conp -1.0 1.805 couple top 1.0 ffield on</code></pre>
+<p>With <code>ffield on</code>, the system is treated as an infinite stack of identical cells: - No vacuum region - Smaller z-dimension possible (saves atoms) - Requires <code>symm on</code> (total charge neutrality) - Uses internal E-field to apply potential difference</p>
+</section>
+</section>
+<section id="pair-style-kspace-consistency" class="level2">
+<h2 class="anchored" data-anchor-id="pair-style-kspace-consistency">Pair Style — Kspace Consistency</h2>
+<section id="the-rule" class="level3">
+<h3 class="anchored" data-anchor-id="the-rule">The Rule</h3>
+<p>The <strong>pair style</strong> determines what forces are computed in real space. The <strong>kspace style</strong> handles the long-range correction.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Pair Style</th>
+<th>Real-Space</th>
+<th>Kspace Style</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>lj/cut/coul/long</code></td>
+<td>LJ + Coulomb</td>
+<td><code>pppm</code> or <code>ewald</code></td>
+<td>Standard</td>
+</tr>
+<tr class="even">
+<td><code>coul/long</code> only</td>
+<td>Coulomb only</td>
+<td><code>pppm</code></td>
+<td>No LJ</td>
+</tr>
+<tr class="odd">
+<td><code>lj/cut/coul/cut</code></td>
+<td>LJ + Coulomb</td>
+<td>none</td>
+<td>Direct only; large error</td>
+</tr>
+<tr class="even">
+<td><code>lj/cut</code> only</td>
+<td>LJ only</td>
+<td>none</td>
+<td>No electrostatics</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="why-consistency-matters" class="level3">
+<h3 class="anchored" data-anchor-id="why-consistency-matters">Why Consistency Matters</h3>
+<p>If you use <code>pair_style lj/cut/coul/long</code> but no kspace style:</p>
+<ul>
+<li>LAMMPS will error and tell you to use <code>kspace_style</code></li>
+<li>The long-range Coulomb is not computed (even though it should be)</li>
+</ul>
+<p>If you use <code>pair_style lj/cut/coul/cut</code> but <code>kspace_style pppm</code>:</p>
+<ul>
+<li>pppm tries to compute long-range on top of already-truncated Coulomb</li>
+<li>Double-counting or error</li>
+</ul>
+</section>
+<section id="electrode-specific-kspace-styles" class="level3">
+<h3 class="anchored" data-anchor-id="electrode-specific-kspace-styles">Electrode-Specific Kspace Styles</h3>
+<p>For ELECTRODE simulations, use:</p>
+<pre class="lammps"><code>kspace_style pppm/electrode 1e-5</code></pre>
+<p>This variant: - Provides electrode-electrode interaction matrix to the ELECTRODE fix - Handles the induced-charge electrostatics correctly - Is compatible with <code>electrode/conp</code>, <code>electrode/conq</code>, <code>electrode/thermo</code></p>
+<p>Available styles: - <code>kspace_style ewald/electrode</code> - <code>kspace_style pppm/electrode</code> - <code>kspace_style pppm/electrode/intel</code> (optimized for Intel hardware)</p>
+</section>
+</section>
+<section id="kspace-modify-options" class="level2">
+<h2 class="anchored" data-anchor-id="kspace-modify-options">Kspace Modify Options</h2>
+<pre class="lammps"><code>kspace_modify slab 3              # 2D Ewald for non-periodic z (default = 3)
+kspace_modify wire                 # wire boundary conditions
+kspace_modify one-step             # faster but less accurate elastance matrix
+kspace_modify force 1e-4          # override tolerance</code></pre>
+</section>
+<section id="output-and-diagnostics" class="level2">
+<h2 class="anchored" data-anchor-id="output-and-diagnostics">Output and Diagnostics</h2>
+<section id="kspace-energy" class="level3">
+<h3 class="anchored" data-anchor-id="kspace-energy">Kspace Energy</h3>
+<p>In thermodynamic output:</p>
+<pre><code>Kspace = 0.5 * sum_over_k(G(k) * |rho(k)|²)</code></pre>
+<p><code>KspaceEng</code> = reciprocal-space energy contribution. Large values indicate significant long-range interactions (expected for ionic systems).</p>
+</section>
+<section id="performance" class="level3">
+<h3 class="anchored" data-anchor-id="performance">Performance</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Kspace Style</th>
+<th>Scaling</th>
+<th>N = 1000</th>
+<th>N = 10000</th>
+<th>N = 100000</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>ewald</code></td>
+<td>O(N³/²)</td>
+<td>~1s/step</td>
+<td>~10s/step</td>
+<td>~100s/step</td>
+</tr>
+<tr class="even">
+<td><code>pppm</code></td>
+<td>O(N log N)</td>
+<td>~0.5s</td>
+<td>~2s</td>
+<td>~10s</td>
+</tr>
+</tbody>
+</table>
+<p>For electrode systems with 10,000+ atoms, PPPM is essential.</p>
+</section>
+</section>
+<section id="common-issues" class="level2">
+<h2 class="anchored" data-anchor-id="common-issues">Common Issues</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 34%">
+<col style="width: 26%">
+<col style="width: 38%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problem</th>
+<th>Cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Very large <code>KspaceEng</code></td>
+<td>kspace tolerance too loose</td>
+<td>Use <code>1e-6</code> or tighter</td>
+</tr>
+<tr class="even">
+<td>Pressure oscillations</td>
+<td>Slab correction wrong</td>
+<td>Check <code>kspace_modify slab</code></td>
+</tr>
+<tr class="odd">
+<td>Energy not conserving</td>
+<td>Missing kspace or wrong pair style</td>
+<td>Add kspace or check pair style</td>
+</tr>
+<tr class="even">
+<td>Slow performance</td>
+<td>Using ewald instead of pppm</td>
+<td>Switch to <code>pppm</code></td>
+</tr>
+<tr class="odd">
+<td>NaN forces</td>
+<td>Overlapping atoms</td>
+<td>Minimize before dynamics</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="summary-table" class="level2">
+<h2 class="anchored" data-anchor-id="summary-table">Summary Table</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 41%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>Physical Meaning</th>
+<th>LAMMPS Command</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Real-space cutoff</td>
+<td>Truncate short-range interaction</td>
+<td><code>pair_style ... cutoff</code></td>
+</tr>
+<tr class="even">
+<td>Ewald parameter</td>
+<td>Split between real/reciprocal</td>
+<td>Default chosen automatically</td>
+</tr>
+<tr class="odd">
+<td>PPPM</td>
+<td>O(N log N) long-range solver</td>
+<td><code>kspace_style pppm</code></td>
+</tr>
+<tr class="even">
+<td>Slab correction</td>
+<td>2D Ewald for non-periodic z</td>
+<td><code>kspace_modify slab 3</code></td>
+</tr>
+<tr class="odd">
+<td>Electrode-aware kspace</td>
+<td>Supports induced charges</td>
+<td><code>kspace_style pppm/electrode</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<ul>
+<li><strong>?@sec-electrodes-cpm</strong> — What constant potential means and why it matters for electrodes</li>
+<li><strong>?@sec-electrode-package</strong> — The ELECTRODE package syntax and options</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/srtee\.github\.io\/mddocs\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

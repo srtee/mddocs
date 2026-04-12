@@ -1,15 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://srtee.github.io/mddocs/vmd/using-reps.html</loc>
-    <lastmod>2026-03-02T01:44:10.320Z</lastmod>
+    <loc>https://srtee.github.io/mddocs/08-troubleshooting.html</loc>
+    <lastmod>2026-04-12T09:56:23.443Z</lastmod>
   </url>
   <url>
-    <loc>https://srtee.github.io/mddocs/introduction.html</loc>
-    <lastmod>2026-03-02T00:08:45.992Z</lastmod>
+    <loc>https://srtee.github.io/mddocs/06-electrode-package.html</loc>
+    <lastmod>2026-04-12T09:55:48.979Z</lastmod>
   </url>
   <url>
-    <loc>https://srtee.github.io/mddocs/vmd/loading-data.html</loc>
-    <lastmod>2026-03-02T01:55:52.476Z</lastmod>
+    <loc>https://srtee.github.io/mddocs/04-electrostatics.html</loc>
+    <lastmod>2026-04-12T09:56:05.961Z</lastmod>
+  </url>
+  <url>
+    <loc>https://srtee.github.io/mddocs/02-force-fields.html</loc>
+    <lastmod>2026-04-12T09:55:23.109Z</lastmod>
+  </url>
+  <url>
+    <loc>https://srtee.github.io/mddocs/01-fundamentals.html</loc>
+    <lastmod>2026-04-12T09:54:54.665Z</lastmod>
+  </url>
+  <url>
+    <loc>https://srtee.github.io/mddocs/OUTLINE.html</loc>
+    <lastmod>2026-04-12T09:12:56.737Z</lastmod>
+  </url>
+  <url>
+    <loc>https://srtee.github.io/mddocs/index.html</loc>
+    <lastmod>2026-04-12T09:41:09.347Z</lastmod>
+  </url>
+  <url>
+    <loc>https://srtee.github.io/mddocs/references.html</loc>
+    <lastmod>2026-04-12T09:56:48.717Z</lastmod>
+  </url>
+  <url>
+    <loc>https://srtee.github.io/mddocs/03-physical-conditions.html</loc>
+    <lastmod>2026-04-12T09:55:41.625Z</lastmod>
+  </url>
+  <url>
+    <loc>https://srtee.github.io/mddocs/05-electrodes-cpm.html</loc>
+    <lastmod>2026-04-12T09:56:17.887Z</lastmod>
+  </url>
+  <url>
+    <loc>https://srtee.github.io/mddocs/07-example-simulation.html</loc>
+    <lastmod>2026-04-12T09:55:53.713Z</lastmod>
   </url>
 </urlset>
